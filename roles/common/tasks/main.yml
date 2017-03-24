@@ -22,11 +22,12 @@
   notify:
   - Restart docker
 
+- name: Reset any existing cluster
+  command: /usr/bin/kubeadm reset
+
 - name: Enable and start docker
   systemd: state=started enabled=yes name=docker
 
 - name: Enable and start kubelet
   systemd: state=started enabled=yes name=kubelet
 
-- name: Reset any existing cluster
-  command: /usr/bin/kubeadm reset

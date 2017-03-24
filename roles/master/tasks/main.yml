@@ -1,9 +1,15 @@
 ---
-- name: Initialize cluster
-  command: /usr/bin/kubeadm init --token {{ kubeadm_token }}
+- name: Generate cluster token
+  command: /usr/bin/kubeadm token generate
+  register: kubeadm_token_generate
 
-- name: Create cluster networking add-on
-  command: /usr/bin/kubectl apply -f http://docs.projectcalico.org/v2.0/getting-started/kubernetes/installation/hosted/kubeadm/calico.yaml
+- name: Initialize cluster
+  command: /usr/bin/kubeadm init --token {{ kubeadm_token_generate.stdout }}
+
+- name: Create cluster addons
+  command: /usr/bin/kubectl apply -f {{ item }}
+  with_items:
+  - "{{ kubeadm_addon_urls }}"
 
 - name: Wait 1 minute for cluster networking and DNS to be Running
   pause: minutes=1

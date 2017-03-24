@@ -1,3 +1,3 @@
 ---
 - name: Join cluster
-  command: /usr/bin/kubeadm join {{ groups['master'][0] }} --token {{ kubeadm_token }}
+  command: /usr/bin/kubeadm join {{ groups['master'][0] }} --token {{ hostvars[groups['master'][0]]['kubeadm_token_generate'].stdout }}
