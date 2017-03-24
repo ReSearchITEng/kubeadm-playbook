@@ -1,0 +1,21 @@
+---
+- hosts: all
+  remote_user: centos
+  become: yes
+  become_method: sudo
+  roles:
+  - common
+
+- hosts: master
+  remote_user: centos
+  become: yes
+  become_method: sudo
+  roles:
+  - master
+
+- hosts: node
+  remote_user: centos
+  become: yes
+  become_method: sudo
+  roles:
+  - node

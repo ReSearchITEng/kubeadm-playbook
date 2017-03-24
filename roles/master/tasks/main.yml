@@ -1,0 +1,9 @@
+---
+- name: Initialize cluster
+  command: /usr/bin/kubeadm init --token {{ kubeadm_token }}
+
+- name: Create cluster networking add-on
+  command: /usr/bin/kubectl apply -f http://docs.projectcalico.org/v2.0/getting-started/kubernetes/installation/hosted/kubeadm/calico.yaml
+
+- name: Wait 1 minute for cluster networking and DNS to be Running
+  pause: minutes=1

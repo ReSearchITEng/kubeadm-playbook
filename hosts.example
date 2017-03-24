@@ -1,0 +1,6 @@
+# Only one master is allowed
+[master]
+master.example.com
+
+[node]
+node[1:2].example.com

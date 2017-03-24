@@ -1,0 +1,32 @@
+---
+- name: Create kubernetes yum repository
+  copy: src=kubernetes.repo dest=/etc/yum.repos.d
+
+- name: Disable selinux
+  selinux: policy=targeted state=permissive
+
+- name: Install packages
+  yum: name={{ item }} state=present
+  with_items:
+  - docker
+  - kubelet
+  - kubeadm
+  - kubectl
+  - kubernetes-cni
+
+- name: Change docker configuration to use json-file/overlay
+  copy: src={{ item }} dest=/etc/sysconfig/docker
+  with_items:
+  - docker
+  - docker-storage
+  notify:
+  - Restart docker
+
+- name: Enable and start docker
+  systemd: state=started enabled=yes name=docker
+
+- name: Enable and start kubelet
+  systemd: state=started enabled=yes name=kubelet
+
+- name: Reset any existing cluster
+  command: /usr/bin/kubeadm reset
