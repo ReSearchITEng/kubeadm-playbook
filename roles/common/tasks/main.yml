@@ -1,9 +1,18 @@
 ---
 - name: Create kubernetes yum repository
-  copy: src=kubernetes.repo dest=/etc/yum.repos.d
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    gpgcheck: 0
 
 - name: Disable selinux
   selinux: policy=targeted state=permissive
+
+- name: Clean yum metadata
+  command: yum clean all
+  args:
+    warn: no
 
 - name: Install packages
   yum: name={{ item }} state=present
@@ -14,13 +23,52 @@
   - kubectl
   - kubernetes-cni
 
-- name: Change docker configuration to use json-file/overlay
-  copy: src={{ item }} dest=/etc/sysconfig/docker
-  with_items:
-  - docker
-  - docker-storage
+- name: Use json-file docker logging driver
+  lineinfile:
+    dest: /etc/sysconfig/docker
+    regexp: '^OPTIONS='
+    line: "OPTIONS='--selinux-enabled --log-driver=json-file --signature-verification=false'"
   notify:
   - Restart docker
+
+- name: Allow insecure registry
+  lineinfile:
+    dest: /etc/sysconfig/docker
+    regexp: '^# INSECURE_REGISTRY='
+    line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
+  when:
+    kubeadm_docker_insecure_registry is defined
+  notify:
+  - Restart docker
+
+- name: Use overlay docker storage driver
+  lineinfile:
+    dest: /etc/sysconfig/docker-storage
+    regexp: '^DOCKER_STORAGE_OPTIONS='
+    line: 'DOCKER_STORAGE_OPTIONS="--storage-driver=overlay"'
+  notify:
+  - Restart docker
+
+- name: Remove existing kubelet args from drop-in unit
+  lineinfile:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '^Environment="KUBELET_EXTRA_ARGS'
+    state: absent
+
+- name: Use systemd kubelet cgroup driver
+  lineinfile:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    insertafter: '^Environment=\"KUBELET_AUTHZ_ARGS'
+    line: 'Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd"'
+  notify:
+  - Reload systemd
+  - Restart kubelet
+
+- name: Create kubeadm sysctl file
+  copy: src=90-kubeadm.conf dest=/etc/sysctl.d/90-kubeadm.conf
+
+- name: Set sysctl settings
+  command: sysctl --system
 
 - name: Reset any existing cluster
   command: /usr/bin/kubeadm reset

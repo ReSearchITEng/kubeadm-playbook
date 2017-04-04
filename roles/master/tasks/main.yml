@@ -1,15 +1,28 @@
 ---
+# TODO automatically detect this with "kubeadm version"
+- name: Pull images
+  command: /usr/bin/docker pull {{ item }}
+  with_items:
+  - "gcr.io/google_containers/kube-proxy-amd64:v1.6.0"
+  - "gcr.io/google_containers/kube-controller-manager-amd64:v1.6.0"
+  - "gcr.io/google_containers/kube-apiserver-amd64:v1.6.0"
+  - "gcr.io/google_containers/kube-scheduler-amd64:v1.6.0"
+
 - name: Generate cluster token
   command: /usr/bin/kubeadm token generate
   register: kubeadm_token_generate
+  when: kubeadm_token is not defined
+
+- set_fact: kubeadm_token={{ kubeadm_token_generate.stdout }}
+  when: kubeadm_token is not defined
 
 - name: Initialize cluster
-  command: /usr/bin/kubeadm init --token {{ kubeadm_token_generate.stdout }}
+  command: /usr/bin/kubeadm init --token {{ kubeadm_token }}
 
-- name: Create cluster addons
-  command: /usr/bin/kubectl apply -f {{ item }}
-  with_items:
-  - "{{ kubeadm_addon_urls }}"
+- name: Create cluster network
+  command: /usr/bin/kubectl apply -f {{ kubeadm_network_addon_url }}
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
 
-- name: Wait 1 minute for cluster networking and DNS to be Running
+- name: Wait 1 minute for images pulls and cluster services to start
   pause: minutes=1

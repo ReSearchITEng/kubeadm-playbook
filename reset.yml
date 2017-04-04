@@ -1,0 +1,8 @@
+---
+- hosts: all
+  remote_user: centos
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: Reset cluster
+    command: /usr/bin/kubeadm reset

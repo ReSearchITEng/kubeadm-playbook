@@ -1,0 +1,7 @@
+---
+- hosts: master
+  remote_user: centos
+  become: yes
+  become_method: sudo
+  roles:
+  - master

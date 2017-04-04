@@ -1,0 +1,9 @@
+# global variables
+
+# https://kubernetes.io/docs/admin/addons/
+kubeadm_network_addon_url: http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+
+# kubeadm_docker_insecure_registry: registry.example.com:5000
+
+# Static token (generated on the fly if not set)
+# kubeadm_token: 0aab9a.be48b5a694f0c250

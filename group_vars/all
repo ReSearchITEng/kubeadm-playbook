@@ -1,7 +1,0 @@
-# URL for addons
-# Network addon is required
-# https://kubernetes.io/docs/admin/addons/
-kubeadm_addon_urls: [
-  'http://docs.projectcalico.org/v2.0/getting-started/kubernetes/installation/hosted/kubeadm/calico.yaml',
-  'https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml'
-]

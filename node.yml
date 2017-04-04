@@ -1,0 +1,7 @@
+---
+- hosts: node
+  remote_user: centos
+  become: yes
+  become_method: sudo
+  roles:
+  - node
