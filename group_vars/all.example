@@ -1,5 +1,8 @@
 # global variables
 
+# Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
+# package_state: latest # Other valid options for this context: present
+
 # https://kubernetes.io/docs/admin/addons/
 kubeadm_network_addon_url: http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 
