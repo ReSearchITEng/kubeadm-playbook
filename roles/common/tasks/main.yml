@@ -15,7 +15,7 @@
     warn: no
 
 - name: Install packages
-  yum: name={{ item }} state=present
+  yum: name={{ item }} state={{ package_state | default ('latest') }}
   with_items:
   - docker
   - kubelet
