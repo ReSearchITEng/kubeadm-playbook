@@ -22,6 +22,7 @@
   - kubeadm
   - kubectl
   - kubernetes-cni
+  
 
 - name: Use json-file docker logging driver
   lineinfile:
@@ -30,6 +31,8 @@
     line: "OPTIONS='--selinux-enabled --log-driver=json-file --signature-verification=false'"
   notify:
   - Restart docker
+  tags: 
+  - docker
 
 - name: Allow insecure registry
   lineinfile:
@@ -40,6 +43,8 @@
     kubeadm_docker_insecure_registry is defined
   notify:
   - Restart docker
+  tags: 
+  - docker
 
 - name: Use overlay docker storage driver
   lineinfile:
@@ -48,12 +53,16 @@
     line: 'DOCKER_STORAGE_OPTIONS="--storage-driver=overlay"'
   notify:
   - Restart docker
+  tags: 
+  - docker
 
 - name: Remove existing kubelet args from drop-in unit
   lineinfile:
     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: '^Environment="KUBELET_EXTRA_ARGS'
     state: absent
+  tags: 
+  - kubelet
 
 - name: Use systemd kubelet cgroup driver
   lineinfile:
@@ -63,9 +72,13 @@
   notify:
   - Reload systemd
   - Restart kubelet
+  tags: 
+  - kubelet
 
 - name: Create kubeadm sysctl file
   copy: src=90-kubeadm.conf dest=/etc/sysctl.d/90-kubeadm.conf
+  tags: 
+  - kubelet
 
 - name: Set sysctl settings
   command: sysctl --system
