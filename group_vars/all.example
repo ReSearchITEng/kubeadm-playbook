@@ -3,6 +3,12 @@
 # Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 # package_state: latest # Other valid options for this context: present
 
+# Desired kubernetes_version, e.g. 'v1.6.1'  ; when not defined, defaults to: 'latest'
+# kubernetes_version: latest
+
+# pod_network_cidr, defaults to '10.244.0.0/16'
+# pod_network_cidr: '10.244.0.0/16'
+
 # https://kubernetes.io/docs/admin/addons/
 kubeadm_network_addon_url: http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 
