@@ -22,7 +22,8 @@
   command: /usr/bin/kubeadm init --token {{ kubeadm_token }} --kubernetes-version {{ kubernetes_version | default ('latest') }} --pod-network-cidr={{ pod_network_cidr | default ('10.244.0.0/16') }}
 
 - name: Create cluster network
-  command: /usr/bin/kubectl apply -f {{ kubeadm_network_addon_url }}
+  command: /usr/bin/kubectl apply -f {{ item }}
+  with_items: "{{ kubeadm_network_addons_urls }}"
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
