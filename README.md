@@ -5,10 +5,10 @@ This is a simple playbook to wrap the following operations:
 * Install the kubeadm repo
 * Install docker, kubeadm, kubelet, kubernetes-cni, and kubectl
 * Disable SELinux :disappointed:
-* Set docker `--logging-driver=json-file`
-* Set docker `--storage-driver=overlay`
-* Set kubelet `--cgroup-driver=systemd`
-* Optional: Configure an insecure registry for docker
+* Set docker `--logging-driver=json-file`             (when the tag docker is not skipped)
+* Set docker `--storage-driver=overlay`               (when the tag docker is not skipped)
+* Set kubelet `--cgroup-driver=systemd`               (when the tag kubelet is not skipped)
+* Optional: Configure an insecure registry for docker (when the tag docker is not skipped)
 * Initialize the cluster on master with `kubeadm init`
 * Install user specified pod network from `group_vars/all`
 * Join the nodes to the cluster with 'kubeadm join`
@@ -27,5 +27,5 @@ vi hosts <add hosts>
 group_vars
 cp group_vars/all.example group_vars/all
 vi group_vars/all <modify vars if needed>
-ansible-playbook -i hosts site.yaml
+ansible-playbook -i hosts site.yaml [--skip-tags "docker,prepull_images,kubelet"]
 ```
