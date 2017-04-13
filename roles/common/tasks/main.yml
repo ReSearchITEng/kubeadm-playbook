@@ -15,6 +15,17 @@
     warn: no
 
 - name: Install packages
+  yum: name={{ item }} state=absent
+  with_items:
+  - kubelet
+  - kubeadm
+  - kubectl
+  - kubernetes-cni
+  when: full_kube_reinstall is defined and full_kube_reinstall
+  tags: 
+  - kubelet
+  
+- name: Install packages
   yum: name={{ item }} state={{ package_state | default ('latest') }}
   with_items:
   - docker
