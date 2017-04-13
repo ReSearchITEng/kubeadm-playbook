@@ -107,3 +107,11 @@
   command: printf "\n# Kubeadm shell completion\nsource '~/.kube/kubeadm_completion.bash.inc'\n" >> $HOME/.bash_profile
   when: shell is undefined or shell == 'bash'
   
+- name: kubectl completion shell
+  command: kubectl completion {{ shell | default ('bash') }} > ~/.kube/completion.bash.inc
+  args:
+    warn: no
+
+- name: kubectl completion shell
+  command: printf "\n# Kubectl shell completion\nsource '~/.kube/completion.bash.inc'\n" >> $HOME/.bash_profile
+  when: shell is undefined or shell == 'bash'
