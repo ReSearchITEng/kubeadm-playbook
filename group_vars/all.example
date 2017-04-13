@@ -17,3 +17,6 @@ kubeadm_network_addon_url: http://docs.projectcalico.org/v2.1/getting-started/ku
 
 # Static token (generated on the fly if not set)
 # kubeadm_token: 0aab9a.be48b5a694f0c250
+
+# shell for bash-completion for kubeadm and kubectl; currently only bash is fully supported, others only partially.
+# shell: 'bash'
