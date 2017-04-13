@@ -1,12 +1,12 @@
 ---
 # TODO automatically detect this with "kubeadm version"
 - name: Pull images
-  command: /usr/bin/docker pull {{ item }}
+  command: /usr/bin/docker pull "{{ item }}:{{ kubernetes_version | default ('latest') }}"
   with_items:
-  - "gcr.io/google_containers/kube-proxy-amd64:v1.6.1"
-  - "gcr.io/google_containers/kube-controller-manager-amd64:v1.6.1"
-  - "gcr.io/google_containers/kube-apiserver-amd64:v1.6.1"
-  - "gcr.io/google_containers/kube-scheduler-amd64:v1.6.1"
+  - "gcr.io/google_containers/kube-proxy-amd64"
+  - "gcr.io/google_containers/kube-controller-manager-amd64"
+  - "gcr.io/google_containers/kube-apiserver-amd64"
+  - "gcr.io/google_containers/kube-scheduler-amd64"
   tags:
   - prepull_images
 
