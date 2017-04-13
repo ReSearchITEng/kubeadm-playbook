@@ -92,3 +92,18 @@
 - name: Enable and start kubelet
   systemd: state=started enabled=yes name=kubelet
 
+- name: kubeadm completion preps
+  file:
+    path: ~/.kube/
+    state: directory
+    mode: 0755
+    
+- name: kubeadm completion shell
+  command: kubeadm completion {{ shell | default ('bash') }} > ~/.kube/kubeadm_completion.bash.inc
+  args:
+    warn: no
+
+- name: kubeadm completion shell
+  command: printf "\n# Kubeadm shell completion\nsource '~/.kube/kubeadm_completion.bash.inc'\n" >> $HOME/.bash_profile
+  when: shell is undefined or shell == 'bash'
+  
