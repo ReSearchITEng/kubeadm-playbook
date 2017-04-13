@@ -20,6 +20,10 @@ proxy_env:
 # pod_network_cidr, defaults to '10.244.0.0/16' ; It is mandatory when using flannel
 # pod_network_cidr: '10.244.0.0/16'
 
+# Any kubeadm init extra params can be put here. The var must exist, even if it's empty.
+#kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"
+kubeadm_init_extra_params: ""
+
 # https://kubernetes.io/docs/admin/addons/
 kubeadm_network_addons_urls: 
   - http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
