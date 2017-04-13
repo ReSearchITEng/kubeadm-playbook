@@ -19,7 +19,7 @@
   when: kubeadm_token is not defined
 
 - name: Initialize cluster
-  command: /usr/bin/kubeadm init --token {{ kubeadm_token }} --kubernetes-version {{ kubernetes_version | default ('latest') }} --pod-network-cidr={{ pod_network_cidr | default ('10.244.0.0/16') }}
+  command: /usr/bin/kubeadm init --token {{ kubeadm_token }} --kubernetes-version {{ kubernetes_version | default ('latest') }} {{ kubeadm_init_extra_params }}
 
 - name: Create cluster network
   command: /usr/bin/kubectl apply -f {{ item }}
