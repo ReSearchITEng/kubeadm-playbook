@@ -3,10 +3,12 @@
 - name: Pull images
   command: /usr/bin/docker pull {{ item }}
   with_items:
-  - "gcr.io/google_containers/kube-proxy-amd64:v1.6.0"
-  - "gcr.io/google_containers/kube-controller-manager-amd64:v1.6.0"
-  - "gcr.io/google_containers/kube-apiserver-amd64:v1.6.0"
-  - "gcr.io/google_containers/kube-scheduler-amd64:v1.6.0"
+  - "gcr.io/google_containers/kube-proxy-amd64:v1.6.1"
+  - "gcr.io/google_containers/kube-controller-manager-amd64:v1.6.1"
+  - "gcr.io/google_containers/kube-apiserver-amd64:v1.6.1"
+  - "gcr.io/google_containers/kube-scheduler-amd64:v1.6.1"
+  tags:
+  - prepull_images
 
 - name: Generate cluster token
   command: /usr/bin/kubeadm token generate
@@ -17,7 +19,7 @@
   when: kubeadm_token is not defined
 
 - name: Initialize cluster
-  command: /usr/bin/kubeadm init --token {{ kubeadm_token }}
+  command: /usr/bin/kubeadm init --token {{ kubeadm_token }} --kubernetes-version {{ kubernetes_version | default ('v1.6.1') }} --pod-network-cidr={{ pod_network_cidr | default ('10.244.0.0/16') }}
 
 - name: Create cluster network
   command: /usr/bin/kubectl apply -f {{ kubeadm_network_addon_url }}
