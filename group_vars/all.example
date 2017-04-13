@@ -10,8 +10,13 @@
 # pod_network_cidr: '10.244.0.0/16'
 
 # https://kubernetes.io/docs/admin/addons/
-kubeadm_network_addon_url: http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
-# kubeadm_network_addon_url: https://github.com/coreos/flannel/blob/master/Documentation/kube-flannel.yml
+kubeadm_network_addons_urls: 
+  - http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+
+# Flannel:
+#kubeadm_network_addons_urls: 
+#  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+#  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
 # kubeadm_docker_insecure_registry: registry.example.com:5000
 
