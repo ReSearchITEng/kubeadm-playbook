@@ -6,11 +6,12 @@
 # Desired kubernetes_version, e.g. 'v1.6.1'  ; when not defined, defaults to: 'latest'
 # kubernetes_version: latest
 
-# pod_network_cidr, defaults to '10.244.0.0/16'
+# pod_network_cidr, defaults to '10.244.0.0/16' ; It is mandatory when using flannel
 # pod_network_cidr: '10.244.0.0/16'
 
 # https://kubernetes.io/docs/admin/addons/
 kubeadm_network_addon_url: http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+# kubeadm_network_addon_url: https://github.com/coreos/flannel/blob/master/Documentation/kube-flannel.yml
 
 # kubeadm_docker_insecure_registry: registry.example.com:5000
 
