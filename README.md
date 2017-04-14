@@ -19,7 +19,7 @@ This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1**
 # How To
 
 ```
-git clone https://github.com/sjenning/kubeadm-playbook.git
+git clone https://github.com/ReSearchITEng/kubeadm-playbook.git
 cd kubeadm-playbook/
 cp hosts.example hosts
 vi hosts <add hosts>
@@ -28,3 +28,4 @@ cp group_vars/all.example group_vars/all
 vi group_vars/all <modify vars as needed>
 ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
 ```
+PS: work based on sjenning/kubeadm-playbook
