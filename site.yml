@@ -1,4 +1,6 @@
 ---
+- include: reset.yml
 - include: common.yml
 - include: master.yml
 - include: node.yml
+- include: sanity.yml

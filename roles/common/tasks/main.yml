@@ -1,10 +1,52 @@
 ---
+# Debian based (includes Ubuntu)
+- name: Install apt-transport-https
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment:
+    http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+    https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+    no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+  with_items:
+  - apt-transport-https
+  when: ansible_os_family == "Debian"
+
+- apt_key:
+    url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+    state: present
+  environment:
+    http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+    https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+    no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+  when: ansible_os_family == "Debian"
+
+- apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    #filename: 'kubernetes.list'
+    update_cache: yes
+  environment:
+    http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+    https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+    no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+  when: ansible_os_family == "Debian"
+
+# RedHat based (includes CentOS, RHEL, Fedora, Oracle, etc.)
 - name: Create kubernetes yum repository
   yum_repository:
     name: kubernetes
     description: Kubernetes
     baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
     gpgcheck: 0
+  when: ansible_os_family == "RedHat"
+
+- name: add proxy for the repo
+  ini_file:
+    dest: /etc/yum.repos.d/kubernetes.repo
+    section: "{{item}}"
+    option: proxy
+    value: "{{proxy_env.https_proxy | default ('') }}"
+  with_items: [ 'kubernetes' ]
+  when: ansible_os_family == "RedHat" and proxy_env.https_proxy is defined
 
 - name: Disable selinux
   selinux: policy=targeted state=permissive
@@ -13,28 +55,33 @@
   command: yum clean all
   args:
     warn: no
+  when: ansible_os_family == "RedHat"
+
+- name: apt-get clean metadata
+  command: apt-get clean ; apt-file purge
+  args:
+    warn: no
+  when: ansible_os_family == "Debian"
 
 - name: Install packages
-  yum: name={{ item }} state=absent
-  with_items:
-  - kubelet
-  - kubeadm
-  - kubectl
-  - kubernetes-cni
-  when: full_kube_reinstall is defined and full_kube_reinstall
-  tags: 
-  - kubelet
-  
-- name: Install packages
-  yum: name={{ item }} state={{ package_state | default ('latest') }}
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment: 
+    http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+    https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+    no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
   with_items:
   - docker
   - kubelet
   - kubeadm
   - kubectl
   - kubernetes-cni
-  
 
+- name: Install packages
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  with_items:
+  - bash-completion
+  ignore_errors: yes
+  
 - name: Use json-file docker logging driver
   lineinfile:
     dest: /etc/sysconfig/docker
@@ -66,6 +113,15 @@
   - Restart docker
   tags: 
   - docker
+
+- name: Replace service_dns_domain under cluster-domain in kubelet.service.d/10-kubeadm.conf
+  replace:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '(--cluster-domain=)[A-Za-z0-9\-\.]+(.*)'
+    replace: '\1{{ service_dns_domain | default("cluster.local") }}\2'
+    backup: yes
+  tags:
+   - kubelet
 
 - name: Remove existing kubelet args from drop-in unit
   lineinfile:
@@ -110,19 +166,26 @@
     mode: 0755
     
 - name: kubeadm completion shell
-  command: kubeadm completion {{ shell | default ('bash') }} > ~/.kube/kubeadm_completion.bash.inc
+  shell: kubeadm completion {{ shell | default ('bash') }} > ~/.kube/kubeadm_completion.bash.inc
   args:
     warn: no
 
-- name: kubeadm completion shell
-  command: printf "\n# Kubeadm shell completion\nsource '~/.kube/kubeadm_completion.bash.inc'\n" >> $HOME/.bash_profile
+- name: kubeadm completion to ~/.bash_profile
+  lineinfile:
+    dest: ~/.bash_profile
+    line: 'source ${HOME}/.kube/kubeadm_completion.bash.inc'
+    state: present
   when: shell is undefined or shell == 'bash'
-  
+
 - name: kubectl completion shell
-  command: kubectl completion {{ shell | default ('bash') }} > ~/.kube/completion.bash.inc
+  shell: kubectl completion {{ shell | default ('bash') }} > ~/.kube/completion.bash.inc
   args:
     warn: no
 
-- name: kubectl completion shell
-  command: printf "\n# Kubectl shell completion\nsource '~/.kube/completion.bash.inc'\n" >> $HOME/.bash_profile
+- name: kubectl completion to ~/.bash_profile
+  lineinfile:
+    dest: ~/.bash_profile
+    line: 'source ${HOME}/.kube/completion.bash.inc'
+    state: present
   when: shell is undefined or shell == 'bash'
+

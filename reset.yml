@@ -1,8 +1,23 @@
 ---
 - hosts: all
-  remote_user: centos
   become: yes
   become_method: sudo
   tasks:
   - name: Reset cluster
     command: /usr/bin/kubeadm reset
+    ignore_errors: yes
+
+  - name: systemctl stop kube*.*.slice
+    shell: 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o *.*.slice | grep kubepod);do echo $i; systemctl stop $i ; done'
+
+  - name: Remove before reinstall packages
+    package: name={{ item }} state=absent
+    with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
+    - kubernetes-cni
+    when: full_kube_reinstall is defined and full_kube_reinstall
+    tags:
+    - kubelet
+    - uninstall

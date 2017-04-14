@@ -2,14 +2,12 @@
 
 # proxy environment variable, mainly for fetching addons
 #proxy_env:
-#  http_proxy: http://yourproxy:8080
-#  https_proxy: http://yourproxy:8080
+#  http_proxy: http://yourproxy.corp.example.com:8080
+#  https_proxy: http://yourproxy.corp.example.com:8080
 #  no_proxy: 127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost
-#OR
-proxy_env:
-  http_proxy: ""
-  https_proxy: ""
-  no_proxy: ""
+
+# first uninstall any kube* package from all hosts
+full_kube_reinstall: True
 
 # Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 # package_state: latest # Other valid options for this context: present
@@ -17,14 +15,18 @@ proxy_env:
 # Desired kubernetes_version, e.g. 'v1.6.1'  ; when not defined, defaults to: 'latest'
 # kubernetes_version: latest
 
-# pod_network_cidr, defaults to '10.244.0.0/16' ; It is mandatory when using flannel
-# pod_network_cidr: '10.244.0.0/16'
-
 # Any kubeadm init extra params can be put here. The var must exist, even if it's empty.
+# e.g. for using flannel, one must put: --pod-network-cidr='10.244.0.0/16'
 #kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"
 kubeadm_init_extra_params: ""
 
-# https://kubernetes.io/docs/admin/addons/
+# service_dns_domain: "myk8s.corp.example.com" # (cluster.local is the default, if not defined)
+#service_dns_domain: "cluster.local"
+
+# apiserver_cert_extra_sans:
+
+### Network addons. More details: https://kubernetes.io/docs/admin/addons/
+# Calico:
 kubeadm_network_addons_urls: 
   - http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 
@@ -35,8 +37,8 @@ kubeadm_network_addons_urls:
 
 # kubeadm_docker_insecure_registry: registry.example.com:5000
 
-# Static token (generated on the fly if not set)
-# kubeadm_token: 0aab9a.be48b5a694f0c250
+# Static token (generated on the fly if not set). Alphanum strings with lengths: 6.16
+# kubeadm_token: secret.token4yourbyok8s
 
 # shell for bash-completion for kubeadm and kubectl; currently only bash is fully supported, others only partially.
 # shell: 'bash'
