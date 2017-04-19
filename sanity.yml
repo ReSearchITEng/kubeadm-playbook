@@ -1,0 +1,22 @@
+---
+- hosts: master
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: kubectl get nodes
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    command: kubectl get nodes
+    register: command_result
+    failed_when: '"NotReady" in command_result.stdout'
+    tags:
+     - sanity_notes
+
+  - name: kubectl get nodes
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl get --namespace kube-system pods | tail -n +2 | grep -v 'Running'
+    register: command_result
+    failed_when: '"/" in command_result.stdout'
+    tags:
+     - sanity_pods
