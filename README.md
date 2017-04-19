@@ -14,6 +14,8 @@ This is a simple playbook to wrap the following operations:
 * Join the nodes to the cluster with 'kubeadm join`
 * Sanity: checks if nodes are ready and if all pods are running
 
+NOTE: It does support http_proxy configuration cases. Simply update the your proxy in the group_vars/all.
+
 This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1**
 
 # How To
