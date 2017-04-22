@@ -12,4 +12,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: "*"
+  namespace: kube-system
+- kind: ServiceAccount
+  name: default
+  namespace: default
