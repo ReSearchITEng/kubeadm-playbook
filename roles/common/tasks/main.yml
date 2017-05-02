@@ -165,7 +165,7 @@
 - name: kubeadm completion to ~/.bash_profile
   lineinfile:
     dest: ~/.bash_profile
-    line: '[[ -x ${HOME}/.kube/completion.bash.inc ]] && source ${HOME}/.kube/kubeadm_completion.bash.inc'
+    line: '[[ -x ${HOME}/.kube/kubeadm_completion.bash.inc ]] && source ${HOME}/.kube/kubeadm_completion.bash.inc'
     state: present
   when: shell is undefined or shell == 'bash'
 

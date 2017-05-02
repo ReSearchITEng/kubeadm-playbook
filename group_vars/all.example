@@ -33,9 +33,8 @@ kubernetes_version: 'v1.6.2'
 #####
 
 #####
-# Any kubeadm init extra params can be put here. 
+# Any kubeadm init extra params can be put here, like --apiserver-advertise-address=<your_ip> and/or --pod-network-cidr='10.244.0.0/16'
 #kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"  #This one is required for Flannel network when used.
-#kubeadm_init_extra_params: ""
 #####
 
 #service_dns_domain: "cluster.local"
