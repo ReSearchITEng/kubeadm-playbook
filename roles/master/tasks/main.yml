@@ -85,12 +85,21 @@
   with_items: "{{ k8s_network_addons_urls | default ('') }}"
   environment:
     KUBECONFIG:  /etc/kubernetes/admin.conf
-    http_proxy:  '{{proxy_env.http_proxy}}'
-    https_proxy: '{{proxy_env.https_proxy}}'
-    no_proxy:    '{{proxy_env.no_proxy}}'
-  when: k8s_network_addons_urls is defined
+  when: proxy_env is not defined and k8s_network_addons_urls is defined
   tags:
-   - k8s_network_addons
+  - k8s_network_addons
+
+- name: Create cluster network
+  command: /usr/bin/kubectl apply -f {{ item }}
+  with_items: "{{ k8s_network_addons_urls | default ('') }}"
+  environment:
+    KUBECONFIG:  /etc/kubernetes/admin.conf
+    http_proxy:  "{{proxy_env.http_proxy }}"
+    https_proxy: "{{proxy_env.https_proxy }}"
+    no_proxy:    "{{proxy_env.no_proxy }}"
+  when: proxy_env is defined and k8s_network_addons_urls is defined
+  tags:
+  - k8s_network_addons
 
 - name: Wait 1 minute for images pulls and cluster services to start
   pause: seconds=10

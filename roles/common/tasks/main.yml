@@ -2,10 +2,7 @@
 # Debian based (includes Ubuntu)
 - name: Install apt-transport-https
   package: name={{ item }} state={{ package_state | default ('latest') }}
-  environment:
-    http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
-    https_proxy: '{{proxy_env.https_proxy | default ("") }}'
-    no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+  environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - apt-transport-https
   when: ansible_os_family == "Debian"
@@ -13,10 +10,7 @@
 - apt_key:
     url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
     state: present
-  environment:
-    http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
-    https_proxy: '{{proxy_env.https_proxy | default ("") }}'
-    no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+  environment: '{{ proxy_env | default ({}) }}'
   when: ansible_os_family == "Debian"
 
 - apt_repository:
@@ -24,10 +18,7 @@
     state: present
     #filename: 'kubernetes.list'
     update_cache: yes
-  environment:
-    http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
-    https_proxy: '{{proxy_env.https_proxy | default ("") }}'
-    no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+  environment: '{{ proxy_env | default ({}) }}'
   when: ansible_os_family == "Debian"
 
 # RedHat based (includes CentOS, RHEL, Fedora, Oracle, etc.)
@@ -44,9 +35,9 @@
     dest: /etc/yum.repos.d/kubernetes.repo
     section: "{{item}}"
     option: proxy
-    value: "{{proxy_env.https_proxy | default ('') }}"
+    value: "{{proxy_env.https_proxy | default ([]) }}"
   with_items: [ 'kubernetes' ]
-  when: ansible_os_family == "RedHat" and proxy_env.https_proxy is defined
+  when: proxy_env is defined and ansible_os_family == "RedHat"
 
 - name: Disable selinux
   selinux: policy=targeted state=permissive
@@ -66,10 +57,7 @@
 
 - name: Install packages
   package: name={{ item }} state={{ package_state | default ('latest') }}
-  environment: 
-    http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
-    https_proxy: '{{proxy_env.https_proxy | default ("") }}'
-    no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+  environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
   - kubeadm
@@ -93,19 +81,19 @@
 #  tags: 
 #  - docker
 
-#- name: Allow insecure registry
-#  lineinfile:
-#    dest: /etc/sysconfig/docker
-#    regexp: '^# INSECURE_REGISTRY='
-#    line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
-#  when:
-#    kubeadm_docker_insecure_registry is defined
-#  notify:
-#  - Restart docker
-#  tags: 
-#  - docker
+- name: Allow insecure registry
+  lineinfile:
+    dest: /etc/sysconfig/docker
+    regexp: '^# INSECURE_REGISTRY='
+    line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
+  when:
+    kubeadm_docker_insecure_registry is defined
+  notify:
+  - Restart docker
+  tags: 
+  - docker
 
-#- name: Use overlay docker storage driver
+#- name: Use overlay docker storage driver (note: overlay2 is not currently supported by k8s)
 #  lineinfile:
 #    dest: /etc/sysconfig/docker-storage
 #    regexp: '^DOCKER_STORAGE_OPTIONS='
