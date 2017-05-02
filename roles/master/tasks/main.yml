@@ -1,4 +1,7 @@
 ---
+- set_fact:
+    env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+
 - name: Pull images
   command: /usr/bin/docker pull "{{ item }}:{{ kubernetes_version | default ('latest') }}"
   with_items:
@@ -25,10 +28,23 @@
   - init
 
 #TODO: It will need adjustments on ansible_play_hosts when kubeadm will support master HA #{{ ansible_play_hosts }}
-- name: Initialize cluster
+- name: Initialize cluster with apiserver-advertise-address {{kubeadm_init_apiserver_advertise_address}}
+  command: /usr/bin/kubeadm init --token {{ kubeadm_token }} --kubernetes-version {{ kubernetes_version | default ('latest') }} {{ kubeadm_init_extra_params | default('') }} --apiserver-advertise-address {{ kubeadm_init_apiserver_advertise_address }} --apiserver-cert-extra-sans {{ inventory_hostname }},{{ inventory_hostname_short }},{{ apiserver_cert_extra_sans | default('kubernetes') }} --service-dns-domain {{ service_dns_domain | default('cluster.local') }}
+  tags:
+  - init
+  when: kubeadm_init_apiserver_advertise_address is defined
+
+- name: Initialize cluster without special apiserver-advertise-address
   command: /usr/bin/kubeadm init --token {{ kubeadm_token }} --kubernetes-version {{ kubernetes_version | default ('latest') }} {{ kubeadm_init_extra_params | default('') }} --apiserver-advertise-address {{ inventory_hostname }},{{ inventory_hostname_short }} --apiserver-cert-extra-sans {{ inventory_hostname }},{{ inventory_hostname_short }},{{ apiserver_cert_extra_sans | default('kubernetes') }} --service-dns-domain {{ service_dns_domain | default('cluster.local') }}
   tags:
   - init
+  when: kubeadm_init_apiserver_advertise_address is not defined and proxy_env is defined
+
+- name: Initialize cluster without special apiserver-advertise-address
+  command: /usr/bin/kubeadm init --token {{ kubeadm_token }} --kubernetes-version {{ kubernetes_version | default ('latest') }} {{ kubeadm_init_extra_params | default('') }} --apiserver-cert-extra-sans {{ inventory_hostname }},{{ inventory_hostname_short }},{{ apiserver_cert_extra_sans | default('kubernetes') }} --service-dns-domain {{ service_dns_domain | default('cluster.local') }}
+  tags:
+  - init
+  when: kubeadm_init_apiserver_advertise_address is not defined and proxy_env is not defined
 
 #This is required when proxy is used, and the inventory_hostname is defined with fqdn
 #to ensure the connection to local server is not going via proxy (expecially when applying addons)
@@ -84,21 +100,8 @@
 - name: Create cluster network
   command: /usr/bin/kubectl apply -f {{ item }}
   with_items: "{{ k8s_network_addons_urls | default ('') }}"
-  environment:
-    KUBECONFIG:  /etc/kubernetes/admin.conf
-  when: proxy_env is not defined and k8s_network_addons_urls is defined
-  tags:
-  - k8s_network_addons
-
-- name: Create cluster network
-  command: /usr/bin/kubectl apply -f {{ item }}
-  with_items: "{{ k8s_network_addons_urls | default ('') }}"
-  environment:
-    KUBECONFIG:  /etc/kubernetes/admin.conf
-    http_proxy:  "{{proxy_env.http_proxy }}"
-    https_proxy: "{{proxy_env.https_proxy }}"
-    no_proxy:    "{{proxy_env.no_proxy }}"
-  when: proxy_env is defined and k8s_network_addons_urls is defined
+  environment: '{{env_kc}}'
+  when: k8s_network_addons_urls is defined
   tags:
   - k8s_network_addons
 
@@ -123,24 +126,10 @@
 - name: Install k8s_addons_urls (with proxy)
   command: /usr/bin/kubectl apply -f {{ item }}
   with_items: "{{ k8s_addons_urls | default ('') }}"
-  environment:
-    KUBECONFIG:  /etc/kubernetes/admin.conf
-    http_proxy:  '{{proxy_env.http_proxy}}'
-    https_proxy: '{{proxy_env.https_proxy}}'
-    no_proxy:    '{{proxy_env.no_proxy}}'
-  when: k8s_addons_urls is defined and proxy_env is defined
+  environment: '{{env_kc}}'
+  when: k8s_addons_urls is defined
   tags:
    - k8s_addons
-
-- name: Install k8s_addons_urls (without proxy)
-  command: /usr/bin/kubectl apply -f {{ item }}
-  with_items: "{{ k8s_addons_urls | default ('') }}"
-  environment:
-    KUBECONFIG:  /etc/kubernetes/admin.conf
-  when: k8s_addons_urls is defined and proxy_env is not defined
-  tags:
-   - k8s_addons
-
 
 - name: prepare kubernetes-dashboard-ingress file
   template:

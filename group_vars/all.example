@@ -33,8 +33,13 @@ kubernetes_version: 'v1.6.2'
 #####
 
 #####
-# Any kubeadm init extra params can be put here, like --apiserver-advertise-address=<your_ip> and/or --pod-network-cidr='10.244.0.0/16'
+# Any kubeadm init extra params can be put here.
 #kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"  #This one is required for Flannel network when used.
+# Note: If you need apiserver-advertise-address, don't add it here, but in the section below, named kubeadm_init_apiserver_advertise_address
+#####
+
+#####
+# kubeadm_init_apiserver_advertise_address: "<>" # Usually required when working with vagrant, as the default (eth0) address is the NAT...
 #####
 
 #service_dns_domain: "cluster.local"
