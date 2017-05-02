@@ -1,44 +1,82 @@
 # global variables
 
+# first uninstall any kube* package from all hosts
+# When full_kube_reinstall is undefined, it will not reinstall, also it won't pre-pull the images (it will be done later time)
+#full_kube_reinstall: True
+
+#####
 # proxy environment variable, mainly for fetching addons
 #proxy_env:
-#  http_proxy: http://yourproxy.corp.example.com:8080
-#  https_proxy: http://yourproxy.corp.example.com:8080
-#  no_proxy: 127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost
+#  http_proxy: 'http://genproxy.corp.example.com:8080'
+#  https_proxy: 'http://genproxy.corp.example.com:8080'
+#  no_proxy: '127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost'
+#OR
+#proxy_env:
+#  http_proxy: ""
+#  https_proxy: ""
+#  no_proxy: ""
+#####
 
-# first uninstall any kube* package from all hosts
-full_kube_reinstall: True
-
+#####
 # Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
-# package_state: latest # Other valid options for this context: present
+# package_state: latest # Other valid options for this context: installed
+#package_state: installed
+#####
 
-# Desired kubernetes_version, e.g. 'v1.6.1'  ; when not defined, defaults to: 'latest'
-# kubernetes_version: latest
+#####
+# Desired kubernetes_version, e.g. 'v1.6.1'  ; when not defined, defaults to: 'latest', which is not always available..
+# kubernetes_version: 'latest'
+#kubernetes_version: 'v1.7.0-alpha.2'
+kubernetes_version: 'v1.6.2'
+#kubernetes_version: 'v1.6.1'
+#kubernetes_version: 'v1.6.0'
+#####
 
-# Any kubeadm init extra params can be put here. The var must exist, even if it's empty.
-# e.g. for using flannel, one must put: --pod-network-cidr='10.244.0.0/16'
-#kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"
-kubeadm_init_extra_params: ""
+#####
+# Any kubeadm init extra params can be put here. 
+#kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"  #This one is required for Flannel network when used.
+#kubeadm_init_extra_params: ""
+#####
 
-# service_dns_domain: "myk8s.corp.example.com" # (cluster.local is the default, if not defined)
 #service_dns_domain: "cluster.local"
+service_dns_domain: "k8s.cloudnative.corp.example.com"
 
-# apiserver_cert_extra_sans:
+# apiserver_cert_extra_sans: 
 
-### Network addons. More details: https://kubernetes.io/docs/admin/addons/
-# Calico:
-kubeadm_network_addons_urls: 
+# kube-apiserver_extra_params
+# Values are here: https://kubernetes.io/docs/admin/kube-apiserver/
+# ansible will update them on the master, here: /etc/kubernetes/manifests/kube-apiserver.yaml, after the "- kube-apiserver" line
+# Note the spaces in front, as it must match with the /etc/kubernetes/manifests/kube-apiserver.yaml
+kube_apiserver_extra_params:
+  - '    - --service-node-port-range=79-32767' #Default 32000-32767
+
+#If you want to be able to schedule pods on the master
+#It's useful if it's a single-machine Kubernetes cluster for development (replacing minikube), set it to true
+#use_master_as_node_also: false
+
+# https://kubernetes.io/docs/admin/addons/
+k8s_network_addons_urls:
   - http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
-
-# Flannel:
-#kubeadm_network_addons_urls: 
+# OR (it's not possible to have more than one network solution)
 #  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
 #  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
+k8s_addons_urls:
+  - https://github.com/kubernetes/dashboard/raw/master/src/deploy/kubernetes-dashboard.yaml
+  - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml
+
+helm:
+  install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get'
+  repos:
+    - { name: fabric8, url: 'https://fabric8.io/helm' }
+  packages_list: #when not defined, namespace defaults to "default" namespace
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' }
+    - { name: prometheus, repo: stable/prometheus, namespace: kube-system, options: '' }
+
 # kubeadm_docker_insecure_registry: registry.example.com:5000
 
-# Static token (generated on the fly if not set). Alphanum strings with lengths: 6.16
-# kubeadm_token: secret.token4yourbyok8s
+# Static token (generated on the fly if not set)
+kubeadm_token: secret.token4yourbyok8s
 
 # shell for bash-completion for kubeadm and kubectl; currently only bash is fully supported, others only partially.
-# shell: 'bash'
+shell: 'bash'

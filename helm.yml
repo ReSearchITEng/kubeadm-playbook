@@ -1,0 +1,157 @@
+---
+- hosts: master
+  become: yes
+  become_method: sudo
+  tasks:
+
+  - name: 'Download {{ helm.install_script_url }}'
+    environment:
+      http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+      https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+      no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+    get_url: url={{ helm.install_script_url | default ("") }} dest=/tmp/helm_install_script force=yes mode="0755"
+    when: helm.install_script_url is defined
+    tags:
+    - helm
+
+  - name: Run {{ helm.install_script_url }}
+    environment:
+      http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+      https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+      no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+    command: "/tmp/helm_install_script"
+    register: command_result
+    changed_when: "'is up-to-date' not in command_result.stdout"
+    when: helm.install_script_url is defined
+    args:
+      chdir: /tmp/
+    tags:
+    - helm
+
+  - name: helm completion shell
+    shell: helm completion {{ shell | default ('bash') }} > ~/.kube/helm_completion.bash.inc
+    args:
+      warn: no
+    tags:
+    - helm
+
+  - name: helm completion to ~/.bash_profile
+    lineinfile:
+      dest: ~/.bash_profile
+      line: '[[ -x ${HOME}/.kube/helm_completion.bash.inc ]] && source ${HOME}/.kube/helm_completion.bash.inc'
+      state: present
+    when: shell is undefined or shell == 'bash'
+    tags:
+    - helm
+
+  - name: helm remove/cleanup
+    shell: helm delete || helm reset || kubectl delete deployment --namespace=kube-system tiller-deploy && kubectl delete service --namespace=kube-system tiller-deploy
+    environment:
+      KUBECONFIG:  '/etc/kubernetes/admin.conf'
+    tags:
+    - helm_reset
+    - helm
+    ignore_errors: yes
+
+  - name: helm init
+    environment:
+      http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+      https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+      no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+      KUBECONFIG:  '/etc/kubernetes/admin.conf'
+    shell: "helm init"
+    when: helm.install_script_url is defined
+    register: command_result
+    changed_when: "'Tiller is already installed' not in command_result.stdout"
+    args:
+      chdir: /root/
+    tags:
+    - helm
+
+  - name: helm sanity - wait for tiller pod to be running
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -w 'tiller-deploy' | grep -v -w 'Running' || true "
+    register: command_result
+    tags:
+    - sanity_helm
+    - sanity
+    - helm
+    until: command_result.stdout == ""
+    retries: 10
+    delay: 3
+
+  - name: Update helm Tiller
+    environment:
+      http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+      https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+      no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+      KUBECONFIG:  '/etc/kubernetes/admin.conf'
+    command: helm init --upgrade
+    when: helm is defined
+    tags:
+    - helm
+
+  - name: helm repo add 
+    environment:
+      http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+      https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+      no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+    command: helm repo add {{ item.name }} {{ item.url }}
+    with_items: 
+      - '{{ helm.repos | default("") }}'
+    when: helm.repos is defined
+    tags:
+    - helm
+
+  - name: helm repo update #Sometimes initial repo add corrupts the repo and update fixes it.
+    environment:
+      http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+      https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+      no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+      KUBECONFIG:  '/etc/kubernetes/admin.conf'
+    command: helm repo update
+    when: helm is defined
+    tags:
+    - helm
+
+  - name: helm sanity - wait for tiller pod to be running
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -w 'tiller-deploy' | grep -v -w 'Running' || true "
+    register: command_result
+    #failed_when: '"/" in command_result.stdout'
+    tags:
+    - sanity_helm
+    - sanity
+    - helm
+    until: command_result.stdout == ""
+    retries: 10
+    delay: 3
+
+  - name: helm charts/packages deployment
+    environment:
+      http_proxy:  '{{proxy_env.http_proxy | default ("") }}'
+      https_proxy: '{{proxy_env.https_proxy | default ("") }}'
+      no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
+      KUBECONFIG:  '/etc/kubernetes/admin.conf'
+    command: 'helm install {{ item.repo }} --namespace {{ item.namespace | default("default") }} --name {{ item.name }} {{ item.options | default ("") }}'
+    with_items: 
+      - "{{ helm.packages_list }}"
+    when: helm.packages_list is defined
+    tags:
+    - helm
+
+  - name: helm full sanity - wait for all installed charts to become running
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    register: command_result
+    tags:
+    - sanity_helm
+    - sanity
+    - helm
+    until: command_result.stdout == ""
+    retries: 30
+    delay: 3
+

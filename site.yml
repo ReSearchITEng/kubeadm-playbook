@@ -4,3 +4,4 @@
 - include: master.yml
 - include: node.yml
 - include: sanity.yml
+- include: helm.yml

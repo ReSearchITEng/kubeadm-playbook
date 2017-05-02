@@ -50,12 +50,13 @@
 
 - name: Disable selinux
   selinux: policy=targeted state=permissive
+  when: ansible_os_family == "RedHat"
 
 - name: Clean yum metadata
   command: yum clean all
   args:
     warn: no
-  when: ansible_os_family == "RedHat"
+  when: ansible_os_family == "RedHat" and package_state is defined and package_state == "latest" 
 
 - name: apt-get clean metadata
   command: apt-get clean ; apt-file purge
@@ -70,11 +71,11 @@
     https_proxy: '{{proxy_env.https_proxy | default ("") }}'
     no_proxy:    '{{proxy_env.no_proxy | default ("") }}'
   with_items:
-  - docker
   - kubelet
   - kubeadm
   - kubectl
   - kubernetes-cni
+  - docker
 
 - name: Install packages
   package: name={{ item }} state={{ package_state | default ('latest') }}
@@ -82,44 +83,47 @@
   - bash-completion
   ignore_errors: yes
   
-- name: Use json-file docker logging driver
-  lineinfile:
-    dest: /etc/sysconfig/docker
-    regexp: '^OPTIONS='
-    line: "OPTIONS='--selinux-enabled --log-driver=json-file --signature-verification=false'"
-  notify:
-  - Restart docker
-  tags: 
-  - docker
+#- name: Use json-file docker logging driver
+#  lineinfile:
+#    dest: /etc/sysconfig/docker
+#    regexp: '^OPTIONS='
+#    line: "OPTIONS='--selinux-enabled --log-driver=json-file --signature-verification=false'"
+#  notify:
+#  - Restart docker
+#  tags: 
+#  - docker
 
-- name: Allow insecure registry
-  lineinfile:
-    dest: /etc/sysconfig/docker
-    regexp: '^# INSECURE_REGISTRY='
-    line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
-  when:
-    kubeadm_docker_insecure_registry is defined
-  notify:
-  - Restart docker
-  tags: 
-  - docker
+#- name: Allow insecure registry
+#  lineinfile:
+#    dest: /etc/sysconfig/docker
+#    regexp: '^# INSECURE_REGISTRY='
+#    line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
+#  when:
+#    kubeadm_docker_insecure_registry is defined
+#  notify:
+#  - Restart docker
+#  tags: 
+#  - docker
 
-- name: Use overlay docker storage driver
-  lineinfile:
-    dest: /etc/sysconfig/docker-storage
-    regexp: '^DOCKER_STORAGE_OPTIONS='
-    line: 'DOCKER_STORAGE_OPTIONS="--storage-driver=overlay"'
-  notify:
-  - Restart docker
-  tags: 
-  - docker
+#- name: Use overlay docker storage driver
+#  lineinfile:
+#    dest: /etc/sysconfig/docker-storage
+#    regexp: '^DOCKER_STORAGE_OPTIONS='
+#    line: 'DOCKER_STORAGE_OPTIONS="--storage-driver=overlay"'
+#  notify:
+#  - Restart docker
+#  tags: 
+#  - docker
 
 - name: Replace service_dns_domain under cluster-domain in kubelet.service.d/10-kubeadm.conf
   replace:
     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: '(--cluster-domain=)[A-Za-z0-9\-\.]+(.*)'
     replace: '\1{{ service_dns_domain | default("cluster.local") }}\2'
-    backup: yes
+    #backup: yes
+  notify:
+  - Reload systemd
+  - Restart kubelet
   tags:
    - kubelet
 
@@ -128,6 +132,9 @@
     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: '^Environment="KUBELET_EXTRA_ARGS'
     state: absent
+  notify:
+  - Reload systemd
+  - Restart kubelet
   tags: 
   - kubelet
 
@@ -150,9 +157,6 @@
 - name: Set sysctl settings
   command: sysctl --system
 
-- name: Reset any existing cluster
-  command: /usr/bin/kubeadm reset
-
 - name: Enable and start docker
   systemd: state=started enabled=yes name=docker
 
@@ -173,7 +177,7 @@
 - name: kubeadm completion to ~/.bash_profile
   lineinfile:
     dest: ~/.bash_profile
-    line: 'source ${HOME}/.kube/kubeadm_completion.bash.inc'
+    line: '[[ -x ${HOME}/.kube/completion.bash.inc ]] && source ${HOME}/.kube/kubeadm_completion.bash.inc'
     state: present
   when: shell is undefined or shell == 'bash'
 
@@ -185,7 +189,10 @@
 - name: kubectl completion to ~/.bash_profile
   lineinfile:
     dest: ~/.bash_profile
-    line: 'source ${HOME}/.kube/completion.bash.inc'
+    line: '[[ -x ${HOME}/.kube/completion.bash.inc ]] && source ${HOME}/.kube/completion.bash.inc'
     state: present
   when: shell is undefined or shell == 'bash'
+
+# Forcing restart of services
+#- meta: flush_handlers
 
