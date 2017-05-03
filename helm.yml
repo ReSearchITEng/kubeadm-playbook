@@ -5,12 +5,8 @@
   tasks:
 
   - set_fact:
-      #env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
-      env_kc: '{{ proxy_env |default({}) | combine ({item.k: item.v}) }}'
-    with_items:
-      - {k: 'KUBECONFIG', v: '/etc/kubernetes/admin.conf' }
-      - {k: 'PATH', v: '/bin:/sbin:/usr/local/bin' }
-
+      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+  
   - name: 'Download {{ helm.install_script_url }}'
     environment: '{{ proxy_env | default ({}) }}'
     get_url: url={{ helm.install_script_url | default ("") }} dest=/tmp/helm_install_script force=yes mode="0755"
@@ -48,7 +44,7 @@
 
   - name: helm remove/cleanup
     environment: '{{env_kc}}'
-    shell: helm delete || helm reset || kubectl delete deployment --namespace=kube-system tiller-deploy && kubectl delete service --namespace=kube-system tiller-deploy
+    shell: ( helm reset || true ) && kubectl delete deployment --namespace=kube-system tiller-deploy && kubectl delete service --namespace=kube-system tiller-deploy
     tags:
     - helm_reset
     - helm
@@ -79,14 +75,14 @@
     delay: 3
 
   - name: Update helm Tiller
-    environment: env_kc
+    environment: '{{env_kc}}'
     command: helm init --upgrade
     when: helm is defined
     tags:
     - helm
 
   - name: helm repo add 
-    environment: '{{ proxy_env | default ({}) }}'
+    environment: '{{env_kc}}'
     command: helm repo add {{ item.name }} {{ item.url }}
     with_items: 
       - '{{ helm.repos | default("") }}'
@@ -95,7 +91,7 @@
     - helm
 
   - name: helm repo update #Sometimes initial repo add corrupts the repo and update fixes it.
-    environment: env_kc
+    environment: '{{env_kc}}'
     command: helm repo update
     when: helm is defined
     tags:
@@ -116,14 +112,14 @@
     delay: 3
 
   - name: helm charts/packages deployment
-    environment: env_kc
+    environment: '{{env_kc}}'
     command: 'helm install {{ item.repo }} --namespace {{ item.namespace | default("default") }} --name {{ item.name }} {{ item.options | default ("") }}'
     with_items: 
       - "{{ helm.packages_list }}"
     when: helm.packages_list is defined
     tags:
     - helm
-    - abc
+    - charts_deploy
 
   - name: helm full sanity - wait for all installed charts to become running
     environment:
