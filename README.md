@@ -5,9 +5,9 @@ This is a simple playbook to wrap the following operations:
 
 * Install the kubeadm repo
 * Install docker, kubeadm, kubelet, kubernetes-cni, and kubectl
-* Disable SELinux :disappointed:
-//removed: * Set docker `--logging-driver=json-file`             (when the tag docker is not skipped)
-//removed: * Set docker `--storage-driver=overlay`               (when the tag docker is not skipped)
+* Disable SELinux :disappointed:    
+~~Set docker `--logging-driver=json-file`             (when the tag docker is not skipped)~~     
+~~Set docker `--storage-driver=overlay`               (when the tag docker is not skipped)~~     
 * Set kubelet `--cgroup-driver=systemd`               (when the tag kubelet is not skipped)
 * Optional: Configure an insecure registry for docker (when the tag docker is not skipped)
 * Initialize the cluster on master with `kubeadm init`
@@ -21,7 +21,7 @@ This is a simple playbook to wrap the following operations:
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.
 
-This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1**
+This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1 & v1.6.2**
 
 # How To
 
