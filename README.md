@@ -35,9 +35,12 @@ cp group_vars/all.example group_vars/all
 vi group_vars/all <modify vars as needed>
 ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
 ```
+
+For load-ballancing, one may want to check also: https://github.com/kubernetes/contrib/tree/master/service-loadbalancer
+
 PS: work based on sjenning/kubeadm-playbook
 
-Similar projects you may want to check:
+Similar k8s install on physical/vagrant/vms (byo) projects you may want to check:
 - https://github.com/kubernetes/contrib/tree/master/ansible -> the official k8s ansible, but without kubeadm, therefore the processes will run on the nodes, not in docker containers
 - https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades, etc.
 
