@@ -15,4 +15,7 @@ subjects:
   namespace: kube-system
 - kind: ServiceAccount
   name: default
+  namespace: ceph
+- kind: ServiceAccount
+  name: default
   namespace: default
