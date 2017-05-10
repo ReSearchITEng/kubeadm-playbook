@@ -71,7 +71,7 @@
     - sanity
     - helm
     until: command_result.stdout == ""
-    retries: 10
+    retries: 20
     delay: 3
 
   - name: Update helm Tiller
@@ -108,7 +108,7 @@
     - sanity
     - helm
     until: command_result.stdout == ""
-    retries: 10
+    retries: 20
     delay: 3
 
   - name: helm charts/packages deployment
