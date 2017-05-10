@@ -13,7 +13,7 @@
     - sanity_notes
     - sanity
     until: command_result.stdout == ""
-    retries: 10
+    retries: 30
     delay: 3
 
   - name: kubectl get nodes
@@ -26,6 +26,6 @@
     - sanity_pods
     - sanity
     until: command_result.stdout == ""
-    retries: 10
+    retries: 30
     delay: 3
     
