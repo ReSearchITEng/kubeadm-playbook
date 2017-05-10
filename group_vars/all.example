@@ -26,7 +26,7 @@
 #####
 # Desired kubernetes_version, e.g. 'v1.6.1'  ; when not defined, defaults to: 'latest', which is not always available..
 # kubernetes_version: 'latest'
-#kubernetes_version: 'v1.7.0-alpha.2'
+#kubernetes_version: 'v1.7.0-alpha.3'
 kubernetes_version: 'v1.6.2'
 #kubernetes_version: 'v1.6.1'
 #kubernetes_version: 'v1.6.0'
@@ -34,7 +34,7 @@ kubernetes_version: 'v1.6.2'
 
 #####
 # Any kubeadm init extra params can be put here.
-#kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"  #This one is required for Flannel network when used.
+kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"  #This one is required for Flannel network when used.
 # Note: If you need apiserver-advertise-address, don't add it here, but in the section below, named kubeadm_init_apiserver_advertise_address
 #####
 
@@ -60,10 +60,11 @@ kube_apiserver_extra_params:
 
 # https://kubernetes.io/docs/admin/addons/
 k8s_network_addons_urls:
-  - http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+#  - http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 # OR (it's not possible to have more than one network solution)
-#  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
-#  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+# For flannel make sure kubeadm_init_extra_params contains "--pod-network-cidr='10.244.0.0/16'"  (see above)
 
 k8s_addons_urls:
   - https://github.com/kubernetes/dashboard/raw/master/src/deploy/kubernetes-dashboard.yaml
@@ -75,7 +76,7 @@ helm:
     - { name: fabric8, url: 'https://fabric8.io/helm' }
   packages_list: #when not defined, namespace defaults to "default" namespace
     - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' }
-    - { name: prometheus, repo: stable/prometheus, namespace: kube-system, options: '' }
+    #- { name: prometheus, repo: stable/prometheus, namespace: kube-system, options: '' }
 
 # kubeadm_docker_insecure_registry: registry.example.com:5000
 
