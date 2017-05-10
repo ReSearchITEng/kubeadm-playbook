@@ -12,7 +12,7 @@
     regexp: '(\s+)(server: https:\/\/)[A-Za-z0-9\-\.]+:'
     replace: '\1\2{{ groups["master"][0] }}:'
     #backup: yes
-  #when: proxy_env is defined and master is defined with fqdn in the inventory file (e.g. master.example.com)
+  when: proxy_env is defined #and master is defined with fqdn in the inventory file (e.g. master.example.com)
   tags:
   - init
   notify:

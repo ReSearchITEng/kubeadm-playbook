@@ -19,7 +19,7 @@
   - name: kubectl get nodes
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' || true "
+    shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' |grep -v -w 'dns' || true "
     register: command_result
     #failed_when: '"/" in command_result.stdout'
     tags:

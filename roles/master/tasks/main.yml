@@ -53,7 +53,7 @@
     regexp: '(\s+)(server: https:\/\/)[A-Za-z0-9\-\.]+:'
     replace: '\1\2{{ groups["master"][0] }}:'
     #backup: yes
-  #when: proxy_env is defined ### and master is defined with fqdn in the inventory file (e.g. master.example.com)
+  when: proxy_env is defined ### and master is defined with fqdn in the inventory file (e.g. master.example.com)
   with_items:
   - /etc/kubernetes/admin.conf
   - /etc/kubernetes/kubelet.conf
@@ -83,11 +83,6 @@
     state: present
   when: shell is undefined or shell == 'bash'
 
-- name: use master as node also
-  shell: 'kubectl taint nodes --all dedicated-'
-  when: use_master_as_node_also | default(false)
-  ignore_errors: yes
-
 - name: Wait few seconds for images pulls and cluster services to start
   pause: seconds=10
 
@@ -111,7 +106,7 @@
 - name: sanity - wait for alls pod to be running (important to ensure network is fine, see cni bugs)
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' || true "
+  shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' |grep -v 'dns' || true "
   register: command_result
   tags:
   - k8s_network_addons
@@ -119,6 +114,11 @@
   until: command_result.stdout == ""
   retries: 40
   delay: 3
+
+- name: use master as node also
+  shell: 'kubectl taint nodes --all dedicated-'
+  when: use_master_as_node_also | default(false)
+  ignore_errors: yes
 
 #- name: Wait 1 minute for images pulls and cluster services to start
 #  pause: minutes=1
