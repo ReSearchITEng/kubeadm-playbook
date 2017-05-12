@@ -1,0 +1,80 @@
+---
+- hosts: master
+  become: yes
+  become_method: sudo
+  tasks:
+  - set_fact:
+      env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+
+  - name: apply taints_master
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: 'kubectl taint nodes {{ inventory_hostname_short }} {{ item }}'
+    when: taints_master is defined
+    with_items: '{{ taints_master }}'
+    tags:
+    - taints
+
+  - name: apply master_uncordon
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: 'kubectl uncordon {{ inventory_hostname_short }} '
+    when: master_uncordon is defined
+    tags:
+    - taints
+
+  - name: 'Wait few seconds for taints/uncordon on master take effect'
+    pause: seconds=3
+    when: taints_master is defined or master_uncordon is defined
+    tags:
+    - taints
+
+  - name: Create cluster network
+    command: /usr/bin/kubectl apply -f {{ item }}
+    with_items: "{{ k8s_network_addons_urls | default ('') }}"
+    environment: '{{env_kc}}'
+    when: k8s_network_addons_urls is defined
+    tags:
+    - k8s_network_addons
+
+  - name: Wait few seconds for network to start deploying
+    pause: seconds=3
+
+  - name: sanity - wait for alls pod to be running (besides kube-dns for now, as it might be forced to a node if master did not allow it due to tains)
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' | grep -v 'kube-dns' || true "
+    register: command_result
+    tags:
+    - k8s_network_addons
+    - sanity
+    until: command_result.stdout == ""
+    retries: 40
+    delay: 3
+
+  - name: Install k8s_addons_urls (with proxy)
+    command: /usr/bin/kubectl apply -f {{ item }}
+    with_items: "{{ k8s_addons_urls | default ('') }}"
+    environment: '{{env_kc}}'
+    when: k8s_addons_urls is defined
+    tags:
+     - k8s_addons
+
+  - name: prepare kubernetes-dashboard-ingress file
+    template:
+      src: kubernetes-dashboard-ingress.j2
+      dest: /tmp/kubernetes-dashboard-ingress.yml
+      #backup: yes
+      force: yes
+    when: k8s_addons_urls is defined
+    tags:
+    - k8s_addons
+
+  - name: create kubernetes-dashboard-ingress in k8s
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl create --namespace kube-system -f /tmp/kubernetes-dashboard-ingress.yml"
+    when: k8s_addons_urls is defined
+    tags:
+    - k8s_addons
+

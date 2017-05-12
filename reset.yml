@@ -30,6 +30,8 @@
   #https://github.com/kubernetes/kubernetes/issues/39557
   - name: cni0 IP alloction issue
     shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ifconfig cni0 down; ifconfig flannel.1 down;'
+    ignore_errors: yes
     tags:
     - uninstall
     - reset
+
