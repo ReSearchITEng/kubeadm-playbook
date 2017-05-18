@@ -1,0 +1,64 @@
+---
+- hosts: master
+  become: yes
+  become_method: sudo
+  tasks:
+
+  - set_fact:
+      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+
+  - name: clean install rook operator
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl delete {{ item }}
+    when: rook is defined and rook.enabled
+    with_items:
+    - "-n rook po/rook-client"
+    - "-n rook po/rook-tools"
+    - "-n rook cm/rook-config-override"
+    - "-f {{ rook.operator_url }}"
+    - "-n rook cluster rook"
+    - "-n rook serviceaccount rook-api"
+    - "clusterrole rook-api"
+    - "clusterrolebinding rook-api"
+    - "thirdpartyresources cluster.rook.io pool.rook.io"
+    - "secret rook-rook-user"
+    - "namespace rook"
+    tags:
+    - rook
+    - reset
+    ignore_errors: yes
+
+  - name: clean install rook secrets from all rook.allowed_consumer_namespaces
+    # TODO: scan all namespaces and remove it. Do not rely on the previously defined rook.allowed_consumer_namespaces
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl delete -n {{ item }} secret rook-admin
+    when: rook is defined and rook.enabled and rook.allowed_consumer_namespaces is defined
+    with_items: "{{ rook.allowed_consumer_namespaces }}"
+    ignore_errors: yes
+
+  - name: rook post cleanup/reset sanity
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    when: rook is defined and rook.enabled
+    register: command_result
+    tags:
+    - rook
+    - sanity
+    - reset
+    until: command_result.stdout == ""
+    retries: 30
+    delay: 3
+
+- hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: clean rook ceph persistant storage directories
+    file: path=/storage/rook state=absent
+    tags:
+    - reset
+    - rook
+    - uninstall
+    when: rook.reset.storage_delete is defined and rook.reset.storage_delete
+

@@ -1,0 +1,242 @@
+---
+- hosts: master
+  become: yes
+  become_method: sudo
+  tasks:
+
+  - set_fact:
+      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+
+  - name: k8s cluster pre-installation sanity - check if all current k8s pods are in Running status
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    register: command_result
+    when: rook is defined and rook.enabled
+    tags:
+    - rook
+    - sanity
+    until: command_result.stdout == ""
+    retries: 30
+    delay: 3
+
+  - name: ensure jq third party exists on the machine (can come from from epel, pip, etc)
+    shell: jq --version
+    when: rook is defined and rook.enabled
+
+  - name: install rook operator
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl apply -f {{ item }}
+    when: rook is defined and rook.enabled
+    with_items:
+    - "{{ rook.operator_url  | default ('') }}"
+    tags:
+    - rook
+
+  - name: rook operator pod sanity
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    register: command_result
+    when: rook is defined and rook.enabled
+    tags:
+    - rook
+    - sanity
+    until: command_result.stdout == ""
+    retries: 30
+    delay: 3
+
+  - name: wait for rook.io/, Kind=Cluster to be created
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl get thirdpartyresources | tail -n +2 | grep rook.io | grep -i cluster
+    register: command_result
+    when: rook is defined and rook.enabled
+    tags:
+    - rook
+    - sanity
+    until: command_result.stdout != ""
+    retries: 30
+    delay: 3
+
+  #- name: Wait few more seconds for rook.io/, Kind=Cluster to be created
+  #  pause: seconds=10
+
+  - name: prepare rook-cluster.yml file
+    template:
+      src: rook-cluster.j2
+      dest: /tmp/rook-cluster.yml
+      force: yes
+    when: rook is defined and rook.enabled
+    tags:
+    - rook
+
+  - name: install rook cluster and create rook namespace
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl apply -f {{ item }}
+    when: rook is defined and rook.enabled
+    with_items:
+    - /tmp/rook-cluster.yml
+    tags:
+    - rook
+
+  - name: rook cluster deploy sanity - wait for all installed pods to become Running
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    register: command_result
+    when: rook is defined and rook.enabled
+    tags:
+    - sanity
+    - rook
+    until: command_result.stdout == ""
+    retries: 30
+    delay: 3
+
+  - name: prepare rook-ceph_conf-ConfigMap.yml file
+    template:
+      src: rook_ceph_conf.j2
+      dest: /tmp/rook_ceph_conf.yml
+      force: yes
+    when: rook.ceph_conf is defined and rook.enabled
+    tags:
+    - rook
+
+  - name: install rook ceph_conf config map - namespace rook should be available
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl apply -f {{ item }}
+    when: rook.ceph_conf is defined and rook.enabled
+    with_items:
+    - /tmp/rook_ceph_conf.yml
+    tags:
+    - rook
+
+  - name: rook-tools allowed_consumer_namespaces secret injection
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl get secret rook-admin -n rook -o json | jq '.metadata.namespace = "{{ item }}"' | kubectl apply -f -
+    when: rook is defined and rook.allowed_consumer_namespaces is defined and rook.enabled
+    with_items: "{{ rook.allowed_consumer_namespaces }}"
+    tags:
+    - rook
+
+  - name: install rook client and tools - aka client_tools_url
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl apply -f {{ item }}
+    when: rook is defined and rook.enabled
+    with_items: "{{ rook.client_tools_url | default ('') }}"
+
+  - name: rook client tools deploy sanity - wait for all installed pods to become Running
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    register: command_result
+    when: rook.client_tools_url is defined and rook.enabled
+    tags:
+    - sanity
+    - rook
+    until: command_result.stdout == ""
+    retries: 30
+    delay: 3
+
+  - name: rook cluster deploy full sanity via rook client command rook node ls
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl -n rook exec rook-client -it /usr/bin/rook node ls | tail -n +2  | grep -v ' OK ' || true "
+    when: rook is defined and rook.enabled
+    register: command_result
+    tags:
+    - sanity
+    - rook
+    until: command_result.stdout == ""
+    retries: 30
+    delay: 3
+
+  - name: rook-client create rook sharedfs
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl -n rook exec rook-client -- rook filesystem create --name {{ item.name | default("sharedfs") }}
+    when: rook.sharedfs is defined and rook.enabled and rook.sharedfs.enabled
+    with_items: "{{ rook.sharedfs.fs | default ('') }}"
+    tags:
+    - rook
+    - sharedfs
+
+  - name: rook-tools set replication(redundancy) for sharedfs data
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl -n rook exec rook-tools -- ceph osd pool set {{ item.name | default("sharedfs") }}-data size {{ item.replication | default (2) }}
+    with_items: '{{ rook.sharedfs.fs | default("sharedfs") }}'
+    when: rook.sharedfs is defined and rook.enabled and rook.sharedfs.enabled
+    tags:
+    - rook
+    - sharedfs
+
+  - name: rook-tools set replication(redundancy) for sharedfs metadata
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl -n rook exec rook-tools -- ceph osd pool set {{ item.name | default("sharedfs") }}-metadata size {{ item.replication | default (2) }}
+    with_items: "{{ rook.sharedfs.fs | default('sharedfs') }}"
+    when: rook.sharedfs is defined and rook.enabled and rook.sharedfs.enabled
+    tags:
+    - rook
+    - sharedfs
+
+  - name: wait for rook.io/, Kind=Pool to be created
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl get thirdpartyresources | tail -n +2 | grep rook.io | grep -i pool
+    register: command_result
+    when: rook is defined and rook.enabled and rook.rbd is defined and rook.rbd.enabled
+    tags:
+    - rook
+    - sanity
+    until: command_result.stdout != ""
+    retries: 30
+    delay: 3
+
+  - name: prepare rook-pool.yml file
+    template:
+      src: rook-pool.j2
+      dest: /tmp/rook-pool.yml
+      force: yes
+    when: rook is defined and rook.enabled and rook.rbd is defined and rook.rbd.enabled
+    tags:
+    - rook
+    - rbd
+
+  - name: install rook rook-pool.yml file
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl apply -f {{ item }}
+    when: rook is defined and rook.enabled and rook.rbd is defined and rook.rbd.enabled
+    with_items:
+    - /tmp/rook-pool.yml
+    tags:
+    - rook
+    - rbd
+
+  - name: prepare rook-storageclass.yml file
+    template:
+      src: rook-storageclass.j2
+      dest: /tmp/rook-storageclass.yml
+      force: yes
+    when: rook is defined and rook.enabled and rook.rbd is defined and rook.rbd.enabled
+    tags:
+    - rook
+    - rbd
+
+  - name: install rook rook-storageclass.yml file
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl apply -f {{ item }}
+    when: rook is defined and rook.enabled and rook.rbd is defined and rook.rbd.enabled
+    with_items:
+    - /tmp/rook-storageclass.yml
+    tags:
+    - rook
+    - rbd
+
+
+
+
+
+

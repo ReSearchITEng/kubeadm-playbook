@@ -2,6 +2,13 @@
 - set_fact:
     env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
 
+#- name: Install packages required by rook (ceph) storage setup
+#  package: name={{ item }} state={{ package_state | default ('latest') }}
+#  when: rook is defined and rook.enabled
+#  with_items:
+#  - jq
+#  - ceph-common
+
 - name: Pull images
   command: /usr/bin/docker pull "{{ item }}:{{ kubernetes_version | default ('latest') }}"
   with_items:

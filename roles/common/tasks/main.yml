@@ -55,6 +55,8 @@
     warn: no
   when: ansible_os_family == "Debian"
 
+# End OS dependent repo setup
+
 - name: Install packages
   package: name={{ item }} state={{ package_state | default ('latest') }}
   environment: '{{ proxy_env | default ({}) }}'
@@ -65,11 +67,23 @@
   - kubernetes-cni
   - docker
 
-- name: Install packages
+- name: Install optional packages like bash-completion
   package: name={{ item }} state={{ package_state | default ('latest') }}
   with_items:
   - bash-completion
   ignore_errors: yes
+
+- name: Install packages required by rook (ceph) storage
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  when: rook is defined and rook.enabled
+  with_items:
+  - ceph-common
+
+- name: Install packages required by rook (ceph) storage setup (usually required only on masters)
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  when: rook is defined and rook.enabled
+  with_items:
+  - jq
   
 #- name: Use json-file docker logging driver
 #  lineinfile:
