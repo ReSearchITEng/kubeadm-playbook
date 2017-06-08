@@ -15,9 +15,10 @@ This is a simple playbook to wrap the following operations:
 * Install kubernetes dashboard
 * Install helm
 * Install nginx ingress controller via helm (control via `group_vars/all`)
-* Install prometheus via helm (control via `group_vars/all`)
+* Planned: Install prometheus via ~~Helm~~ operator (control via `group_vars/all`)
 * Join the nodes to the cluster with 'kubeadm join`
 * Sanity: checks if nodes are ready and if all pods are running
+* create ceph storage cluster using rook operator
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.
 

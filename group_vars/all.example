@@ -1,40 +1,36 @@
 # global variables
 
-# first uninstall any kube* package from all hosts
-# When full_kube_reinstall is undefined, it will not reinstall, also it won't pre-pull the images (it will be done later time)
-#full_kube_reinstall: True
-
 #####
+# PROXY
 # proxy environment variable, mainly for fetching addons
-#proxy_env:
-#  http_proxy: 'http://genproxy.corp.example.com:8080'
-#  https_proxy: 'http://genproxy.corp.example.com:8080'
-#  no_proxy: '127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost'
-#OR
-#proxy_env:
-#  http_proxy: ""
-#  https_proxy: ""
-#  no_proxy: ""
+proxy_env:
+  http_proxy: 'http://genproxy.corp.example.com:8080'
+  https_proxy: 'http://genproxy.corp.example.com:8080'
+  no_proxy: '127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost'
 #####
 
 #####
+# PACKAGES (rpm/deb)
 # Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 # package_state: latest # Other valid options for this context: installed
-#package_state: installed
+package_state: installed
 #####
 
+# first force uninstall any kube* packages (rpm/deb) from all hosts
+# When full_kube_reinstall is undefined, it will not reinstall, also it won't pre-pull the k8s docker images (it will be done later time)
+# full_kube_reinstall: False
+
 #####
-# Desired kubernetes_version, e.g. 'v1.6.1'  ; when not defined, defaults to: 'latest', which is not always available..
+# Desired kubernetes_version, at least v1.6.0; when not defined, defaults to: 'latest', which is not always available...
 # kubernetes_version: 'latest'
-#kubernetes_version: 'v1.7.0-alpha.3'
-kubernetes_version: 'v1.6.2'
-#kubernetes_version: 'v1.6.1'
+kubernetes_version: 'v1.7.0-alpha.3'
+#kubernetes_version: 'v1.6.3'
 #kubernetes_version: 'v1.6.0'
 #####
 
 #####
 # Any kubeadm init extra params can be put here.
-kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"  #This one is required for Flannel network when used.
+kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"  # This one is required when Flannel network is used
 # Note: If you need apiserver-advertise-address, don't add it here, but in the section below, named kubeadm_init_apiserver_advertise_address
 #####
 
@@ -45,7 +41,7 @@ kubeadm_init_extra_params: "--pod-network-cidr='10.244.0.0/16'"  #This one is re
 #service_dns_domain: "cluster.local"
 service_dns_domain: "k8s.cloudnative.corp.example.com"
 
-# apiserver_cert_extra_sans: 
+# apiserver_cert_extra_sans:
 
 # kube-apiserver_extra_params
 # Values are here: https://kubernetes.io/docs/admin/kube-apiserver/
@@ -54,34 +50,145 @@ service_dns_domain: "k8s.cloudnative.corp.example.com"
 kube_apiserver_extra_params:
   - '    - --service-node-port-range=79-32767' #Default 32000-32767
 
-#If you want to be able to schedule pods on the master
-#It's useful if it's a single-machine Kubernetes cluster for development (replacing minikube), set it to true
-#use_master_as_node_also: false
+#####
+# TAINTS (for master) & uncordon
+# NoExecute evicts on the spot. (while NoSchedule does not allow new pods); other option: PreferNoSchedule
+# FYI, by default, master has this taint: node-role.kubernetes.io/master:NoSchedule
+# If you want to be able to schedule pods on the master, either set master_uncordon:true  (prefered option) or via taints section: uncomment 'node-role.kubernetes.io/master:NoSchedule-'
+# It's useful if it's a single-machine Kubernetes cluster for development (replacing minikube)
+# To see taints, use: kubectl describe nodes
 
-# https://kubernetes.io/docs/admin/addons/
+taints_master:
+- 'dedicated=master:NoExecute'                 # Force eviction of pods from master
+- 'dedicated=master:PreferNoSchedule'          # Safety net
+- 'dedicated:NoExecute-'                       # Puts the previous PreferNoSchedule into action - step1
+- 'node-role.kubernetes.io/master:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
+
+#master_uncordon: True     # This makes master like any other node. Mandatory for a single machine cluster (where master==node)
+#####
+
+#####
+# NETWORK
+# it's not possible to have more than one network solution
+# options: https://kubernetes.io/docs/admin/addons/
 k8s_network_addons_urls:
+# CALICO
 #  - http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
-# OR (it's not possible to have more than one network solution)
+# OR
+# Flannel: (also ensure above setting pod-network-cidr is set to 10.244.0.0/16
   - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
   - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-# For flannel make sure kubeadm_init_extra_params contains "--pod-network-cidr='10.244.0.0/16'"  (see above)
+#####
 
+#####
+# ADDONS
 k8s_addons_urls:
   - https://github.com/kubernetes/dashboard/raw/master/src/deploy/kubernetes-dashboard.yaml
   - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml
+#####
 
+#####
+# Rook - Ceph Distributed Software Storage
+# As per spec section of: https://github.com/rook/rook/blob/master/demo/kubernetes/rook-cluster.yaml
+rook:
+  enabled: true
+  os_packages:
+  - jq
+  reset:
+    storage_delete: true
+  operator_url:
+    https://github.com/rook/rook/raw/master/demo/kubernetes/rook-operator.yaml
+  client_tools_url:
+  - https://github.com/rook/rook/raw/master/demo/kubernetes/rook-client.yaml
+  - https://github.com/rook/rook/raw/master/demo/kubernetes/rook-tools.yaml
+  sharedfs:
+    enabled: true
+    fs:
+    - { name: "sharedfs", replication: 2 } #ceph osd pool set sharedfs-data size 2 && ceph osd pool set sharedfs-metadata size 2
+  allowed_consumer_namespaces:  #E.g.: kubectl get secret rook-admin -n rook -o json | jq '.metadata.namespace = "kube-system"' | kubectl apply -f - # as per: https://github.com/rook/rook/blob/master/Documentation/k8s-filesystem.md
+  - "kube-system"
+  - "default"
+  cluster_spec: # as per: https://github.com/rook/rook/blob/master/demo/kubernetes/rook-cluster.yaml and https://github.com/rook/rook/blob/master/Documentation/cluster-tpr.md
+    versionTag: master-latest
+    dataDirHostPath: /storage/rook
+    storage:                # cluster level storage configuration and selection
+      useAllNodes: true
+      useAllDevices: false
+      deviceFilter:
+      metadataDevice:
+      location:
+      storeConfig:
+        storeType: filestore
+        databaseSizeMB: 1024 # this value can be removed for environments with normal sized disks (100 GB or larger)
+        journalSizeMB: 1024  # this value can be removed for environments with normal sized disks (20 GB or larger)
+  # Individual nodes and their config can be specified as well, but 'useAllNodes' above must be set to false. Then, only the named
+  # nodes below will be used as storage resources.  Each node's 'name' field should match their 'kubernetes.io/hostname' label.
+  #    nodes:
+  #    - name: "172.17.4.101"
+  #     directories:         # specific directores to use for storage can be specified for each node
+  #     - path: "/rook/storage-dir"
+  #   - name: "172.17.4.201"
+  #     devices:             # specific devices to use for storage can be specified for each node
+  #     - name: "sdb"
+  #     - name: "sdc"
+  #     storeConfig:         # configuration can be specified at the node level which overrides the cluster level config
+  #       storeType: bluestore
+  #   - name: "172.17.4.301"
+  #     deviceFilter: "^sd."
+
+## ADVANCED rook options:
+  rbd:
+    enabled: true
+    pool_spec: # as per: https://github.com/rook/rook/blob/master/demo/kubernetes/rook-storageclass.yaml and https://github.com/rook/rook/blob/master/Documentation/pool-tpr.md
+      replication:
+        size: 2
+      # For an erasure-coded pool, comment out the replication size above and uncomment the following settings.
+      # Make sure you have enough OSDs to support the replica size or erasure code chunks.
+      #erasureCode:
+      #  codingChunks: 2
+      #  dataChunks: 2
+
+    storageclass_parameters: # as per: https://github.com/rook/rook/blob/master/demo/kubernetes/rook-storageclass.yaml
+      pool: replicapool
+      # Specify the Rook cluster from which to create volumes. If not specified, it will use `rook` as the namespace and name of the cluster.
+      # clusterName: rook
+      # clusterNamespace: rook
+
+  #ceph_conf: as per https://github.com/rook/rook/blob/master/Documentation/advanced-configuration.md
+  ceph_conf: |
+    [global]
+    osd crush update on start = false
+    osd pool default size = 2
+
+  monitoring: # as per: https://github.com/rook/rook/blob/master/Documentation/k8s-monitoring.md
+    enabled: true
+
+#####
+
+#####
+# HELM CHARTS
 helm:
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get'
-  repos:
-    - { name: fabric8, url: 'https://fabric8.io/helm' }
-  packages_list: #when not defined, namespace defaults to "default" namespace
+#  repos:
+#    - { name: fabric8, url: 'https://fabric8.io/helm' }
+  packages_list: # when not defined, namespace defaults to "default" namespace
     - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' }
-    #- { name: prometheus, repo: stable/prometheus, namespace: kube-system, options: '' }
+#    - { name: prometheus, repo: stable/prometheus, namespace: kube-system, options: '' }
+#####
 
+#####
 # kubeadm_docker_insecure_registry: registry.example.com:5000
+#####
 
+#####
+# TOKEN
 # Static token (generated on the fly if not set)
 kubeadm_token: secret.token4yourbyok8s
+#####
 
+#####
+# VARIOUS
 # shell for bash-completion for kubeadm and kubectl; currently only bash is fully supported, others only partially.
 shell: 'bash'
+#####
+

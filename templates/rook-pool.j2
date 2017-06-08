@@ -1,0 +1,16 @@
+apiVersion: rook.io/v1alpha1
+kind: Pool
+metadata:
+  name: replicapool
+  namespace: rook
+spec:
+  {{ rook.rbd.pool_spec | to_yaml | indent(2) }}
+
+  # as per https://github.com/rook/rook/blob/master/demo/kubernetes/rook-storageclass.yaml and https://github.com/rook/rook/blob/master/Documentation/pool-tpr.md
+  #replication:
+  #  size: 1
+  # For an erasure-coded pool, comment out the replication size above and uncomment the following settings.
+  # Make sure you have enough OSDs to support the replica size or erasure code chunks.
+  #erasureCode:
+  #  codingChunks: 2
+  #  dataChunks: 2

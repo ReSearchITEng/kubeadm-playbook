@@ -2,6 +2,13 @@
 - set_fact:
     env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
 
+#- name: Install packages required by rook (ceph) storage setup
+#  package: name={{ item }} state={{ package_state | default ('latest') }}
+#  when: rook is defined and rook.enabled
+#  with_items:
+#  - jq
+#  - ceph-common
+
 - name: Pull images
   command: /usr/bin/docker pull "{{ item }}:{{ kubernetes_version | default ('latest') }}"
   with_items:
@@ -13,7 +20,7 @@
   - prepull_images
   register: command_result
   changed_when: '"Image is up to date" not in command_result.stdout'
-  when: full_kube_reinstall is defined
+  when: full_kube_reinstall is defined and full_kube_reinstall
 
 - name: Generate cluster token
   command: /usr/bin/kubeadm token generate
@@ -28,7 +35,7 @@
   - init
 
 #TODO: It will need adjustments on ansible_play_hosts when kubeadm will support master HA #{{ ansible_play_hosts }}
-- name: Initialize cluster with apiserver-advertise-address {{kubeadm_init_apiserver_advertise_address}}
+- name: 'Initialize cluster with apiserver-advertise-address {{ kubeadm_init_apiserver_advertise_address }}'
   command: /usr/bin/kubeadm init --token {{ kubeadm_token }} --kubernetes-version {{ kubernetes_version | default ('latest') }} {{ kubeadm_init_extra_params | default('') }} --apiserver-advertise-address {{ kubeadm_init_apiserver_advertise_address }} --apiserver-cert-extra-sans {{ inventory_hostname }},{{ inventory_hostname_short }},{{ apiserver_cert_extra_sans | default('kubernetes') }} --service-dns-domain {{ service_dns_domain | default('cluster.local') }}
   tags:
   - init
@@ -84,7 +91,7 @@
   when: shell is undefined or shell == 'bash'
 
 - name: Wait few seconds for images pulls and cluster services to start
-  pause: seconds=10
+  pause: seconds=3
 
 - name: Forcing restart of services
   meta: flush_handlers
@@ -92,74 +99,14 @@
 - name: Wait few seconds for images pulls and cluster services to start
   pause: seconds=10
 
-- name: Create cluster network
-  command: /usr/bin/kubectl apply -f {{ item }}
-  with_items: "{{ k8s_network_addons_urls | default ('') }}"
-  environment: '{{env_kc}}'
-  when: k8s_network_addons_urls is defined
-  tags:
-  - k8s_network_addons
-
-- name: Wait few seconds for images pulls and cluster services to start
-  pause: seconds=10
-
-- name: sanity - wait for alls pod to be running (important to ensure network is fine, see cni bugs)
+- name: "sanity - wait for alls pod to be running (besides kube-dns which won't be ready yet)"
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' |grep -v 'dns' || true "
+  shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' | grep -v 'kube-dns' || true "
   register: command_result
   tags:
-  - k8s_network_addons
-  - sanity
-  until: command_result.stdout == ""
-  retries: 40
-  delay: 3
-
-- name: use master as node also
-  shell: 'kubectl taint nodes --all dedicated-'
-  when: use_master_as_node_also | default(false)
-  ignore_errors: yes
-
-#- name: Wait 1 minute for images pulls and cluster services to start
-#  pause: minutes=1
-
-- name: Install k8s_addons_urls (with proxy)
-  command: /usr/bin/kubectl apply -f {{ item }}
-  with_items: "{{ k8s_addons_urls | default ('') }}"
-  environment: '{{env_kc}}'
-  when: k8s_addons_urls is defined
-  tags:
-   - k8s_addons
-
-- name: prepare kubernetes-dashboard-ingress file
-  template:
-    src: kubernetes-dashboard-ingress.j2
-    dest: /tmp/kubernetes-dashboard-ingress.yml
-    #backup: yes
-    force: yes
-  when: k8s_addons_urls is defined
-  tags:
-  - k8s_addons
-
-- name: create kubernetes-dashboard-ingress in k8s
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  shell: "kubectl create --namespace kube-system -f /tmp/kubernetes-dashboard-ingress.yml"
-  when: k8s_addons_urls is defined
-  tags:
-  - k8s_addons
-
-- name: sanity - wait for alls pod to be in Running status
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' || true "
-  register: command_result
-  tags:
-  - k8s_addons
   - sanity
   until: command_result.stdout == ""
   retries: 20
   delay: 3
-
-
 
