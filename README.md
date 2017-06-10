@@ -1,6 +1,8 @@
 # kubeadm Ansible Playbook for Centos/RHEL 7
 Ubuntu/debian should work also, but not tested.
 
+Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.
+
 This is a simple playbook to wrap the following operations:
 
 * Install the kubeadm repo
@@ -39,9 +41,10 @@ ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
 
 For load-ballancing, one may want to check also: https://github.com/kubernetes/contrib/tree/master/service-loadbalancer
 
-PS: work based on sjenning/kubeadm-playbook
+PS: work based on initial work of sjenning/kubeadm-playbook
 
-Similar k8s install on physical/vagrant/vms (byo) projects you may want to check:
+Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
 - https://github.com/kubernetes/contrib/tree/master/ansible -> the official k8s ansible, but without kubeadm, therefore the processes will run on the nodes, not in docker containers
 - https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades, etc.
+- https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
 
