@@ -29,9 +29,16 @@
 
   #https://github.com/kubernetes/kubernetes/issues/39557
   - name: cni0 IP alloction issue
-    shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ifconfig cni0 down; ifconfig flannel.1 down;'
+    shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ifconfig cni0 down; ifconfig flannel.1 down; ifconfig weave down;'
     ignore_errors: yes
     tags:
     - uninstall
     - reset
 
+
+  - name: Reset iptables rules
+    shell: iptables-save | awk '/^[*]/ { print $1 } /^:[A-Z]+ [^-]/ { print $1 " ACCEPT" ; } /COMMIT/ { print $0; }' | iptables-restore
+    ignore_errors: yes
+    tags:
+    - uninstall
+    - reset
