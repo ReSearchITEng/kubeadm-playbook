@@ -23,8 +23,8 @@ package_state: installed
 #####
 # Desired kubernetes_version, at least v1.6.0; when not defined, defaults to: 'latest', which is not always available...
 # kubernetes_version: 'latest'
-kubernetes_version: 'v1.7.0-alpha.3'
-#kubernetes_version: 'v1.6.3'
+#kubernetes_version: 'v1.7.0-alpha.3'
+kubernetes_version: 'v1.6.3'
 #kubernetes_version: 'v1.6.0'
 #####
 
@@ -76,22 +76,25 @@ k8s_network_addons_urls:
 #  - http://docs.projectcalico.org/v2.1/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 # OR
 # Flannel: (also ensure above setting pod-network-cidr is set to 10.244.0.0/16
-  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
-  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+#  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+# OR
+# WEAVE NET
+   - https://git.io/weave-kube-1.6
 #####
 
 #####
 # ADDONS
 k8s_addons_urls:
   - https://github.com/kubernetes/dashboard/raw/master/src/deploy/kubernetes-dashboard.yaml
-  - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml
+#  - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml
 #####
 
 #####
 # Rook - Ceph Distributed Software Storage
 # As per spec section of: https://github.com/rook/rook/blob/master/demo/kubernetes/rook-cluster.yaml
 rook:
-  enabled: true
+  enabled: false
   os_packages:
   - jq
   reset:
@@ -138,7 +141,7 @@ rook:
 
 ## ADVANCED rook options:
   rbd:
-    enabled: true
+    enabled: false
     pool_spec: # as per: https://github.com/rook/rook/blob/master/demo/kubernetes/rook-storageclass.yaml and https://github.com/rook/rook/blob/master/Documentation/pool-tpr.md
       replication:
         size: 2
