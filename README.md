@@ -39,7 +39,10 @@ vi group_vars/all <modify vars as needed>
 ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
 ```
 
-For load-ballancing, one may want to check also: https://github.com/kubernetes/contrib/tree/master/service-loadbalancer or https://github.com/cloudnativelabs/kube-router/wiki
+For load-ballancing, one may want to check also: 
+- https://github.com/kubernetes/contrib/tree/master/service-loadbalancer 
+- https://github.com/cloudnativelabs/kube-router/wiki
+- https://github.com/kubernetes/contrib/tree/master/keepalived-vip
 
 PS: work based on initial work of sjenning/kubeadm-playbook
 
