@@ -1,0 +1,11 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+  - name: Copy weave net script
+    copy: src=weave dest=/usr/local/bin/weave mode=u+rxw
+
+  - name: Reset weave
+    shell: /usr/local/bin/weave reset
+    ignore_errors: yes

@@ -160,10 +160,10 @@
   command: sysctl --system
 
 - name: Enable and start docker
-  systemd: state=started enabled=yes name=docker
+  systemd: state=started enabled=yes name=docker daemon_reload=yes
 
 - name: Enable and start kubelet
-  systemd: state=started enabled=yes name=kubelet
+  systemd: state=started enabled=yes name=kubelet daemon_reload=yes
 
 - name: kubeadm completion preps
   file:

@@ -1,0 +1,6 @@
+# Only one master is allowed
+[master]
+
+
+[node]
+10.178.11.240
