@@ -35,6 +35,7 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 * Install kubernetes dashboard
 * Install helm
 * Install nginx ingress controller via helm (control via `group_vars/all`)
+  NOTE: nginx ingress is not yet RBAC ready, and we currently have to use: https://github.com/ReSearchITEng/kubeadm-playbook/blob/master/allow-all-all-rbac.yml. 
 * Join the nodes to the cluster with 'kubeadm join'
 * Planned: Install prometheus via ~~Helm~~ operator (control via `group_vars/all`)
 * Sanity: checks if nodes are ready and if all pods are running
