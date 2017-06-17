@@ -1,30 +1,49 @@
 # kubeadm Ansible Playbook for Centos/RHEL 7
 Ubuntu/debian should work also, but not tested.
 
+## Targets/pros&cons
 Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.
+The project is for those who want to quickly create&recreate k8s cluster, with all production features:
+- Ingresses
+- Persistent storage (ceph or vsphere)
 
-This is a simple playbook to wrap the following operations:
+### PROS:
+- quick (3-7 min) full cluster (re)installation
+- all in one shop for a cluster which you can start working right away, without mastering the details
+- applies fixes for quite few issues currently k8s installers have
+
+### CONS:
+- no HA: for now, kubeadm cannot install clusters with master/etcd HA.
+- requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how.
+
+## Prerequisites:
+- machine(s) with properly set up and working docker daemon (with http_proxy, no_proxy,etc under /etc/sysconfig/docker when proxy is required)
+- For a good experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists)
+- if one needs ceph(rook) persistent storage, disks or folders should be prepared and properly sized (e.g. /storage/rook)
+
+## This playbook will:
 
 * Install the kubeadm repo
-* Install docker, kubeadm, kubelet, kubernetes-cni, and kubectl
-* Disable SELinux :disappointed:    
+* Install ~~docker,~~~ kubeadm, kubelet, kubernetes-cni, and kubectl
 ~~Set docker `--logging-driver=json-file`             (when the tag docker is not skipped)~~     
 ~~Set docker `--storage-driver=overlay`               (when the tag docker is not skipped)~~     
-* Set kubelet `--cgroup-driver=systemd`               (when the tag kubelet is not skipped)
-* Optional: Configure an insecure registry for docker (when the tag docker is not skipped)
+* Disable SELinux :disappointed:    (prerequisite of kubeadm)
+* Set kubelet `--cgroup-driver=systemd`               
+~~* Optional: Configure an insecure registry for docker (when the tag docker is not skipped)~~
 * Initialize the cluster on master with `kubeadm init`
 * Install user specified pod network from `group_vars/all`
 * Install kubernetes dashboard
 * Install helm
 * Install nginx ingress controller via helm (control via `group_vars/all`)
+* Join the nodes to the cluster with 'kubeadm join'
 * Planned: Install prometheus via ~~Helm~~ operator (control via `group_vars/all`)
-* Join the nodes to the cluster with 'kubeadm join`
 * Sanity: checks if nodes are ready and if all pods are running
 * create ceph storage cluster using rook operator
+* create vsphere persistent storage class and all required setup. Please fill in vcenter u/p/url,etc `group_vars/all`, and follow all initial steps there.
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.
 
-This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1 & v1.6.2**
+This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1 - 1.6.4**
 
 # How To
 
