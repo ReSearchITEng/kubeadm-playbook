@@ -62,7 +62,15 @@
 
   #https://github.com/kubernetes/kubernetes/issues/39557
   - name: cni0 IP alloction issue
-    shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ip link delete cni0 ; ip link delete flannel.1'
+    shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ip link delete cni0 ; ip link delete flannel.1; ip link delete weave'
+    ignore_errors: yes
+    tags:
+    - uninstall
+    - reset
+
+  - name: Reset iptables rules
+    shell: iptables-save | awk '/^[*]/ { print $1 } /^:[A-Z]+ [^-]/ { print $1 " ACCEPT" ; } /COMMIT/ { print $0; }' | iptables-restore
+    when: iptables_reset defined and iptables_reset
     ignore_errors: yes
     tags:
     - uninstall

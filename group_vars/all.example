@@ -21,6 +21,10 @@ package_state: installed
 #####
 
 #####
+# iptables_reset: False # False is default
+#####
+
+#####
 ## This is the configuration that will be used by kubeadm init on master.
 ## Structure comes from: https://kubernetes.io/docs/admin/kubeadm/#config-file
 kubeadm_master_config:
