@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: demo
+  namespace: default
+spec:
+  rules:
+    - host: pv.k8s.cloud.corp.example.com
+      http:
+        paths:
+          - backend:
+              serviceName: demo-svc
+              servicePort: 80
+            path: /

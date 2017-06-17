@@ -1,9 +1,20 @@
 ---
 - set_fact: kubeadm_token={{ hostvars[groups['master'][0]]['kubeadm_token'] }}
-  when: kubeadm_token is not defined
+  when: kubeadm_master_config.token is not defined
+  tags:
+  - always
+
+- set_fact: kubeadm_token={{ kubeadm_master_config.token }}
+  when: kubeadm_master_config.token is defined
+  tags:
+  - always
+
 
 - name: Join cluster
-  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }}
+  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} 
+  tags:
+  - init
+  - node
 
 #This is required when proxy is used, and the inventory_hostname is defined with fqdn
 #to ensure the connection to local server is not going via proxy (expecially when applying addons)
@@ -15,6 +26,7 @@
   #when: proxy_env is defined and master is defined with fqdn in the inventory file (e.g. master.example.com)
   tags:
   - init
+  - node
   notify:
   - Restart kubelet
 

@@ -2,10 +2,14 @@
 - hosts: master
   become: yes
   become_method: sudo
+  tags:
+  - helm
   tasks:
 
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    tags:
+    - always
   
   - name: 'Download {{ helm.install_script_url }}'
     environment: '{{ proxy_env | default ({}) }}'
@@ -44,11 +48,25 @@
 
   - name: helm remove/cleanup
     environment: '{{env_kc}}'
-    shell: ( helm reset || true ) && kubectl delete deployment --namespace=kube-system tiller-deploy && kubectl delete service --namespace=kube-system tiller-deploy
+    shell: ( helm reset || true ) && ( kubectl delete deployment --namespace=kube-system tiller-deploy || true ) && ( kubectl delete service --namespace=kube-system tiller-deploy  || true ) && (  kubectl delete clusterrolebinding tiller  || true ) && (  kubectl delete --namespace=kube-system sa tiller )
     tags:
     - helm_reset
     - helm
     ignore_errors: yes
+
+  - name: create helm related RBAC (tiller sa)
+    environment: '{{env_kc}}'
+    shell: kubectl --namespace=kube-system create sa tiller
+    tags:
+    - helm
+    - rbac
+
+  - name: create helm related RBAC (tiller clusterrolebinding)
+    environment: '{{env_kc}}'
+    shell: kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+    tags:
+    - helm
+    - rbac
 
   - name: helm init
     environment: '{{env_kc}}'
@@ -74,6 +92,15 @@
     retries: 20
     delay: 3
 
+  - name: create helm related RBAC (Patch Tiller s Deployment to use the new ServiceAccount)
+    environment: '{{env_kc}}'
+    shell: 'kubectl -n kube-system patch deploy/tiller-deploy -p ''{"spec": {"template": {"spec": {"serviceAccountName": "tiller"}}}}'''
+    register: command_result
+    changed_when: '"not patched" not in command_result.stdout'
+    tags:
+    - helm
+    - rbac
+
   - name: Update helm Tiller
     environment: '{{env_kc}}'
     command: helm init --upgrade
@@ -97,6 +124,11 @@
     tags:
     - helm
 
+  - name: Wait few seconds for tiller deployment to start
+    pause: seconds=3
+    tags:
+    - helm
+
   - name: helm sanity - wait for tiller pod to be running
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
@@ -111,6 +143,11 @@
     retries: 20
     delay: 3
 
+  - name: Wait few seconds to be 100% tiller deployment is up (the above is not enough)
+    pause: seconds=10
+    tags:
+    - helm
+
   - name: helm charts/packages deployment
     environment: '{{env_kc}}'
     command: 'helm install {{ item.repo }} --namespace {{ item.namespace | default("default") }} --name {{ item.name }} {{ item.options | default ("") }}'
@@ -121,6 +158,13 @@
     - helm
     - charts_deploy
 
+  - name: Wait few seconds for deployments to start
+    pause: seconds=3
+    tags:
+    - helm
+    - charts_deploy
+
+
   - name: helm full sanity - wait for all installed charts to become running
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
@@ -130,6 +174,7 @@
     - sanity_helm
     - sanity
     - helm
+    - charts_deploy
     until: command_result.stdout == ""
     retries: 30
     delay: 3

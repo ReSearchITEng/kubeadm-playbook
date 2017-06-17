@@ -1,0 +1,24 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: demo-pod
+  labels:
+    app: demo
+spec:
+  volumes:
+    - name: demo-storage
+      persistentVolumeClaim:
+       claimName: demo-claim
+
+  containers:
+    - name: demo-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+      - mountPath: "/usr/share/nginx/html"
+        name: demo-storage
+  nodeSelector:
+    run: here
+    #kubernetes.io/hostname: machine02

@@ -5,11 +5,13 @@
   tasks:
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    tags:
+    - always
 
   - name: apply taints_master
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: 'kubectl taint nodes {{ inventory_hostname_short }} {{ item }}'
+    shell: 'kubectl taint nodes {{ inventory_hostname_short }} {{ item }} --overwrite'
     when: taints_master is defined
     with_items: '{{ taints_master }}'
     tags:
@@ -31,11 +33,19 @@
 
   - name: Create cluster network
     command: /usr/bin/kubectl apply -f {{ item }}
-    with_items: "{{ k8s_network_addons_urls | default ('') }}"
+    with_items: "{{ k8s_network_addons_urls | default ([]) }}"
     environment: '{{env_kc}}'
     when: k8s_network_addons_urls is defined
     tags:
     - k8s_network_addons
+
+  - name: Create vsphere storage class
+    command: /usr/bin/kubectl apply -f {{ item }}
+    with_items: "{{ vsphere_storageclass_urls | default ([]) }}"
+    environment: '{{env_kc}}'
+    when: vsphere_storageclass_urls is defined and kubeadm_master_config.cloudProvider is defined and kubeadm_master_config.cloudProvider == 'vsphere'
+    tags:
+    - vsphere_storageclass_urls
 
   - name: Wait few seconds for network to start deploying
     pause: seconds=3

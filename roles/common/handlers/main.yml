@@ -1,9 +1,9 @@
 ---
 - name: Restart docker
-  systemd: name=docker state=restarted
+  systemd: name=docker state=restarted enabled=yes
 
 - name: Reload systemd
   command: systemctl daemon-reload
 
 - name: Restart kubelet
-  systemd: name=kubelet state=restarted
+  systemd: name=kubelet state=restarted enabled=yes

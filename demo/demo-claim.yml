@@ -1,0 +1,13 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: demo-claim
+  annotations:
+    volume.beta.kubernetes.io/storage-class: rook-block
+    #volume.beta.kubernetes.io/storage-class: thin #vsphere
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi

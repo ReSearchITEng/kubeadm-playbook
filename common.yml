@@ -2,5 +2,9 @@
 - hosts: all
   become: yes
   become_method: sudo
+  tags:
+  - common
+  - master
+  - node
   roles:
   - common

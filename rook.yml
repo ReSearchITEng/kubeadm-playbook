@@ -2,10 +2,14 @@
 - hosts: master
   become: yes
   become_method: sudo
+  tags:
+  - rook
   tasks:
 
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    tags:
+    - always
 
   - name: k8s cluster pre-installation sanity - check if all current k8s pods are in Running status
     environment:
@@ -24,12 +28,31 @@
     shell: jq --version
     when: rook is defined and rook.enabled
 
-  - name: install rook operator
+  - name: install rook operator (using rook.operator_url)
     environment: '{{env_kc}}'
     command: /usr/bin/kubectl apply -f {{ item }}
-    when: rook is defined and rook.enabled
+    when: rook is defined and rook.enabled and rook.operator_url is defined
     with_items:
     - "{{ rook.operator_url  | default ('') }}"
+    tags:
+    - rook
+
+  - name: git clone rook (till charts.rook.io is created)
+    environment: '{{env_kc}}'
+    git:
+      repo: 'https://github.com/rook/rook.git'
+      dest: /tmp/rook
+      force: yes
+      depth: 1
+      version: master
+      recursive: no
+
+  - name: deploy rook operator (using helm chart) - prefered method
+    environment: '{{env_kc}}'
+    #command: 'helm install {{ item.repo }} --namespace {{ item.namespace | default("default") }} --name {{ item.name }} {{ item.options | default ("") }}'
+    #command: 'helm install rook/rook-operator --namespace rook --name rook-operator --set image.pullPolicy=Always '
+    command: 'helm install /tmp/rook/demo/helm/rook-operator/ --namespace rook --name rook-operator --set image.pullPolicy=Always '
+    when: rook is defined and rook.enabled and rook.operator_url is not defined
     tags:
     - rook
 
@@ -59,8 +82,10 @@
     retries: 30
     delay: 3
 
-  #- name: Wait few more seconds for rook.io/, Kind=Cluster to be created
-  #  pause: seconds=10
+  # This is still required...
+  - name: Wait few more seconds for rook.io/, Kind=Cluster to be created
+    pause: seconds=0
+    when: rook is defined and rook.enabled
 
   - name: prepare rook-cluster.yml file
     template:
@@ -70,6 +95,7 @@
     when: rook is defined and rook.enabled
     tags:
     - rook
+    - rook-cluster
 
   - name: install rook cluster and create rook namespace
     environment: '{{env_kc}}'
@@ -79,6 +105,7 @@
     - /tmp/rook-cluster.yml
     tags:
     - rook
+    - rook-cluster
 
   - name: rook cluster deploy sanity - wait for all installed pods to become Running
     environment:
@@ -142,7 +169,8 @@
   - name: rook cluster deploy full sanity via rook client command rook node ls
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl -n rook exec rook-client -it /usr/bin/rook node ls | tail -n +2  | grep -v ' OK ' || true "
+    #kubectl exec -it rook-tools -- bash -c "rook node ls >> /tmp/status.txt"
+    shell: "kubectl -n rook exec rook-tools -it /usr/bin/rook node ls | tail -n +2  | grep -v ' OK ' || true "
     when: rook is defined and rook.enabled
     register: command_result
     tags:
@@ -155,7 +183,7 @@
   - name: rook-client create rook sharedfs
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: kubectl -n rook exec rook-client -- rook filesystem create --name {{ item.name | default("sharedfs") }}
+    shell: kubectl -n rook exec rook-tools -- rook filesystem create --name {{ item.name | default("sharedfs") }}
     when: rook.sharedfs is defined and rook.enabled and rook.sharedfs.enabled
     with_items: "{{ rook.sharedfs.fs | default ('') }}"
     tags:

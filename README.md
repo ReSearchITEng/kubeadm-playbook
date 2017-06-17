@@ -1,5 +1,5 @@
-# kubeadm Ansible Playbook for Centos/RHEL 7
-Ubuntu/debian should work also, but not tested.
+# kubeadm based all in one kubernetes cluster installation Ansible Playbook
+Tested on for Centos/RHEL 7.; Ubuntu/debian should work also, but not tested.
 
 ## Targets/pros&cons
 Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.
@@ -25,17 +25,17 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 
 * Install the kubeadm repo
 * Install ~~docker,~~~ kubeadm, kubelet, kubernetes-cni, and kubectl
-~~Set docker `--logging-driver=json-file`             (when the tag docker is not skipped)~~     
-~~Set docker `--storage-driver=overlay`               (when the tag docker is not skipped)~~     
+~~Set docker `--logging-driver=json-file`             (when the tag docker is not skipped)~~
+~~Set docker `--storage-driver=overlay`               (when the tag docker is not skipped)~~
 * Disable SELinux :disappointed:    (prerequisite of kubeadm)
-* Set kubelet `--cgroup-driver=systemd`               
+* Set kubelet `--cgroup-driver=systemd`
 ~~* Optional: Configure an insecure registry for docker (when the tag docker is not skipped)~~
 * Initialize the cluster on master with `kubeadm init`
 * Install user specified pod network from `group_vars/all`
 * Install kubernetes dashboard
 * Install helm
 * Install nginx ingress controller via helm (control via `group_vars/all`)
-  NOTE: nginx ingress is not yet RBAC ready, and we currently have to use: https://github.com/ReSearchITEng/kubeadm-playbook/blob/master/allow-all-all-rbac.yml. 
+  NOTE: nginx ingress is not yet RBAC ready, and we currently have to use: https://github.com/ReSearchITEng/kubeadm-playbook/blob/master/allow-all-all-rbac.yml.
 * Join the nodes to the cluster with 'kubeadm join'
 * Planned: Install prometheus via ~~Helm~~ operator (control via `group_vars/all`)
 * Sanity: checks if nodes are ready and if all pods are running
@@ -59,12 +59,19 @@ vi group_vars/all <modify vars as needed>
 ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
 ```
 
-For load-ballancing, one may want to check also: 
-- https://github.com/kubernetes/contrib/tree/master/service-loadbalancer 
-- https://github.com/cloudnativelabs/kube-router/wiki
+If the wildcard DNS was properly set up ( *.k8s.cloud.corp.example.com pointing to master machine public IP), at this stage one should be able to see the dashboard at: http://dashboard.cloud.corp.example.com
+For testing the Persistent volume, one may use/tune the files in the demo folder.
+```
+kubectl exec -it demo-pod -- bash -c "echo Hello DEMO >> /usr/share/nginx/html/index.html "
+```
+and check the http://pv.cloud.corp.example.com page.
+
+For load-ballancing, one may want to check also:
+- https://github.com/kubernetes/contrib/tree/master/service-loadbalancer
+- https://github.com/cloudlabs/kube-router/wiki
 - https://github.com/kubernetes/contrib/tree/master/keepalived-vip
 
-PS: work based on initial work of sjenning/kubeadm-playbook
+PS: work inspired from: @sjenning
 
 Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
 - https://github.com/kubernetes/contrib/tree/master/ansible -> the official k8s ansible, but without kubeadm, therefore the processes will run on the nodes, not in docker containers

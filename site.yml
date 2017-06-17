@@ -4,7 +4,7 @@
 - include: master.yml
 - include: node.yml
 - include: post_cluster_deploy.yml
+- include: helm.yml
 - include: rook_clean.yml
 - include: rook.yml
 - include: sanity.yml
-- include: helm.yml

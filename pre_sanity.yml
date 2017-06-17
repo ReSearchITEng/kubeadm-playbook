@@ -1,0 +1,25 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  tags:
+  - pre_sanity
+  - master
+  - node
+  tasks:
+
+  - name: check 127.0.1.1 /etc/hosts
+    # For a system with a permanent IP address, that permanent IP address should be used here instead of 127.0.1.1
+    # https://www.debian.org/doc/manuals/debian-reference/ch05.en.html#_the_hostname_resolution
+    # This is a good rule, while not mandatory. If you want, you can skip this task with --skip-tags check_etc_hosts
+    command: 'grep '^\s*127.0.1.1 /etc/hosts'
+    register: command_result
+    failed_when: command_result.stdout != ""
+    tags:
+    - check_etc_hosts
+
+  - name: check docker is running
+    command: 'docker info'
+    tags:
+    - check_docker
+

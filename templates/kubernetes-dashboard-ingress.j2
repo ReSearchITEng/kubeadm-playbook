@@ -5,7 +5,7 @@ metadata:
   namespace: kube-system
 spec:
   rules:
-    - host: dashboard.{{ service_dns_domain | default ("cluster.local") }}
+    - host: dashboard.{{ kubeadm_master_config.networking.dnsDomain | default ("cluster.local") }}
       http:
         paths:
           - backend:

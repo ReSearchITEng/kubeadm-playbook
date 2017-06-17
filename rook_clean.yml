@@ -2,10 +2,25 @@
 - hosts: master
   become: yes
   become_method: sudo
+  tags:
+  - rook
+  - reset
   tasks:
 
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    tags:
+    - always
+
+
+  - name: deploy rook operator (using helm chart) - prefered method
+    environment: '{{env_kc}}'
+    command: 'helm delete --purge rook-operator '
+    when: rook is defined and rook.enabled and rook.operator_url is not defined
+    ignore_errors: yes
+    tags:
+    - rook
+    - reset
 
   - name: clean install rook operator
     environment: '{{env_kc}}'
@@ -15,7 +30,8 @@
     - "-n rook po/rook-client"
     - "-n rook po/rook-tools"
     - "-n rook cm/rook-config-override"
-    - "-f {{ rook.operator_url }}"
+    - "-n rook deploy/rook-api"
+    - "-n rook ds/osd"
     - "-n rook cluster rook"
     - "-n rook serviceaccount rook-api"
     - "clusterrole rook-api"
@@ -23,10 +39,18 @@
     - "thirdpartyresources cluster.rook.io pool.rook.io"
     - "secret rook-rook-user"
     - "namespace rook"
+    - "sc rook-block"
     tags:
     - rook
     - reset
     ignore_errors: yes
+
+  - name: clean install rook operator
+    environment: '{{env_kc}}'
+    command: /usr/bin/kubectl delete {{ item }}
+    when: rook is defined and rook.enabled and rook.operator_url is defined
+    with_items:
+    - "-f {{ rook.operator_url }}"
 
   - name: clean install rook secrets from all rook.allowed_consumer_namespaces
     # TODO: scan all namespaces and remove it. Do not rely on the previously defined rook.allowed_consumer_namespaces
@@ -55,10 +79,10 @@
   become_method: sudo
   tasks:
   - name: clean rook ceph persistant storage directories
-    file: path=/storage/rook state=absent
+    file: path=/storage/rook/* state=absent force=yes
     tags:
     - reset
     - rook
     - uninstall
-    when: rook.reset.storage_delete is defined and rook.reset.storage_delete
+    when: rook is defined and rook.enabled and rook.reset.storage_delete is defined and rook.reset.storage_delete
 

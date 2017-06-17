@@ -2,6 +2,10 @@
 - hosts: all
   become: yes
   become_method: sudo
+  tags:
+  - reset
+  - master
+  - node
   tasks:
   - name: Reset cluster
     command: /usr/bin/kubeadm reset
@@ -9,8 +13,26 @@
     tags:
     - reset
 
+  - name: ensure old kubeadm config files were removed
+    file: state=absent path={{ item }}
+    with_items:
+    - /etc/kubernetes/kubeadm.conf
+    - /etc/kubernetes/kubeadm-master.config
+    - /etc/kubernetes/kubeadm-master.conf
+    - /etc/kubernetes/cloud-config
+    tags:
+    - reset
+
+  - name: ensure old /etc/kubernetes/ is removed when full_kube_reinstall is true
+    file: state=absent path={{ item }}
+    with_items:
+    - /etc/kubernetes/
+    when: full_kube_reinstall is defined and full_kube_reinstall
+    tags:
+    - reset
+
   - name: systemctl stop kube*.*.slice
-    shell: 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o *.*.slice | grep kubepod);do echo $i; systemctl stop $i ; done'
+    shell: 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done'
     tags:
     - reset
 
@@ -27,11 +49,33 @@
     - uninstall
     - reset
 
+  - name: stop kubelet for cleanup activities
+    systemd: name={{ item }} state=stopped
+    with_items:
+    - kubelet
+    when: ! (full_kube_reinstall is defined and full_kube_reinstall )
+    tags:
+    - kubelet
+    - uninstall
+    - reset
+    ignore_errors: yes
+
   #https://github.com/kubernetes/kubernetes/issues/39557
   - name: cni0 IP alloction issue
-    shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ifconfig cni0 down; ifconfig flannel.1 down;'
+    shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ip link delete cni0 ; ip link delete flannel.1'
     ignore_errors: yes
     tags:
     - uninstall
     - reset
+
+  #- name: restart kubelet for cleanup activities
+  #  systemd: name={{ item }} state=restarted
+  #  with_items:
+  #  - kubelet
+  #  when: ! (full_kube_reinstall is defined and full_kube_reinstall )
+  #  tags:
+  #  - kubelet
+  #  - uninstall
+  #  - reset
+  #  ignore_errors: yes
 

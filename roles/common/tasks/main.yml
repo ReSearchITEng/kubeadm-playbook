@@ -42,6 +42,9 @@
 - name: Disable selinux
   selinux: policy=targeted state=permissive
   when: ansible_os_family == "RedHat"
+  register: command_result
+  # TODO: changed_when: '"..." not in command_result.stdout '
+  # TODO: When message is: "state change will take effect next reboot, config state changed from", trigger machine reboot
 
 - name: Clean yum metadata
   command: yum clean all
@@ -53,19 +56,40 @@
   command: apt-get clean ; apt-file purge
   args:
     warn: no
-  when: ansible_os_family == "Debian"
+  when: ansible_os_family == "Debian" and package_state is defined and package_state == "latest"
 
 # End OS dependent repo setup
+
+- name: Install kubeadm
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is not defined
+
+- name: Install kubeadm
+  package: name={{ item }}-{{kubeadm_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is defined and ( kubeadm_version!='installed' or kubeadm_version!='latest' )
+
+- name: Install kubeadm
+  package: name={{ item }}-{{kubeadm_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is defined and ( kubeadm_version=='installed' or kubeadm_version=='latest' )
 
 - name: Install packages
   package: name={{ item }} state={{ package_state | default ('latest') }}
   environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
-  - kubeadm
   - kubectl
   - kubernetes-cni
   - docker
+  #- kubeadm
 
 - name: Install optional packages like bash-completion
   package: name={{ item }} state={{ package_state | default ('latest') }}
@@ -117,12 +141,18 @@
 #  tags: 
 #  - docker
 
-- name: Replace service_dns_domain under cluster-domain in kubelet.service.d/10-kubeadm.conf
+- set_fact: fact_cloud_provider='--cloud-provider={{ kubeadm_master_config.cloudProvider }} --cloud-config=/etc/kubernetes/cloud-config'
+  when: kubeadm_master_config.cloudProvider is defined # cloud_config.enabled is defined and cloud_config.enabled and cloud_config.cloud_provider is defined
+  tags:
+  - always
+
+- name: Replace {{kubeadm_master_config.networking.dnsDomain}} under cluster-domain in kubelet.service.d/10-kubeadm.conf
   replace:
     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: '(--cluster-domain=)[A-Za-z0-9\-\.]+(.*)'
-    replace: '\1{{ service_dns_domain | default("cluster.local") }}\2'
+    replace: '\1{{ kubeadm_master_config.networking.dnsDomain | default("cluster.local") }}\2'
     #backup: yes
+  when: kubeadm_master_config.networking.dnsDomain is defined
   notify:
   - Reload systemd
   - Restart kubelet
@@ -144,12 +174,29 @@
   lineinfile:
     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     insertafter: '^Environment=\"KUBELET_AUTHZ_ARGS'
-    line: 'Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd"'
+    line: Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd {{ fact_cloud_provider | default ('') }} "
   notify:
   - Reload systemd
   - Restart kubelet
   tags: 
   - kubelet
+
+#- set_fact:
+#    cloud_config_path: cloud_config.{{kubeadm_master_config.cloudProvider}}
+#  when: kubeadm_master_config.cloudProvider is defined
+
+#- name: Writing contents of  {{ cloud_config_path }} to /etc/kubernetes/cloud-config
+#  copy: content="{{ kubeadm_master_config.cloud_config_path | to_nice_yaml }}" dest="/etc/kubernetes/cloud-config" force=yes
+#  when: kubeadm_master_config.cloudProvider is defined
+
+- name: prepare cloud-config file
+  template:
+    src: cloud-config.j2
+    dest: /etc/kubernetes/cloud-config
+    force: yes
+  when: kubeadm_master_config.cloudProvider is defined
+  tags:
+  - init
 
 - name: Create kubeadm sysctl file
   copy: src=90-kubeadm.conf dest=/etc/sysctl.d/90-kubeadm.conf
@@ -159,11 +206,11 @@
 - name: Set sysctl settings
   command: sysctl --system
 
-- name: Enable and start docker
-  systemd: state=started enabled=yes name=docker
+- name: Enable and start docker (optional)
+  systemd: state=started enabled=yes name=docker daemon_reload=yes
 
-- name: Enable and start kubelet
-  systemd: state=started enabled=yes name=kubelet
+#- name: Enable and start kubelet
+#  systemd: state=started enabled=yes name=kubelet daemon_reload=yes
 
 - name: kubeadm completion preps
   file:
