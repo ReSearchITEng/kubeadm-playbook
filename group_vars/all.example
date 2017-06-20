@@ -118,6 +118,7 @@ vsphere_storageclass_urls:
 #####
 ## HELM CHARTS
 helm:
+  helm_version: v2.4.2
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get'
 #  repos:
 #    - { name: rook, url: 'http://charts.rook.io' }
