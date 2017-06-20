@@ -2,10 +2,10 @@
 #####
 ## PROXY
 ## proxy environment variable, mainly for fetching addons
-proxy_env:
-  http_proxy: 'http://proxy.corp.example.com:8080'
-  https_proxy: 'http://proxy.corp.example.com:8080'
-  no_proxy: '127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost'
+#proxy_env:
+#  http_proxy: 'http://proxy.corp.example.com:8080'
+#  https_proxy: 'http://proxy.corp.example.com:8080'
+#  no_proxy: '127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost'
 #####
 
 #####
@@ -48,8 +48,8 @@ kubeadm_master_config:
     dnsDomain: "k8s.cloud.corp.example.com"
 #    serviceSubnet: <cidr>
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, this entry can be commented out.
-  #kubernetesVersion: 'v1.7.0-beta.2' # If defined, it will require internet access to find which is the latest one.
-  kubernetesVersion: 'v1.6.5' # If defined, it will require internet access to find which is the latest one.
+  #kubernetesVersion: 'v1.7.0-beta.2' # for k8s 1.7 you need also kubeadm 1.7
+  kubernetesVersion: 'v1.6.6' # If defined, it will require internet access to find which is the latest one.
 #  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines>
 #  authorizationModes:
 #  - <authorizationMode1|string>
@@ -118,7 +118,7 @@ vsphere_storageclass_urls:
 #####
 ## HELM CHARTS
 helm:
-  helm_version: v2.4.2
+  #helm_version: 'v2.4.2' # 'latest' #
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get'
 #  repos:
 #    - { name: rook, url: 'http://charts.rook.io' }
@@ -237,7 +237,7 @@ cloud_config: |
       datacenter = DC01
       datastore = DS01
       ##./govc vm.info -vm.dns=machine01 | grep Path #and remove the machine name (last string)
-      ## Working dir is optional
+      ## Working dir is required when machines are under a directory
       # working-dir = kubernetes
 
       ## Setup of per machine vm-uuid is usually not required, and it's determined automatically.
