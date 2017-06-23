@@ -79,3 +79,4 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 - https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades, etc.
 - https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
 
+URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
