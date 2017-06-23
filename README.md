@@ -44,7 +44,8 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.
 
-This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1 - 1.6.4**
+This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1 - 1.6.6**
+For installing k8s 1.7 one must also use kubeadm 1.7 (known kubeadm limitation)
 
 # How To
 
