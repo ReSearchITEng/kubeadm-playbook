@@ -242,6 +242,12 @@
     state: present
   when: shell is undefined or shell == 'bash'
 
+- name: create dir /var/log/journal (so node-problem-detector finds any issues with the nodes, should there be any)
+  file:
+    path: /var/log/journal
+    state: directory
+    mode: 0755
+
 # Forcing restart of services
 #- meta: flush_handlers
 
