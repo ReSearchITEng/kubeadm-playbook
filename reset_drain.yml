@@ -1,0 +1,37 @@
+---
+- hosts: master
+  become: yes
+  become_method: sudo
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  tags:
+  - reset
+  - master
+  - node
+  tasks:
+  - name: get nodes
+    shell: "kubectl get nodes -- | tail -n +2 | cut -f 1 -d ' '"
+    register: command_results
+
+  - name: drain nodes
+    command: kubectl drain {{ item }} --delete-local-data --force --ignore-daemonsets --grace-period=5 --timeout=60s
+    with_items: "{{command_results.stdout_lines}}"
+    ignore_errors: yes
+
+  - name: delete nodes
+    command: kubectl delete node {{ item }}
+    with_items: "{{command_results.stdout_lines}}"
+    ignore_errors: yes
+
+    #shell: "kubectl get nodes -o jsonpath='{.items[*].metadata.name}'"
+    #with_items: "{{ groups['node'] }}"
+
+  - name: kubectl get nodes must be empty by now
+    shell: "kubectl get nodes | tail -n +2 || true"
+    register: command_result
+    until: command_result.stdout == ""
+    retries: 10
+    delay: 3
+    ignore_errors: yes
+
+

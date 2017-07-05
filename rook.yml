@@ -46,6 +46,7 @@
       depth: 1
       version: master
       recursive: no
+    when: rook is defined and rook.enabled and rook.operator_url is defined
 
   - name: deploy rook operator (using helm chart) - prefered method
     environment: '{{env_kc}}'

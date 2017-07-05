@@ -47,6 +47,24 @@
     tags:
     - vsphere_storageclass_urls
 
+  - name: prepare nfs provisioner
+    template:
+      src: nfs.j2
+      dest: /tmp/nfs.yml
+      #backup: yes
+      force: yes
+    when: nfs_k8s is defined and nfs_k8s.enabled
+    tags:
+    - nfs_storage
+
+  - name: create nfs provisioner
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl create --namespace kube-system -f /tmp/nfs.yml"
+    when: nfs_k8s is defined and nfs_k8s.enabled
+    tags:
+    - nfs_storage
+
   - name: Wait few seconds for network to start deploying
     pause: seconds=3
 

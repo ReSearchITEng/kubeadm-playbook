@@ -90,6 +90,7 @@
   - kubernetes-cni
   - docker
   #- kubeadm
+  #- docker.io # for ubuntu
 
 - name: Install optional packages like bash-completion
   package: name={{ item }} state={{ package_state | default ('latest') }}

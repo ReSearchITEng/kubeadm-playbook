@@ -2,9 +2,10 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: demo-claim
-  annotations:
-    volume.beta.kubernetes.io/storage-class: rook-block
+  #annotations: # When not defined, the default storageClass is used (if any defined)
+    #volume.beta.kubernetes.io/storage-class: rook-block
     #volume.beta.kubernetes.io/storage-class: thin #vsphere
+    #volume.beta.kubernetes.io/storage-class: nfs.k8s
 spec:
   accessModes:
     - ReadWriteOnce

@@ -1,0 +1,135 @@
+#https://github.com/kubernetes/kubernetes/blob/master/examples/volumes/nfs/provisioner/nfs-server-gce-pv.yaml
+#https://github.com/kubernetes-incubator/nfs-provisioner
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+metadata:
+  name: nfs-provisioner-runner
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["get"]
+  - apiGroups: ["extensions"]
+    resources: ["podsecuritypolicies"]
+    resourceNames: ["nfs-provisioner"]
+    verbs: ["use"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-provisioner
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+metadata:
+  name: run-nfs-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: nfs-provisioner
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: nfs-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nfs-provisioner
+  labels:
+    app: nfs-provisioner
+spec:
+  ports:
+    - name: nfs
+      port: 2049
+    - name: mountd
+      port: 20048
+    - name: rpcbind
+      port: 111
+    - name: rpcbind-udp
+      port: 111
+      protocol: UDP
+  selector:
+    app: nfs-provisioner
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nfs-provisioner
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate 
+  template:
+    metadata:
+      labels:
+        app: nfs-provisioner
+    spec:
+      nodeSelector:
+        #kubernetes.io/hostname: machine01
+        node-role.kubernetes.io/master: ""
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          effect: NoSchedule
+      containers:
+        - name: nfs-provisioner
+          image: quay.io/kubernetes_incubator/nfs-provisioner:v1.0.8
+          ports:
+            - name: nfs
+              containerPort: 2049
+            - name: mountd
+              containerPort: 20048
+            - name: rpcbind
+              containerPort: 111
+            - name: rpcbind-udp
+              containerPort: 111
+              protocol: UDP
+          securityContext:
+            capabilities:
+              add:
+                - DAC_READ_SEARCH
+                - SYS_RESOURCE
+          args:
+            - "-provisioner={{ nfs_k8s.provisioner }}"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SERVICE_NAME
+              value: nfs-provisioner
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          imagePullPolicy: "IfNotPresent"
+          volumeMounts:
+            - name: export-volume
+              mountPath: /export
+      volumes:
+        - name: export-volume
+          hostPath:
+            path: {{ nfs_k8s.host_path }}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1beta1
+metadata:
+  name: "{{nfs_k8s.provisioner }}"
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "{{ nfs_k8s.is_default_class | default('true') }}"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: "{{nfs_k8s.provisioner }}"
+#parameters:
+

@@ -1,4 +1,8 @@
 ---
+- include: reset_helm.yml
+- include: remove_pvs.yml
+- include: reset_nfs.yml
+- include: reset_drain.yml
 - include: reset.yml
 - include: reset-weave.yml
 - include: common.yml

@@ -7,6 +7,7 @@
   - master
   - node
   tasks:
+
   - name: Reset cluster
     command: /usr/bin/kubeadm reset
     ignore_errors: yes
@@ -27,6 +28,7 @@
     file: state=absent path={{ item }}
     with_items:
     - /etc/kubernetes/
+    - /var/lib/etcd
     when: full_kube_reinstall is defined and full_kube_reinstall
     tags:
     - reset
@@ -53,7 +55,28 @@
     systemd: name={{ item }} state=stopped
     with_items:
     - kubelet
-    when: ! (full_kube_reinstall is defined and full_kube_reinstall )
+    tags:
+    - kubelet
+    - uninstall
+    - reset
+    ignore_errors: yes
+
+  - name: remove plugins mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
+    #shell: 'umount $(mount | grep " on /var/lib/kubelet/plugins/kubernetes.io/" | cut -f1 -d" ")'
+    shell: umount $(mount | grep '/kubelet/plugins/kubernetes.io/' | awk '{print $3}')
+    #shell: 'umount $(mount | grep "/kubelet/plugins/kubernetes.io/" | cut -f1 -d" ")'
+    with_items:
+    - kubelet
+    tags:
+    - kubelet
+    - uninstall
+    - reset
+    ignore_errors: yes
+
+  - name: remove pods mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
+    shell: umount $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~' | awk '{print $3}')
+    with_items:
+    - kubelet
     tags:
     - kubelet
     - uninstall
@@ -61,8 +84,8 @@
     ignore_errors: yes
 
   #https://github.com/kubernetes/kubernetes/issues/39557
-  - name: cni0 IP alloction issue
-    shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ip link delete cni0 ; ip link delete flannel.1; ip link delete weave'
+  - name: cni0/cbr0 IP alloction issue
+    shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ip link delete cni0; ip link delete cbr0 ; ip link delete flannel.1; ip link delete weave'
     ignore_errors: yes
     tags:
     - uninstall

@@ -11,10 +11,11 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 - quick (3-7 min) full cluster (re)installation
 - all in one shop for a cluster which you can start working right away, without mastering the details
 - applies fixes for quite few issues currently k8s installers have
+- deploys plugins to all creation of dynamica persistent volumes via: vsphere, rook or self deployed NFS
 
 ### CONS:
 - no HA: for now, kubeadm cannot install clusters with master/etcd HA.
-- requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how.
+- during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how.
 
 ## Prerequisites:
 - machine(s) with properly set up and working docker daemon (with http_proxy, no_proxy,etc under /etc/sysconfig/docker when proxy is required)

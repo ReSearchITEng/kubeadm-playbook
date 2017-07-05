@@ -89,7 +89,7 @@
     - sanity
     - helm
     until: command_result.stdout == ""
-    retries: 20
+    retries: 50
     delay: 3
 
   - name: create helm related RBAC (Patch Tiller s Deployment to use the new ServiceAccount)
@@ -140,7 +140,7 @@
     - sanity
     - helm
     until: command_result.stdout == ""
-    retries: 20
+    retries: 30
     delay: 3
 
   - name: Wait few seconds to be 100% tiller deployment is up (the above is not enough)
@@ -176,6 +176,6 @@
     - helm
     - charts_deploy
     until: command_result.stdout == ""
-    retries: 30
+    retries: 60
     delay: 3
 

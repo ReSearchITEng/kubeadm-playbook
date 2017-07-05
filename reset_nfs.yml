@@ -1,0 +1,31 @@
+---
+- hosts: master
+  become: yes
+  become_method: sudo
+  tags:
+  - reset
+  - nfs_storage
+  - master
+  tasks:
+
+  - set_fact:
+      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    tags:
+    - always
+
+  - name: delete old nfs provisioner
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl delete --namespace kube-system -f /tmp/nfs.yml"
+    when: nfs_k8s is defined and nfs_k8s.enabled
+    tags:
+    - nfs_storage
+    ignore_errors: yes
+
+  - name: wipe nfs host_path
+    file: path={{nfs_k8s.host_path}} state=absent
+    when: nfs_k8s is defined and nfs_k8s.enabled and nfs_k8s.wipe
+    tags:
+    - nfs_storage
+    ignore_errors: yes
+
