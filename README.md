@@ -12,10 +12,10 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 - quick (3-7 min) full cluster (re)installation
 - all in one shop for a cluster which you can start working right away, without mastering the details
 - applies fixes for quite few issues currently k8s installers have
-- deploys plugins to all creation of dynamica persistent volumes via: vsphere, rook or self deployed NFS
+- deploys plugins to all creation of dynamical persistent volumes via: vsphere, rook or self deployed NFS
 
 ### CONS:
-- no HA: for now, kubeadm cannot install clusters with master/etcd HA.
+- no HA: for now, kubeadm cannot install clusters with master/etcd HA (yet; but planned).
 - during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how.
 
 ## Prerequisites:
@@ -35,17 +35,18 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 * Install kubernetes dashboard
 * Install helm
 * Install nginx ingress controller via helm (control via `group_vars/all`)
-  NOTE: nginx ingress is not yet RBAC ready, and we currently have to use: https://github.com/ReSearchITEng/kubeadm-playbook/blob/master/allow-all-all-rbac.yml.
 * Join the nodes to the cluster with 'kubeadm join'
 * Planned: Install prometheus via ~~Helm~~ operator (control via `group_vars/all`)
 * Sanity: checks if nodes are ready and if all pods are running
-* create ceph storage cluster using rook operator
-* create vsphere persistent storage class and all required setup. Please fill in vcenter u/p/url,etc `group_vars/all`, and follow all initial steps there.
+* when enabled, it will create ceph storage cluster using rook operator
+* when enabled, it will create vsphere persistent storage class and all required setup. Please fill in vcenter u/p/url,etc `group_vars/all`, and follow all initial steps there.
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.
-
 This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1 - 1.6.6 and 1.7.0**
 For installing k8s v1.7 one must also use kubeadm 1.7 (kubeadm limitation)
+
+If for any reason anyone needs to relax RBAC, they can do: 
+```kubectl create -f https://github.com/ReSearchITEng/kubeadm-playbook/blob/master/allow-all-all-rbac.yml```
 
 # How To
 
@@ -54,7 +55,7 @@ git clone https://github.com/ReSearchITEng/kubeadm-playbook.git
 cd kubeadm-playbook/
 cp hosts.example hosts
 vi hosts <add hosts>
-group_vars
+# Setul vars in group_vars
 cp group_vars/all.example group_vars/all
 vi group_vars/all <modify vars as needed>
 ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
