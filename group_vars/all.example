@@ -111,7 +111,7 @@ k8s_network_addons_urls:
 k8s_addons_urls:
   - https://github.com/kubernetes/dashboard/raw/master/src/deploy/kubernetes-dashboard.yaml # OR using this: https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dashboard
   - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
-  - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # Unfortunatelly it's required by prods like nginx-ingress, which are not rbac ready yet
+  # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
 #####
 
 vsphere_storageclass_urls:
@@ -128,7 +128,7 @@ helm:
 #    - { name: rook, url: 'http://charts.rook.io' }
 #    - { name: fabric8, url: 'https://fabric8.io/helm' }
   packages_list: # when not defined, namespace defaults to "default" namespace
-    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' } # non-RBAC ready
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' } # non-RBAC ready
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster' }
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
 #    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.k8s.cloud.corp.example.com,server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.k8s.cloud.corp.example.com'
