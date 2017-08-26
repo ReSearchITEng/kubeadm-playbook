@@ -153,8 +153,8 @@ storage:
 ## Creates a nfs server on the master and exports the below path from the master to all cluster
 nfs_k8s: #https://github.com/kubernetes/kubernetes/blob/master/examples/volumes/nfs/provisioner/nfs-server-gce-pv.yaml
          #https://github.com/kubernetes-incubator/nfs-provisioner
-  enabled: "true"
-  #enabled: False
+  #enabled: "true"
+  enabled: False
   provisioner: nfs.k8s
   # Path on the master node:
   host_path: /storage/nfs
