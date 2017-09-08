@@ -98,7 +98,7 @@ taints_master:
 ## options: https://kubernetes.io/docs/admin/addons/
 k8s_network_addons_urls:
 ## CALICO
-#   - http://docs.projectcalico.org/v2.3/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+#   - https://docs.projectcalico.org/v2.5/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
   - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
   - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
