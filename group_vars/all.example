@@ -110,7 +110,7 @@ k8s_network_addons_urls:
 # ADDONS
 k8s_addons_urls:
   - https://github.com/kubernetes/dashboard/raw/master/src/deploy/kubernetes-dashboard.yaml # OR using this: https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dashboard
-  - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
+  # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
   # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
 #####
 
