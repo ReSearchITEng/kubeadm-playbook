@@ -104,6 +104,8 @@ k8s_network_addons_urls:
   - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ## OR Weave:
 # - https://git.io/weave-kube-1.6
+# OR newer:
+# - https://cloud.weave.works/k8s/net?k8s-version=1.7
 #####
 
 #####
