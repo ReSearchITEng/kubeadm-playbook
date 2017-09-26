@@ -100,7 +100,7 @@ k8s_network_addons_urls:
 ## CALICO
 #   - https://docs.projectcalico.org/v2.5/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
-  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml
+  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
   - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ## OR Weave:
 # - https://git.io/weave-kube-1.6
@@ -111,7 +111,7 @@ k8s_network_addons_urls:
 #####
 # ADDONS
 k8s_addons_urls:
-  - https://github.com/kubernetes/dashboard/raw/master/src/deploy/kubernetes-dashboard.yaml # OR using this: https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dashboard
+  # - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml  
   # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
   # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
 #####
@@ -132,6 +132,8 @@ helm:
   packages_list: # when not defined, namespace defaults to "default" namespace
     - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' } # non-RBAC ready
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster' }
+    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head' } #with all admin permissions, development version
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ networking.dnsDomain }},imageTag=v1.7.0' } # secure & stable prod version
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
 #    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.k8s.cloud.corp.example.com,server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.k8s.cloud.corp.example.com'
 
