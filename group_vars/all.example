@@ -26,6 +26,8 @@ package_state: installed
 # iptables_reset: False # False is default
 #####
 
+custom.networking.dnsDomain: "k8s.cloud.corp.example.com"
+
 #####
 ## This is the configuration that will be used by kubeadm init on master.
 ## Structure comes from: https://kubernetes.io/docs/admin/kubeadm/#config-file
@@ -47,10 +49,10 @@ kubeadm_master_config:
 ## If you plan to use something like k8s.cloud.corp.example.com (instead of the default cluster.local), ensure you have the DNS set for wildcard, and pointing all the trafic
 ## for *.k8s.cloud.corp.example.com to the IP of the master
 ## default is: "cluster.local"
-    dnsDomain: "k8s.cloud.corp.example.com"
+#    dnsDomain: "k8s1.cluster.local"
 #    serviceSubnet: <cidr>
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.7.0' # If defined, it will require internet access to find which is the latest one.
+  kubernetesVersion: 'v1.7.7' # If defined, it will require internet access to find which is the latest one.
   #kubernetesVersion: 'v1.6.6' # If defined, it will require internet access to find which is the latest one.
   #cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines>
 #  authorizationModes:
@@ -109,8 +111,8 @@ k8s_network_addons_urls:
 #####
 
 #####
-# ADDONS
-k8s_addons_urls:
+# ADDONS # uncomment/ add the desired ones.
+#k8s_addons_urls:
   # - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml  
   # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
   # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
@@ -123,7 +125,7 @@ vsphere_storageclass_urls:
 #####
 ## HELM CHARTS
 helm:
-  #helm_version: latest #v2.5.0
+  #helm_version: latest #v2.5.0 +
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get'
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
     - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
@@ -132,8 +134,8 @@ helm:
   packages_list: # when not defined, namespace defaults to "default" namespace
     - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' } # non-RBAC ready
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster' }
-    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head' } #with all admin permissions, development version
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ networking.dnsDomain }},imageTag=v1.7.0' } # secure & stable prod version
+    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head' } #with all admin permissions, development version
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.0' } # secure & stable prod version
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
 #    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.k8s.cloud.corp.example.com,server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.k8s.cloud.corp.example.com'
 
