@@ -17,6 +17,9 @@ package_state: installed
 # kubeadm_version: 1.6.4 # In one wants specific kubeadm version, use this setting. Note: requires also full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
 #####
 
+# kubeadm_init_args: "--skip-preflight-checks"
+# kubeadm_join_args: "--skip-preflight-checks"
+
 ## first force uninstall any kube* packages (rpm/deb) from all hosts
 ## When full_kube_reinstall is False or undefined, it will not reinstall, also it won't pre-pull the k8s docker images (it will be done later time), and it won't remove the /etc/kubernetes/ folder before reinstall
 # full_kube_reinstall: True
