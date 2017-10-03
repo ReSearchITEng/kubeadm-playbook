@@ -11,7 +11,7 @@
 
 
 - name: Join cluster
-  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} 
+  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:
   - init
   - node
