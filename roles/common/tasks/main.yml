@@ -39,6 +39,9 @@
   with_items: [ 'kubernetes' ]
   when: proxy_env is defined and ansible_os_family == "RedHat"
 
+- name: swap - disable swap (prereq k8s 1.8)
+  command: swapoff --all
+
 - name: Disable selinux
   selinux: policy=targeted state=permissive
   when: ansible_os_family == "RedHat"
