@@ -42,7 +42,7 @@
 - name: 'Initialize cluster with --config /etc/kubernetes/kubeadm-master.conf'
   # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
 #  environment: '{{env_kc}}'
-  command: /usr/bin/kubeadm init --config /etc/kubernetes/kubeadm-master.conf
+  command: /usr/bin/kubeadm init {{ kubeadm_init_args | default(" ") }} --config /etc/kubernetes/kubeadm-master.conf
   tags:
   - init
 
