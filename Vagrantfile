@@ -18,33 +18,40 @@ Vagrant.configure(2) do |config|
   # boxes at https://atlas.hashicorp.com/search.
 
   config.vm.box = "centos/7"
-  #config.vm.network "public_network", bridge: "enp3s0"
-  #config.vm.network "public_network", :adapter=>1 , type: "dhcp", :bridge => "enp3s0"
-  config.vm.network "public_network", type: "dhcp", :bridge => "enp3s0"
-  config.vm.usable_port_range = (2000..2500)
+    #config.vm.box_check_update = "false"  # If there is no internet access to get new updates
+
+  #config.vm.network "public_network", type: "dhcp", bridge: "enp3s0"
+  config.vm.network "public_network" #, :bridge => "enp3s0" #, mac: "auto" #, :adapter=>1 #, use_dhcp_assigned_default_route: true
+  #config.ssh.port=22
+  #config.vm.network "public_network", type: "dhcp", :bridge => "enp3s0"
+  #config.vm.usable_port_range = (2000..2500)
+  #config.vm.boot_timeout = 90
+  #config.ssh.insert_key = false
+  #config.ssh.username = "your_user"
+  #config.ssh.password = "your_password"
 
   config.vm.provider "virtualbox" do |vb|
-     # Display the VirtualBox GUI when booting the machine
      vb.gui = false
-  #   # Customize the amount of memory on the VM:
-     vb.memory = "3072"
+     vb.memory = "4096" #"3072"
      vb.cpus = 3
   end
 
   # NODES:
   (1..$num_instances).each do |i|
     config.vm.define vm_name = "%s-%02d" % [$instance_name_prefix, i] do |node|
-     node.vm.box = "centos/atomic-host"
+     node.vm.box = "centos/7"
+     #node.vm.box = "centos/atomic-host"
      node.vm.hostname = vm_name
+     node.ssh.host = vm_name
      node.vm.provision "shell", inline: "echo hello from %s" % [node.vm.hostname]
+     node.vm.provision "shell" do |s|
+      s.path= "dockerize.sh"
+      #s.args= "node"
+     end
      node.vm.provision "shell", inline: <<-SHELL
-      sudo cp -r ~vagrant/.ssh ~/  # This will allow us to ssh into root with existing vagrant key
-      #sudo apt-get update
-      #sudo apt-get install -y git docker ansible
-      #sudo yum install -y git docker ansible curl tar zip unzip
-      #ssh-copy-id
+      sudo cp -r ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
      SHELL
-     File.open("ssh_config", "w+") { |file| file.write("boo" ) }
+     #File.open("ssh_config", "w+") { |file| file.write("boo" ) }
     end
   end
 
@@ -53,18 +60,24 @@ Vagrant.configure(2) do |config|
     #k8smaster.vm.hostname = "#{k8smaster}"
     #k8smaster.vm.hostname = "%s" % [ k8smaster ]
     k8smaster.vm.hostname = vm_name
-    k8smaster.vm.network "forwarded_port", guest: 80, host: 2080, auto_correct: true
-    k8smaster.vm.network "forwarded_port", guest: 443, host: 2443, auto_correct: true
+    #k8smaster.ssh.host = vm_name
+    #k8smaster.vm.network "forwarded_port", guest: 80, host: 2080, auto_correct: true
+    #k8smaster.vm.network "forwarded_port", guest: 443, host: 2443, auto_correct: true
+
     k8smaster.vm.provision :shell, inline: "echo hello from %s" % [k8smaster.vm.hostname]
+    k8smaster.vm.provision "shell" do |s|
+     s.path= "dockerize.sh"
+     #s.args= "master"
+    end
+
     k8smaster.vm.provision "shell", inline: <<-SHELL
-     sudo cp -r ~vagrant/.ssh ~/  # This will allow us to ssh into root with existing vagrant key
-     #sudo apt-get update
-     #sudo apt-get install -y git docker ansible
-     sudo yum install -y git docker ansible curl tar zip unzip
+     sudo cp -r ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
      curl -SL https://github.com/ReSearchITEng/kubeadm-playbook/archive/master.tar.gz | tar xvz
     SHELL
+    k8smaster.vm.synced_folder ".vagrant", "/vagrant", type: "rsync" #, rsync__exclude: ".local_only" #rsync__include: ".vagrant/"
 
   end
+
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
