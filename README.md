@@ -81,3 +81,16 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 - https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
 
 URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
+
+
+## USING with Vagrant 
+For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script:
+./vagrant_demo.sh full
+After preparations (edit group_vars/all, etc.), run the ansible installation normally.
+
+Using vagrant keeping NAT as 1st interface (usually with only one machine) was not tested and the Vagrantfile may requires some changes.
+There was no focus on this option as it's more complicated to use afterwards: one must export the ports manually to access ingresses like dashboard from the browser, and usually does not support more than one machine.
+
+
+
+
