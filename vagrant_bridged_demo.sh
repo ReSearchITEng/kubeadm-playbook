@@ -73,7 +73,7 @@ done
 
 echo "to ssh into any of the machines, run like this: "
 for M in ${all_runningVagrMs} ; do
-  echo "ssh -f ./ssh_config $M "
+  echo "ssh -F ./ssh_config $M "
 done
 echo
 
