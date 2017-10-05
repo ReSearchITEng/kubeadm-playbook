@@ -42,7 +42,7 @@ Vagrant.configure(2) do |config|
      node.vm.box = "centos/7"
      #node.vm.box = "centos/atomic-host"
      node.vm.hostname = vm_name
-     node.ssh.host = vm_name
+     #node.ssh.host = vm_name
      node.vm.provision "shell", inline: "echo hello from %s" % [node.vm.hostname]
      node.vm.provision "shell" do |s|
       s.path= "dockerize.sh"
