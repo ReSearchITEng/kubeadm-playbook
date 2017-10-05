@@ -50,7 +50,7 @@ If for any reason anyone needs to relax RBAC, they can do:
 
 # How To
 
-```
+```shell
 git clone https://github.com/ReSearchITEng/kubeadm-playbook.git
 cd kubeadm-playbook/
 cp hosts.example hosts
@@ -63,7 +63,7 @@ ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
 
 If the wildcard DNS was properly set up ( *.k8s.cloud.corp.example.com pointing to master machine public IP), at this stage one should be able to see the dashboard at: http://dashboard.cloud.corp.example.com
 For testing the Persistent volume, one may use/tune the files in the demo folder.
-```
+```shell
 kubectl exec -it demo-pod -- bash -c "echo Hello DEMO >> /usr/share/nginx/html/index.html "
 ```
 and check the http://pv.cloud.corp.example.com page.
@@ -85,7 +85,9 @@ URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
 
 ## USING with Vagrant 
 For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script:
-./vagrant_demo.sh full
+```shell
+./vagrant_bridged_demo.sh --full [ --bridged_adapter <desired host interface> ] # bridged_adapter defaults to ip route | grep default | head -1 
+```
 After preparations (edit group_vars/all, etc.), run the ansible installation normally.
 
 Using vagrant keeping NAT as 1st interface (usually with only one machine) was not tested and the Vagrantfile may requires some changes.
