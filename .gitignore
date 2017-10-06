@@ -1,3 +1,6 @@
 *.retry
+.vagrant
+ansible.cfg
+ssh_config
 /hosts
 /group_vars/all
