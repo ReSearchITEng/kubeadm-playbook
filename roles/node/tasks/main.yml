@@ -10,15 +10,25 @@
   - always
 
 
-- name: Join cluster
+- name: Join cluster using kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:
   - init
   - node
+#  args:
+#  creates: /etc/kubernetes/kubelet.conf
+
+- name: wait for /etc/kubernetes/kubelet.conf to be created
+  wait_for: 
+    path: /etc/kubernetes/kubelet.conf
+    state: present
+    timeout: 30
+    delay: 3
 
 #This is required when proxy is used, and the inventory_hostname is defined with fqdn
 #to ensure the connection to local server is not going via proxy (expecially when applying addons)
-- replace:
+- name: replace master api server address to {{ groups["master"][0] }} in the /etc/kubernetes/kubelet.conf
+  replace:
     dest: /etc/kubernetes/kubelet.conf
     regexp: '(\s+)(server: https:\/\/)[A-Za-z0-9\-\.]+:'
     replace: '\1\2{{ groups["master"][0] }}:'

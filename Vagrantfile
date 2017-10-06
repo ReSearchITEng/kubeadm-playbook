@@ -9,6 +9,14 @@
 $instance_name_prefix = "k8s"
 $num_instances = 1
 
+# https://www.virtualbox.org/manual/ch08.html#vboxmanage-natnetwork
+def nat(config)
+    config.vm.provider "virtualbox" do |v|
+      v.customize ["modifyvm", :id, "--nic1", "bridged", "--bridgeadapter", "enp3s0", "--nictype1", "82540EM", "--macaddress1", "auto" ] #, "--nat-network2", "mybridgeinterface", "--nictype1", "virtio"]
+      v.customize ["modifyvm", :id, "--nic2", "nat", "--nictype2", "82540EM"]
+    end
+end
+
 Vagrant.configure(2) do |config|
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
@@ -18,7 +26,7 @@ Vagrant.configure(2) do |config|
   # boxes at https://atlas.hashicorp.com/search.
 
   config.vm.box = "centos/7"
-    #config.vm.box_check_update = "false"  # If there is no internet access to get new updates
+  #config.vm.box_check_update = "false"  # If there is no internet access to get new updates
 
   #config.vm.network "public_network", type: "dhcp", bridge: "enp3s0"
   config.vm.network "public_network" #, :bridge => "enp3s0" #, mac: "auto" #, :adapter=>1 #, use_dhcp_assigned_default_route: true

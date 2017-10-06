@@ -2,10 +2,12 @@
 - hosts: master
   become: yes
   become_method: sudo
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  tags:
+  - master
   tasks:
   - name: kubectl get nodes
-    environment:
-      KUBECONFIG: /etc/kubernetes/admin.conf
     shell: "kubectl get nodes | tail -n +2 | grep -v -w 'Ready' || true "
     register: command_result
     tags:
@@ -16,8 +18,6 @@
     delay: 3
 
   - name: kubectl get nodes
-    environment:
-      KUBECONFIG: /etc/kubernetes/admin.conf
     shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' || true "
     register: command_result
     tags:
@@ -26,4 +26,44 @@
     until: command_result.stdout == ""
     retries: 30
     delay: 3
-    
+
+  - name: Get events
+    command: kubectl get events --all-namespaces
+    register: command_result
+
+  - name: Display events
+    debug:
+      var: command_result.stdout_lines
+
+  - name: Get pods
+    command: kubectl get pods -o wide --all-namespaces --show-all=true --show-labels=true --show-kind=true
+    register: command_result
+
+  - name: Display pods
+    debug:
+      var: command_result.stdout_lines
+
+  - name: Get nodes
+    command: kubectl get nodes
+    register: command_result
+
+  - name: Display nodes
+    debug:
+      var: command_result.stdout_lines
+
+  - name: Check all nodes were registered
+    shell: "/usr/bin/test $(kubectl get nodes | grep -ow Ready | wc -l) == {{ groups['node'] | length + groups['master'] | length }}"
+    register: command_result
+    retries: 10
+    delay: 3
+    until: command_result | success
+
+  - name: Get cluster info
+    command: kubectl cluster-info
+    register: command_result
+
+  - name: cluster-info
+    debug:
+      var: command_result.stdout_lines    
+
+

@@ -1,4 +1,5 @@
 ---
+- include: pre_sanity.yml
 - include: reset_helm.yml
 - include: remove_pvs.yml
 - include: reset_nfs.yml
@@ -7,6 +8,7 @@
 - include: reset-weave.yml
 - include: common.yml
 - include: master.yml
+- include: network.yml
 - include: node.yml
 - include: post_cluster_deploy.yml
 - include: helm.yml

@@ -1,5 +1,6 @@
 ---
 - hosts: master
+  gather_facts: False
   become: yes
   become_method: sudo
   tags:

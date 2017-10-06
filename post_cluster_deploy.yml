@@ -2,6 +2,8 @@
 - hosts: master
   become: yes
   become_method: sudo
+  tags:
+  - master
   tasks:
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
@@ -30,14 +32,6 @@
     when: taints_master is defined or master_uncordon is defined
     tags:
     - taints
-
-  - name: Create cluster network
-    command: /usr/bin/kubectl apply -f {{ item }}
-    with_items: "{{ k8s_network_addons_urls | default ([]) }}"
-    environment: '{{env_kc}}'
-    when: k8s_network_addons_urls is defined
-    tags:
-    - k8s_network_addons
 
   - name: Create vsphere storage class
     command: /usr/bin/kubectl apply -f {{ item }}

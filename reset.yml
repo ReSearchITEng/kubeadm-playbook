@@ -1,5 +1,6 @@
 ---
 - hosts: all
+  gather_facts: False
   become: yes
   become_method: sudo
   tags:
@@ -7,6 +8,16 @@
   - master
   - node
   tasks:
+
+  - name: remove pods NFS mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
+    shell: umount -f $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~nfs' | awk '{print $3}')
+    with_items:
+    - kubelet
+    tags:
+    - kubelet
+    - uninstall
+    - reset
+    ignore_errors: yes
 
   - name: Reset cluster
     command: /usr/bin/kubeadm reset
@@ -63,7 +74,7 @@
 
   - name: remove plugins mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     #shell: 'umount $(mount | grep " on /var/lib/kubelet/plugins/kubernetes.io/" | cut -f1 -d" ")'
-    shell: umount $(mount | grep '/kubelet/plugins/kubernetes.io/' | awk '{print $3}')
+    shell: umount -f $(mount | grep '/kubelet/plugins/kubernetes.io/' | awk '{print $3}')
     #shell: 'umount $(mount | grep "/kubelet/plugins/kubernetes.io/" | cut -f1 -d" ")'
     with_items:
     - kubelet
@@ -74,7 +85,7 @@
     ignore_errors: yes
 
   - name: remove pods mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
-    shell: umount $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~' | awk '{print $3}')
+    shell: umount -f $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~' | awk '{print $3}')
     with_items:
     - kubelet
     tags:

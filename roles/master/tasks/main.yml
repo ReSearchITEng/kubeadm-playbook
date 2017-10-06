@@ -11,7 +11,7 @@
 #  - jq
 #  - ceph-common
 
-- name: Pull images
+- name: Pull images on master
   command: /usr/bin/docker pull "{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
   with_items:
   - "gcr.io/google_containers/kube-proxy-amd64"
@@ -22,7 +22,8 @@
   - prepull_images
   register: command_result
   changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
-  when: full_kube_reinstall is defined and full_kube_reinstall and kubeadm_master_config.kubernetesVersion is defined
+  when: pre_pull_k8s_images is defined and pre_pull_k8s_images and kubeadm_master_config.kubernetesVersion is defined
+  #when: full_kube_reinstall is defined and full_kube_reinstall and kubeadm_master_config.kubernetesVersion is defined
 
 - name: adding {{ inventory_hostname,inventory_hostname_short }} to the kubeadm_master_config.apiServerCertSANs
   set_fact:

@@ -15,6 +15,7 @@
 ## package_state: latest # Other valid options for this context: installed
 package_state: installed
 # kubeadm_version: 1.6.4 # In one wants specific kubeadm version, use this setting. Note: requires also full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
+# https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
 #####
 
 # kubeadm_init_args: "--skip-preflight-checks"
@@ -25,11 +26,19 @@ package_state: installed
 # full_kube_reinstall: True
 #####
 
+pre_pull_k8s_images: True
+#pre_pull_k8s_images: False
 #####
 # iptables_reset: False # False is default
 #####
 
+#####
 custom.networking.dnsDomain: "k8s.cloud.corp.example.com"
+#####
+
+#####
+# reset_gracefully: False # False is default
+#####
 
 #####
 ## This is the configuration that will be used by kubeadm init on master.
@@ -49,15 +58,14 @@ kubeadm_master_config:
 #    certFile: <path|string>
 #    keyFile: <path|string>
   networking:
-## If you plan to use something like k8s.cloud.corp.example.com (instead of the default cluster.local), ensure you have the DNS set for wildcard, and pointing all the trafic
-## for *.k8s.cloud.corp.example.com to the IP of the master
 ## default is: "cluster.local"
 #    dnsDomain: "k8s1.cluster.local"
 #    serviceSubnet: <cidr>
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.7.7' # If defined, it will require internet access to find which is the latest one.
+    #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
+  kubernetesVersion: 'v1.7.6' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
   #kubernetesVersion: 'v1.6.6' # If defined, it will require internet access to find which is the latest one.
-  #cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines>
+  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
 #  authorizationModes:
 #  - <authorizationMode1|string>
 #  - <authorizationMode2|string>
@@ -66,10 +74,10 @@ kubeadm_master_config:
 #  selfHosted: <bool>
   apiServerExtraArgs: # https://kubernetes.io/docs/admin/kube-apiserver/
     service-node-port-range: '79-32767' #Default 32000-32767 ; Ensure the local ports on all nodes are set accordingly
-#    <argument>: <value|string>
+    runtime-config: batch/v2alpha1  # Required if one wants to use batch jobs before 1.8
 #    <argument>: <value|string>
 #  controllerManagerExtraArgs: # https://kubernetes.io/docs/admin/kube-controller-manager/
-#    pod-eviction-timeout: '2m00s' # Default 5m0s #PodEvictionTimeout controls grace peroid for deleting pods on failed nodes.  Takes time duration string (e.g. '300ms' or '2m30s').  Valid time units are 'ns', 'us', 'ms', 's', 'm', 'h'.
+#    pod-eviction-timeout: '3m00s' # Default 5m0s #PodEvictionTimeout controls grace peroid for deleting pods on failed nodes.  Takes time duration string (e.g. '300ms' or '2m30s').  Valid time units are 'ns', 'us', 'ms', 's', 'm', 'h'.
 #    <argument>: <value|string>
 #  schedulerExtraArgs:
 #    <argument>: <value|string>
@@ -102,7 +110,7 @@ taints_master:
 ## it's not possible to have more than one network solution
 ## options: https://kubernetes.io/docs/admin/addons/
 k8s_network_addons_urls:
-## CALICO
+# CALICO # For Calico one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 192.168.0.0/16 )
 #   - https://docs.projectcalico.org/v2.5/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
   - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
@@ -135,16 +143,14 @@ helm:
 #    - { name: rook, url: 'http://charts.rook.io' }
 #    - { name: fabric8, url: 'https://fabric8.io/helm' }
   packages_list: # when not defined, namespace defaults to "default" namespace
-    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' } # non-RBAC ready
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' } # RBAC ready
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster' }
     - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head' } #with all admin permissions, development version
 #    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.0' } # secure & stable prod version
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
-#    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.k8s.cloud.corp.example.com,server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.k8s.cloud.corp.example.com'
+#    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}}'
+#    - { name: moodle, repo: stable/moodle, options: '--set moodleUsername=admin,moodlePassword=password,mariadb.mariadbRootPassword=secretpassword,serviceType=ClusterIP' }
 
-## For nginx-ingress, in case you don't want to give all perms to all(allow-all-all-rbac.yml), one has to tune: https://raw.githubusercontent.com/kubernetes/ingress/master/examples/rbac/nginx/nginx-ingress-controller-rbac.yml
-#    - { name: helm, repo: stable/heapster namespace: kube-system, options: '--set service.type=NodePort' }
-#    - { name: prometheus, repo: stable/prometheus, namespace: kube-system, options: '' }
 ## Not tested:
 #    - { name: elasticsearch, repo: incubator/elasticsearch }
 #####
@@ -153,7 +159,7 @@ helm:
 ##################  STORAGE  ################
 #############################################
 
-# When reseting a previous instalaltion, should it first remove the exsting pvcs&pvs (default false)?
+## When reseting a previous instalaltion, should it first remove the exsting pvcs&pvs (default false)?
 storage:
   delete_pvs: true
 
@@ -290,7 +296,8 @@ cloud_config: |
       #machine03: vm-uuid="4215fbc5-0851-4255-9fb7-a1f7e31ae716"
       #machine04: vm-uuid="42151a5f-f227-e888-7d73-e148de927888"
     [Disk]
-      scsicontrollertype = lsilogic-sas
+      #scsicontrollertype = lsilogic-sas
+      scsicontrollertype = pvscsi
 
 #####
 
