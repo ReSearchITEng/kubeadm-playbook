@@ -58,15 +58,19 @@ kubeadm_master_config:
 #    caFile: <path|string>
 #    certFile: <path|string>
 #    keyFile: <path|string>
+#    dataDir: <path|string>
+#    extraArgs:
+#      <argument>: <value|string>
+#      <argument>: <value|string>
+#    image: <string>
   networking:
-## default is: "cluster.local"
-#    dnsDomain: "k8s1.cluster.local"
+#    dnsDomain: "k8s1.cluster.local"  ## default is: "cluster.local"
 #    serviceSubnet: <cidr>
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, this entry can be commented out.
     #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
   kubernetesVersion: 'v1.7.8' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
-  #kubernetesVersion: 'v1.6.6' # If defined, it will require internet access to find which is the latest one.
-  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
+#  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
+#  nodeName: <string>
 #  authorizationModes:
 #  - <authorizationMode1|string>
 #  - <authorizationMode2|string>
@@ -89,7 +93,11 @@ kubeadm_master_config:
 #    - <name1|string>
 #    - <name2|string>
 #  certificatesDir: <string>
-
+#  imageRepository: <string>
+#  unifiedControlPlaneImage: <string>
+#  featureGates:
+#    <feature>: <bool>
+#    <feature>: <bool>
 #####
 ## TAINTS (for master) & uncordon
 ## NoExecute evicts on the spot. (while NoSchedule does not allow new pods); other option: PreferNoSchedule
