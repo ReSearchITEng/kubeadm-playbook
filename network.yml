@@ -1,0 +1,30 @@
+---
+- hosts: master
+  become: yes
+  become_method: sudo
+  tasks:
+  - set_fact:
+      env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    tags:
+    - always
+
+  - name: Create cluster network
+    command: /usr/bin/kubectl apply -f {{ item }}
+    with_items: "{{ k8s_network_addons_urls | default ([]) }}"
+    environment: '{{env_kc}}'
+    when: k8s_network_addons_urls is defined
+    tags:
+    - k8s_network_addons
+
+  - name: sanity - wait for alls pod to be running (besides kube-dns for now, as it might be forced to a node if master did not allow it due to tains)
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' | grep -v 'kube-dns' || true "
+    register: command_result
+    tags:
+    - k8s_network_addons
+    - sanity
+    until: command_result.stdout == ""
+    retries: 40
+    delay: 3
+

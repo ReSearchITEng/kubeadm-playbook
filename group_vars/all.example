@@ -18,8 +18,9 @@ package_state: installed
 # https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
 #####
 
-# kubeadm_init_args: "--skip-preflight-checks"
-# kubeadm_join_args: "--skip-preflight-checks"
+kubeadm_init_args: "--skip-preflight-checks"
+kubeadm_join_args: "--skip-preflight-checks  --discovery-token-unsafe-skip-ca-verification"
+turn_swapoff: true #false # default true
 
 ## first force uninstall any kube* packages (rpm/deb) from all hosts
 ## When full_kube_reinstall is False or undefined, it will not reinstall, also it won't pre-pull the k8s docker images (it will be done later time), and it won't remove the /etc/kubernetes/ folder before reinstall
@@ -32,10 +33,10 @@ pre_pull_k8s_images: True
 # iptables_reset: False # False is default
 #####
 
-#####
-custom.networking.dnsDomain: "k8s.cloud.corp.example.com"
-#####
-
+## ensure you have the DNS set for wildcard, and pointing all the trafic
+custom:
+  networking:
+   dnsDomain: "mycluster1.k8s.corp.example.com"
 #####
 # reset_gracefully: False # False is default
 #####
@@ -46,7 +47,7 @@ custom.networking.dnsDomain: "k8s.cloud.corp.example.com"
 kubeadm_master_config:
   apiVersion: kubeadm.k8s.io/v1alpha1
   kind: MasterConfiguration
-#  api:
+  api:
 #    advertiseAddress: <address|string>
 #    advertiseAddress: '10x.x...x' # Usually required when working with vagrant, as the default (eth0) address is the NAT...
 #    bindPort: <int>
@@ -63,7 +64,7 @@ kubeadm_master_config:
 #    serviceSubnet: <cidr>
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, this entry can be commented out.
     #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.7.6' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
+  kubernetesVersion: 'v1.7.8' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
   #kubernetesVersion: 'v1.6.6' # If defined, it will require internet access to find which is the latest one.
   cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
 #  authorizationModes:
@@ -76,6 +77,7 @@ kubeadm_master_config:
     service-node-port-range: '79-32767' #Default 32000-32767 ; Ensure the local ports on all nodes are set accordingly
     runtime-config: batch/v2alpha1  # Required if one wants to use batch jobs before 1.8
 #    <argument>: <value|string>
+#    kubelet-preferred-address-types: 'Hostname' #,ExternalIP,InternalIP'
 #  controllerManagerExtraArgs: # https://kubernetes.io/docs/admin/kube-controller-manager/
 #    pod-eviction-timeout: '3m00s' # Default 5m0s #PodEvictionTimeout controls grace peroid for deleting pods on failed nodes.  Takes time duration string (e.g. '300ms' or '2m30s').  Valid time units are 'ns', 'us', 'ms', 's', 'm', 'h'.
 #    <argument>: <value|string>
@@ -96,11 +98,11 @@ kubeadm_master_config:
 ## It's useful if it's a single-machine Kubernetes cluster for development (replacing minikube)
 ## To see taints, use: kubectl describe nodes
 
-taints_master:
-- 'dedicated=master:NoExecute'                 # Force eviction of pods from master
-- 'dedicated=master:PreferNoSchedule'          # Safety net
-- 'dedicated:NoExecute-'                       # Puts the previous PreferNoSchedule into action - step1
-- 'node-role.kubernetes.io/master:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
+#taints_master:
+#- 'dedicated=master:NoExecute'                 # Force eviction of pods from master
+#- 'dedicated=master:PreferNoSchedule'          # Safety net
+#- 'dedicated:NoExecute-'                       # Puts the previous PreferNoSchedule into action - step1
+#- 'node-role.kubernetes.io/master:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
 
 #master_uncordon: True     # This makes master like any other node. Mandatory for a single machine cluster (where master==node)
 #####
@@ -110,10 +112,10 @@ taints_master:
 ## it's not possible to have more than one network solution
 ## options: https://kubernetes.io/docs/admin/addons/
 k8s_network_addons_urls:
-# CALICO # For Calico one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 192.168.0.0/16 )
+## CALICO # For Calico one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 192.168.0.0/16 )
 #   - https://docs.projectcalico.org/v2.5/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
-  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
+  ##- https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
   - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ## OR Weave:
 # - https://git.io/weave-kube-1.6
