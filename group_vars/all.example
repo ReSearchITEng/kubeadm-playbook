@@ -10,9 +10,9 @@
 #####
 
 #####
-# PACKAGES (rpm/deb)
-# Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
-# package_state: latest # Other valid options for this context: installed
+## PACKAGES (rpm/deb)
+## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
+## package_state: latest # Other valid options for this context: installed
 package_state: installed
 kubeadm_version: 1.7.5 # requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
 kubelet_version: 1.7.5
@@ -23,7 +23,6 @@ kubectl_version: 1.7.5
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubectl' | grep ver
 #####
 ##### NOTE ->> For the actual k8s version, please set the below: kubeadm_master_config.kubernetesVersion
-
 
 kubeadm_init_args: "--skip-preflight-checks"
 kubeadm_join_args: "--skip-preflight-checks  --discovery-token-unsafe-skip-ca-verification"

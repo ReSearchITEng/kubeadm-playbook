@@ -64,28 +64,6 @@
   command: swapoff --all
   when: turn_swapoff | default (true)
 
-### kubeadm
-- name: Install kubeadm
-  package: name={{ item }} state={{ package_state | default ('latest') }}
-  environment: '{{ proxy_env | default ({}) }}'
-  with_items:
-  - kubeadm
-  when: kubeadm_version is not defined
-
-- name: Install kubeadm
-  package: name={{ item }}-{{kubeadm_version}} state=installed
-  environment: '{{ proxy_env | default ({}) }}'
-  with_items:
-  - kubeadm
-  when: kubeadm_version is defined and ( kubeadm_version!='installed' or kubeadm_version!='latest' )
-
-- name: Install kubeadm
-  package: name={{ item }}-{{kubeadm_version}} state=installed
-  environment: '{{ proxy_env | default ({}) }}'
-  with_items:
-  - kubeadm
-  when: kubeadm_version is defined and ( kubeadm_version=='installed' or kubeadm_version=='latest' )
-
 ### kubelet
 - name: Install kubelet
   package: name={{ item }} state={{ package_state | default ('latest') }}
@@ -129,6 +107,28 @@
   with_items:
   - kubectl
   when: kubectl_version is defined and ( kubectl_version=='installed' or kubectl_version=='latest' )
+
+### kubeadm
+- name: Install kubeadm
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is not defined
+
+- name: Install kubeadm
+  package: name={{ item }}-{{kubeadm_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is defined and ( kubeadm_version!='installed' or kubeadm_version!='latest' )
+
+- name: Install kubeadm
+  package: name={{ item }}-{{kubeadm_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is defined and ( kubeadm_version=='installed' or kubeadm_version=='latest' )
 
 #- name: Install packages
 #  package: name={{ item }} state={{ package_state | default ('latest') }}
