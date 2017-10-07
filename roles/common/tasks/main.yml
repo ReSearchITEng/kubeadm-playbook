@@ -50,7 +50,7 @@
   command: yum clean all
   args:
     warn: no
-  when: ansible_os_family == "RedHat" and package_state is defined and package_state == "latest" 
+  when: ansible_os_family == "RedHat" and package_state is defined and package_state == "latest"
 
 - name: apt-get clean metadata
   command: apt-get clean ; apt-file purge
@@ -64,6 +64,7 @@
   command: swapoff --all
   when: turn_swapoff | default (true)
 
+### kubeadm
 - name: Install kubeadm
   package: name={{ item }} state={{ package_state | default ('latest') }}
   environment: '{{ proxy_env | default ({}) }}'
@@ -85,13 +86,55 @@
   - kubeadm
   when: kubeadm_version is defined and ( kubeadm_version=='installed' or kubeadm_version=='latest' )
 
-- name: Install packages
+### kubelet
+- name: Install kubelet
   package: name={{ item }} state={{ package_state | default ('latest') }}
   environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
+  when: kubelet_version is not defined
+
+- name: Install kubelet
+  package: name={{ item }}-{{kubelet_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubelet
+  when: kubelet_version is defined and ( kubelet_version!='installed' or kubelet_version!='latest' )
+
+- name: Install kubelet
+  package: name={{ item }}-{{kubelet_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubelet
+  when: kubelet_version is defined and ( kubelet_version=='installed' or kubelet_version=='latest' )
+
+### kubectl
+- name: Install kubectl
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
   - kubectl
-  - kubernetes-cni
+  when: kubectl_version is not defined
+
+- name: Install kubectl
+  package: name={{ item }}-{{kubectl_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubectl
+  when: kubectl_version is defined and ( kubectl_version!='installed' or kubectl_version!='latest' )
+
+- name: Install kubectl
+  package: name={{ item }}-{{kubectl_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubectl
+  when: kubectl_version is defined and ( kubectl_version=='installed' or kubectl_version=='latest' )
+
+#- name: Install packages
+#  package: name={{ item }} state={{ package_state | default ('latest') }}
+#  environment: '{{ proxy_env | default ({}) }}'
+#  with_items:
+  #- kubernetes-cni # already installed by kubelet anyway
   #- docker # for RH, but could be installed manually, so no checks here.
   #- kubeadm
   #- docker.io # for ubuntu
@@ -113,7 +156,7 @@
   when: rook is defined and rook.enabled
   with_items:
   - jq
-  
+
 #- name: Use json-file docker logging driver
 #  lineinfile:
 #    dest: /etc/sysconfig/docker
@@ -121,7 +164,7 @@
 #    line: "OPTIONS='--selinux-enabled --log-driver=json-file --signature-verification=false'"
 #  notify:
 #  - Restart docker
-#  tags: 
+#  tags:
 #  - docker
 
 - name: Allow insecure registry
@@ -133,7 +176,7 @@
     kubeadm_docker_insecure_registry is defined
   notify:
   - Restart docker
-  tags: 
+  tags:
   - docker
 
 #- name: Use overlay docker storage driver (note: overlay2 is not currently supported by k8s)
@@ -143,7 +186,7 @@
 #    line: 'DOCKER_STORAGE_OPTIONS="--storage-driver=overlay"'
 #  notify:
 #  - Restart docker
-#  tags: 
+#  tags:
 #  - docker
 
 - set_fact: fact_cloud_provider='--cloud-provider={{ kubeadm_master_config.cloudProvider }} --cloud-config=/etc/kubernetes/cloud-config'
@@ -172,7 +215,7 @@
   notify:
   - Reload systemd
   - Restart kubelet
-  tags: 
+  tags:
   - kubelet
 
 - name: Use systemd kubelet cgroup driver
@@ -183,7 +226,7 @@
   notify:
   - Reload systemd
   - Restart kubelet
-  tags: 
+  tags:
   - kubelet
 
 #- set_fact:
@@ -205,7 +248,7 @@
 
 - name: Create kubeadm sysctl file
   copy: src=90-kubeadm.conf dest=/etc/sysctl.d/90-kubeadm.conf
-  tags: 
+  tags:
   - kubelet
 
 - name: Set sysctl settings
@@ -222,7 +265,7 @@
     path: ~/.kube/
     state: directory
     mode: 0755
-    
+
 - name: kubeadm completion shell
   shell: kubeadm completion {{ shell | default ('bash') }} > ~/.kube/kubeadm_completion.bash.inc
   args:

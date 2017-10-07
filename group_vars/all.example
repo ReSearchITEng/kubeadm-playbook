@@ -10,13 +10,20 @@
 #####
 
 #####
-## PACKAGES (rpm/deb)
-## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
-## package_state: latest # Other valid options for this context: installed
+# PACKAGES (rpm/deb)
+# Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
+# package_state: latest # Other valid options for this context: installed
 package_state: installed
-# kubeadm_version: 1.6.4 # In one wants specific kubeadm version, use this setting. Note: requires also full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
-# https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
+kubeadm_version: 1.7.5 # requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
+kubelet_version: 1.7.5
+kubectl_version: 1.7.5
+# To find the possible versions, check: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
+# curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubeadm' | grep ver
+# curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubelet' | grep ver
+# curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubectl' | grep ver
 #####
+##### NOTE ->> For the actual k8s version, please set the below: kubeadm_master_config.kubernetesVersion
+
 
 kubeadm_init_args: "--skip-preflight-checks"
 kubeadm_join_args: "--skip-preflight-checks  --discovery-token-unsafe-skip-ca-verification"
@@ -134,7 +141,7 @@ k8s_network_addons_urls:
 #####
 # ADDONS # uncomment/ add the desired ones.
 #k8s_addons_urls:
-  # - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml  
+  # - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
   # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
   # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
 #####
