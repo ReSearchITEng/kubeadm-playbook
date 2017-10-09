@@ -90,10 +90,6 @@ For using vagrant on one or multiple machines with bridged interface (public_net
 1. edit ./Vagrant file and set desired number of machines, sizing, etc.
 2. run:
 ```shell
-vagrant up
-```
-3. run:
-```shell
 ./vagrant_bridged_demo.sh --full [ --bridged_adapter <desired host interface> ] # bridged_adapter defaults to ip route | grep default | head -1 
 ```
 After preparations (edit group_vars/all, etc.), run the ansible installation normally.
