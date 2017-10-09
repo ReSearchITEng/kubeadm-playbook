@@ -25,7 +25,7 @@ kubectl_version: 1.7.5
 ##### NOTE ->> For the actual k8s version, please set the below: kubeadm_master_config.kubernetesVersion
 
 kubeadm_init_args: "--skip-preflight-checks"
-kubeadm_join_args: "--skip-preflight-checks  --discovery-token-unsafe-skip-ca-verification"
+kubeadm_join_args: "--skip-preflight-checks" #  For 1.8+ you may want to add: --discovery-token-unsafe-skip-ca-verification" 
 turn_swapoff: true #false # default true
 
 ## first force uninstall any kube* packages (rpm/deb) from all hosts
