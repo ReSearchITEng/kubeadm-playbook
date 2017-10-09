@@ -127,10 +127,10 @@ kubeadm_master_config:
 ## options: https://kubernetes.io/docs/admin/addons/
 k8s_network_addons_urls:
 ## CALICO # For Calico one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 192.168.0.0/16 )
-#   - https://docs.projectcalico.org/v2.5/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml
+#   - https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml # versions are 2.4,2.5,2.6
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
   ##- https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
-  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  - https://raw.githubusercontent.com/coreos/flannel/v0.9.0/Documentation/kube-flannel.yml # For latest, replace v0.9.0 with master
 ## OR Weave:
 # - https://git.io/weave-kube-1.6
 # OR newer:
