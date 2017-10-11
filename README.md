@@ -1,15 +1,20 @@
 # Update Status of the project: Stable
-
 Link to project's github page: https://github.com/ReSearchITEng/kubeadm-playbook
 
 # kubeadm based all in one kubernetes cluster installation Ansible Playbook
-Tested on for Centos/RHEL 7.; Ubuntu/debian should work also, but not tested.
+Tested on for Centos/RHEL 7.2, 7.3, 7.4. 
+When docker_setup: True, min. OS is CentOS/RHEL 7.4. Any other OS needs manual docker pre-installed and docker_setup set to False. 
+Ubuntu/debian should work when docker is preinstalled, but not tested.
 
 ## Targets/pros&cons
+One may use it to get a fully working "production LIKE" environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.
 Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.
 The project is for those who want to quickly create&recreate k8s cluster, with all production features:
 - Ingresses
 - Persistent storage (ceph or vsphere)
+- dashboard (via helm chart)
+- heapster (via helm chart)
+- support proxy
 
 ### PROS:
 - quick (3-7 min) full cluster (re)installation
@@ -23,8 +28,8 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 
 ## Prerequisites:
 - ansible min. 2.1
-- docker: machine(s) with properly set up and working docker daemon (with http_proxy, no_proxy,etc under /etc/sysconfig/docker when proxy is required)
-- For a good experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists)
+- For a good experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists). Note: dashboard will by default use the master machine, but also try to deploy under the provided domain
+- if docker_setup is True, it will also attempt to define your docker and set it up with overlay2 storage driver (one needs CentOS 7.4+)
 - if one needs ceph(rook) persistent storage, disks or folders should be prepared and properly sized (e.g. /storage/rook)
 
 ## This playbook will:
@@ -81,11 +86,11 @@ PS: work inspired from: @sjenning - thanks. PRs & suggestions from: @carlosedp -
 
 Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
 - https://github.com/kubernetes/contrib/tree/master/ansible -> the official k8s ansible, but without kubeadm, therefore the processes will run on the nodes, not in docker containers
-- https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades, etc.
+- https://github.com/dcj/ansible-kubeadm-cluster -> very simple cluster, does not (currently) have: ingresses, helm, addons, proxy support, vagrant support, persistent volumes, etc.
+- https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades 
 - https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
 
 URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
-
 
 ## USING with Vagrant 
 For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script: vagrant_bridged_demo.sh.
