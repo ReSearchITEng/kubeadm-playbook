@@ -53,7 +53,7 @@ Vagrant.configure(2) do |config|
      #node.vm.box = "centos/atomic-host"
      node.vm.hostname = vm_name
      #node.ssh.host = vm_name
-     node.vm.provision "shell", inline: "echo hello from %s" % [node.vm.hostname]
+     #node.vm.provision "shell", inline: "echo hello from %s" % [node.vm.hostname]
      node.vm.provision "shell" do |s|
       s.path= "dockerize.sh"
       #s.args= "node"
@@ -77,7 +77,7 @@ Vagrant.configure(2) do |config|
     #k8smaster.vm.network "forwarded_port", guest: 80, host: 2080, auto_correct: true
     #k8smaster.vm.network "forwarded_port", guest: 443, host: 2443, auto_correct: true
 
-    k8smaster.vm.provision :shell, inline: "echo hello from %s" % [k8smaster.vm.hostname]
+    #k8smaster.vm.provision :shell, inline: "echo hello from %s" % [k8smaster.vm.hostname]
     k8smaster.vm.provision "shell" do |s|
      s.path= "dockerize.sh"
      #s.args= "master"

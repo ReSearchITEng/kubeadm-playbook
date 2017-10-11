@@ -6,6 +6,7 @@
 - include: reset_drain.yml
 - include: reset.yml
 - include: reset-weave.yml
+- include: prerequisites.yml
 - include: common.yml
 - include: master.yml
 - include: network.yml

@@ -72,6 +72,7 @@ for runningVagrM in $all_runningVagrMs ; do
 done
 
 echo "to ssh into any of the machines, run like this: "
+echo ""
 for M in ${all_runningVagrMs} ; do
   echo "ssh -F ./ssh_config $M "
 done
@@ -92,7 +93,7 @@ echo "a local ./ansible.cfg has been generated with success"
 echo
 
 ###
-echo "### Generating (guessing) inventory file based on host names (master must have wokrd master in it)"
+echo "### Generating (guessing) inventory file based on host names (master must have word master in its name)"
 echo "[master]" > hosts
 echo $all_runningVagrMs | tr ' ' '\n' | grep "master" >> hosts
 echo "[node]" >> hosts

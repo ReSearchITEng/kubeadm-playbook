@@ -14,9 +14,9 @@
 ## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 ## package_state: latest # Other valid options for this context: installed
 package_state: installed
-kubeadm_version: 1.7.5 # requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
-kubelet_version: 1.7.5
-kubectl_version: 1.7.5
+kubeadm_version: 1.7.8 # requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
+kubelet_version: 1.7.8
+kubectl_version: 1.7.8
 # To find the possible versions, check: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubeadm' | grep ver
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubelet' | grep ver
@@ -26,12 +26,19 @@ kubectl_version: 1.7.5
 
 kubeadm_init_args: "--skip-preflight-checks"
 kubeadm_join_args: "--skip-preflight-checks" #  For 1.8+ you may want to add: --discovery-token-unsafe-skip-ca-verification" 
-turn_swapoff: true #false # default true
+turn_swapoff: true #false # default true # Important for 1.8+
 
 ## first force uninstall any kube* packages (rpm/deb) from all hosts
 ## When full_kube_reinstall is False or undefined, it will not reinstall, also it won't pre-pull the k8s docker images (it will be done later time), and it won't remove the /etc/kubernetes/ folder before reinstall
 # full_kube_reinstall: True
 #####
+
+iptables_setup: True # Default: True. When undefined, means False. It will disable&mask firewalld service (if exists), set default policies ACCEPT, and it will remove REJECT rules from all chains (INPUT,FW,OUT) with a commands like: iptables -D INPUT -j REJECT --reject-with icmp-host-prohibited (for each).
+# If still issues, debug iptables on both master and nodes with:
+# watch -n1 iptables -vnL
+# http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
+
+docker_setup: True # Default: True. When undefined, means False. It will install docker (if not yet installed), set it up (with overlay2 storage driver) and (re)start it
 
 pre_pull_k8s_images: True
 #pre_pull_k8s_images: False
@@ -39,10 +46,12 @@ pre_pull_k8s_images: True
 # iptables_reset: False # False is default
 #####
 
-## ensure you have the DNS set for wildcard, and pointing all the trafic
+## ensure you have the DNS set for wildcard, and pointing all the trafic to master or similar setup
+## It is used only for setting up the 2nd dashboard ingress (url), the first url is on the master machine
 custom:
   networking:
    dnsDomain: "mycluster1.k8s.corp.example.com"
+
 #####
 # reset_gracefully: False # False is default
 #####
@@ -161,7 +170,7 @@ helm:
   packages_list: # when not defined, namespace defaults to "default" namespace
     - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' } # RBAC ready
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster' }
-    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head' } #with all admin permissions, development version
+    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head' } #with all admin permissions, development version. For prod, use the below entry:
 #    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.0' } # secure & stable prod version
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
 #    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}}'

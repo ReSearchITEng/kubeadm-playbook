@@ -22,6 +22,7 @@
     command: 'docker info'
     tags:
     - check_docker
+    when: docker_setup is not defined or not docker_setup 
 
   - name: check docker hello world
     shell: docker run -i hello-world | awk '/Hello/ {print $1}' 
@@ -29,6 +30,7 @@
     failed_when: command_result.stdout != "Hello"
     tags:
     - check_docker
+    when: docker_setup is not defined or not docker_setup
 
 # Ideally, to ensure there is no x509 certificate error like:
 #' docker pull gcr.io/google_containers/kube-apiserver-amd64:v1.7.2

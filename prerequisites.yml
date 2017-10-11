@@ -1,0 +1,190 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  tags:
+  - prerequisites
+  - master
+  - node
+  tasks:
+
+  - name: check 127.0.1.1 /etc/hosts
+    # For a system with a permanent IP address, that permanent IP address should be used here instead of 127.0.1.1
+    # https://www.debian.org/doc/manuals/debian-reference/ch05.en.html#_the_hostname_resolution
+    # This is a good rule, while not mandatory. If you want, you can skip this task with --skip-tags check_etc_hosts
+    command: grep '^\s*127.0.1.1' /etc/hosts
+    register: command_result
+    failed_when: command_result.stdout != ""
+    tags:
+    - check_etc_hosts
+
+  - name: Install in CentOS/RHEL docker (if does not exist)
+    package: state=installed name={{ item }} #-{{version}}
+    environment: '{{ proxy_env | default ({}) }}'
+    with_items:
+    - docker
+    tags:
+    - docker
+    when: docker_setup is defined and docker_setup and ansible_os_family == "RedHat"
+
+  - name: Install in debian docker (if does not exist)
+    package: state=installed name={{ item }} #-{{version}}
+    environment: '{{ proxy_env | default ({}) }}'
+    with_items:
+    - docker-engine
+    tags:
+    - docker
+    when: docker_setup is defined and docker_setup and ansible_os_family == "Debian"
+
+  - name: prepare docker-storage-setup (CentOS/RHEL)
+    copy:
+      content: |
+        EXTRA_STORAGE_OPTIONS="--storage-opt overlay2.override_kernel_check=true"
+        STORAGE_DRIVER="overlay2"
+      dest: /etc/sysconfig/docker-storage-setup
+      backup: yes
+    run_once: yes
+    when: docker_setup is defined and docker_setup and ansible_os_family == "RedHat"
+    tags:
+    - docker
+    # CURRENTLY tested in CentOS/RHEL. 
+    # For Ubuntu/Debian probably this should go to: /etc/default/docker # Or keep the defaults (loopback for tests)
+
+  - name: remove previous /etc/sysconfig/docker-storage (CentOS/RHEL)
+    file: 
+      path: /etc/sysconfig/docker-storage
+      state: absent
+    when: docker_setup is defined and docker_setup and ansible_os_family == "RedHat"
+    tags:
+    - docker
+
+  - name: Install iptables-services (if does not exist)
+    package: state=installed name={{ item }} #-{{version}}
+    environment: '{{ proxy_env | default ({}) }}'
+    with_items:
+    - iptables-services
+    when: iptables_setup is defined and iptables_setup
+
+  - name: Reload systemd
+    command: systemctl daemon-reload
+
+  - name: Disable firewalld (CentOS/RHEL)
+    systemd: name=firewalld state=stopped enabled=no
+    when: iptables_setup is defined and iptables_setup and ansible_os_family == "RedHat"
+
+  - name: Restart iptables
+    systemd: name=iptables state=restarted enabled=yes
+    when: iptables_setup is defined and iptables_setup
+
+  - name: Restart docker-storage-setup  (CentOS/RHEL)
+    systemd: name=docker-storage-setup state=restarted
+    when: docker_setup is defined and docker_setup and ansible_os_family == "RedHat"
+    tags:
+    - docker
+
+  - name: set proxy in docker (CentOS/RHEL)
+    lineinfile:
+      name: /etc/sysconfig/docker
+      state: present
+      line: "https_proxy={{proxy_env.https_proxy | default ([]) }}"
+    when: docker_setup is defined and docker_setup and proxy_env is defined and ansible_os_family == "RedHat"
+    tags:
+    - docker
+
+  - name: set proxy in docker (CentOS/RHEL)
+    lineinfile:
+      name: /etc/sysconfig/docker
+      state: present
+      line: "http_proxy={{proxy_env.http_proxy | default ([]) }}"
+    when: docker_setup is defined and docker_setup and proxy_env is defined and ansible_os_family == "RedHat"
+    tags:
+    - docker
+
+  - name: set proxy in docker (CentOS/RHEL)
+    lineinfile:
+      name: /etc/sysconfig/docker
+      state: present
+      line: "no_proxy={{proxy_env.no_proxy | default ([]) }}"
+    when: docker_setup is defined and docker_setup and proxy_env is defined and ansible_os_family == "RedHat"
+    tags:
+    - docker
+
+  - name: set proxy in docker (Debian)
+    lineinfile:
+      name: /etc/default/docker
+      state: present
+      line: "https_proxy={{proxy_env.https_proxy | default ([]) }}"
+    when: docker_setup is defined and docker_setup and proxy_env is defined and ansible_os_family == "Debian"
+    tags:
+    - docker
+
+  - name: set proxy in docker (Debian)
+    lineinfile:
+      name: /etc/default/docker
+      state: present
+      line: "http_proxy={{proxy_env.http_proxy | default ([]) }}"
+    when: docker_setup is defined and docker_setup and proxy_env is defined and ansible_os_family == "Debian"
+    tags:
+    - docker
+
+  - name: set proxy in docker (Debian)
+    lineinfile:
+      name: /etc/default/docker
+      state: present
+      line: "no_proxy={{proxy_env.no_proxy | default ([]) }}"
+    when: docker_setup is defined and docker_setup and proxy_env is defined and ansible_os_family == "Debian"
+    tags:
+    - docker
+
+  - name: Restart docker
+    systemd: name=docker state=restarted enabled=yes
+    when: docker_setup is defined and docker_setup
+    tags:
+    - docker
+
+  - name: iptables default policies need to be ACCEPT on all chains
+    iptables:
+      chain: '{{item}}'
+      policy: ACCEPT
+    with_items:
+    - INPUT
+    - FORWARD
+    - OUTPUT
+    when: iptables_setup is defined and iptables_setup
+
+  - name: remove the REJECT rules on all chains
+    iptables:
+      chain: '{{item}}'
+      state: absent
+      reject_with: 'icmp-host-prohibited'
+    with_items:
+    - INPUT
+    - FORWARD
+    - OUTPUT
+    when: iptables_setup is defined and iptables_setup
+
+# Debug iptables with: 
+# watch -n1 iptables -vnL
+# http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
+
+  - name: check docker is running
+    command: 'docker info'
+    tags:
+    - check_docker
+
+  - name: check docker hello world # It will not work if there is no internet connection
+    shell: docker run -i hello-world | awk '/Hello/ {print $1}' 
+    register: command_result
+    failed_when: command_result.stdout != "Hello"
+    tags:
+    - check_docker
+    - docker
+
+# Ideally, to ensure there is no x509 certificate error like:
+#' docker pull gcr.io/google_containers/kube-apiserver-amd64:v1.7.2
+#Trying to pull repository gcr.io/google_containers/kube-apiserver-amd64 ...
+#Get https://gcr.io/v1/_ping: x509: certificate signed by unknown authority '
+# yum check-update ca-certificates; (($?==100)) && yum update ca-certificates || yum reinstall ca-certificates
+# update-ca-trust extract
+
+# Check ports: https://kubernetes.io/docs/setup/independent/install-kubeadm/
