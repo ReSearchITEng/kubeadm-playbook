@@ -2,7 +2,7 @@
 Link to project's github page: https://github.com/ReSearchITEng/kubeadm-playbook
 
 # kubeadm based all in one kubernetes cluster installation Ansible Playbook
-Tested on for Centos/RHEL 7.2, 7.3, 7.4. 
+Tested on for Centos/RHEL 7.2+, but ideally use version 7.4 (for overlay2 and automatic docker_setup).
 When docker_setup: True, min. OS is CentOS/RHEL 7.4. Any other OS needs manual docker pre-installed and docker_setup set to False. 
 Ubuntu/debian should work when docker is preinstalled, but not tested.
 
