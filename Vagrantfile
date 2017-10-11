@@ -10,12 +10,13 @@ $instance_name_prefix = "k8s"
 $num_instances = 1
 
 # https://www.virtualbox.org/manual/ch08.html#vboxmanage-natnetwork
-def nat(config)
-    config.vm.provider "virtualbox" do |v|
-      v.customize ["modifyvm", :id, "--nic1", "bridged", "--bridgeadapter", "enp3s0", "--nictype1", "82540EM", "--macaddress1", "auto" ] #, "--nat-network2", "mybridgeinterface", "--nictype1", "virtio"]
-      v.customize ["modifyvm", :id, "--nic2", "nat", "--nictype2", "82540EM"]
-    end
-end
+#def nat(config)
+### Cannot be used, as the rest of vagrant commands fail...
+#    config.vm.provider "virtualbox" do |v|
+#      v.customize ["modifyvm", :id, "--nic1", "bridged", "--bridgeadapter", "enp3s0", "--nictype1", "virtio", "--macaddress1", "auto" ] #, "--nat-network2", "mybridgeinterface", "--nictype1", "virtio"] # 82540EM
+#      v.customize ["modifyvm", :id, "--nic2", "nat", "--nictype2", "virtio"]
+#    end
+#end
 
 Vagrant.configure(2) do |config|
   # The most common configuration options are documented and commented below.
@@ -29,7 +30,7 @@ Vagrant.configure(2) do |config|
   #config.vm.box_check_update = "false"  # If there is no internet access to get new updates
 
   #config.vm.network "public_network", type: "dhcp", bridge: "enp3s0"
-  config.vm.network "public_network" #, :bridge => "enp3s0" #, mac: "auto" #, :adapter=>1 #, use_dhcp_assigned_default_route: true
+  #config.vm.network "public_network" #, :bridge => "enp3s0" #, mac: "auto" #, :adapter=>1 #, use_dhcp_assigned_default_route: true
   #config.ssh.port=22
   #config.vm.network "public_network", type: "dhcp", :bridge => "enp3s0"
   #config.vm.usable_port_range = (2000..2500)
@@ -40,13 +41,14 @@ Vagrant.configure(2) do |config|
 
   config.vm.provider "virtualbox" do |vb|
      vb.gui = false
-     vb.memory = "4096" #"3072"
-     vb.cpus = 3
+     vb.memory = "6144" #"4096" #"3072" # 6144
+     vb.cpus = 4
   end
 
   # NODES:
   (1..$num_instances).each do |i|
     config.vm.define vm_name = "%s-%02d" % [$instance_name_prefix, i] do |node|
+     #node.vm.synced_folder ".vagrant", "/vagrant", type: "rsync" #, rsync__exclude: ".local_only" #rsync__include: ".vagrant/"
      node.vm.box = "centos/7"
      #node.vm.box = "centos/atomic-host"
      node.vm.hostname = vm_name
@@ -58,6 +60,8 @@ Vagrant.configure(2) do |config|
      end
      node.vm.provision "shell", inline: <<-SHELL
       sudo cp -r ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
+      #chmod 755 /vagrant/dockerize.sh
+      #/vagrant/dockerize.sh
      SHELL
      #File.open("ssh_config", "w+") { |file| file.write("boo" ) }
     end
@@ -65,6 +69,7 @@ Vagrant.configure(2) do |config|
 
   # MASTER:
   config.vm.define vm_name = "%s-master" % [$instance_name_prefix] , primary: true do |k8smaster|
+    #k8smaster.vm.synced_folder ".vagrant", "/vagrant", type: "rsync" #, rsync__exclude: ".local_only" #rsync__include: ".vagrant/"
     #k8smaster.vm.hostname = "#{k8smaster}"
     #k8smaster.vm.hostname = "%s" % [ k8smaster ]
     k8smaster.vm.hostname = vm_name
@@ -80,9 +85,10 @@ Vagrant.configure(2) do |config|
 
     k8smaster.vm.provision "shell", inline: <<-SHELL
      sudo cp -r ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
-     curl -SL https://github.com/ReSearchITEng/kubeadm-playbook/archive/master.tar.gz | tar xvz
+     #chmod 755 /vagrant/dockerize.sh
+     #/vagrant/dockerize.sh
+     # curl -SL https://github.com/ReSearchITEng/kubeadm-playbook/archive/master.tar.gz | tar xvz # already in /vagrant
     SHELL
-    k8smaster.vm.synced_folder ".vagrant", "/vagrant", type: "rsync" #, rsync__exclude: ".local_only" #rsync__include: ".vagrant/"
 
   end
 
