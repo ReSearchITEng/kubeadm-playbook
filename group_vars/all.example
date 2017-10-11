@@ -39,6 +39,7 @@ iptables_setup: True # Default: True. When undefined, means False. It will disab
 # http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
 
 docker_setup: True # Default: True. When undefined, means False. It will install docker (if not yet installed), set it up (with overlay2 storage driver) and (re)start it
+                   # It works on CentOS/RHEL 7.4. For any other OS make docker_setup: False and ensure docker is already installed.
 
 pre_pull_k8s_images: True
 #pre_pull_k8s_images: False
