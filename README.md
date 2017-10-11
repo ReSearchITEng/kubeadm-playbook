@@ -1,4 +1,7 @@
 # Update Status of the project: Stable
+
+Link to project's github page: https://github.com/ReSearchITEng/kubeadm-playbook
+
 # kubeadm based all in one kubernetes cluster installation Ansible Playbook
 Tested on for Centos/RHEL 7.; Ubuntu/debian should work also, but not tested.
 
@@ -99,5 +102,4 @@ Using vagrant keeping NAT as 1st interface (usually with only one machine) was n
 There was no focus on this option as it's more complicated to use afterwards: one must export the ports manually to access ingresses like dashboard from the browser, and usually does not support more than one machine.
 
 
-
-
+Project on Github : https://github.com/ReSearchITEng/kubeadm-playbook
