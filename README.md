@@ -84,7 +84,11 @@ URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
 
 
 ## USING with Vagrant 
-For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script:
+For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script: vagrant_bridged_demo.sh.
+
+### Steps to start Vagrant deployment:
+1. edit ./Vagrant file and set desired number of machines, sizing, etc.
+2. run:
 ```shell
 ./vagrant_bridged_demo.sh --full [ --bridged_adapter <desired host interface> ] # bridged_adapter defaults to ip route | grep default | head -1 
 ```
