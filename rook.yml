@@ -14,7 +14,7 @@
   - name: k8s cluster pre-installation sanity - check if all current k8s pods are in Running status
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
     register: command_result
     when: rook is defined and rook.enabled
     tags:
@@ -23,10 +23,12 @@
     until: command_result.stdout == ""
     retries: 30
     delay: 3
+    changed_when: false
 
   - name: ensure jq third party exists on the machine (can come from from epel, pip, etc)
     shell: jq --version
     when: rook is defined and rook.enabled
+    changed_when: false
 
   - name: install rook operator (using rook.operator_url)
     environment: '{{env_kc}}'
@@ -60,7 +62,7 @@
   - name: rook operator pod sanity
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
     register: command_result
     when: rook is defined and rook.enabled
     tags:
@@ -69,11 +71,12 @@
     until: command_result.stdout == ""
     retries: 30
     delay: 3
+    changed_when: false
 
   - name: wait for rook.io/, Kind=Cluster to be created
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: kubectl get thirdpartyresources | tail -n +2 | grep rook.io | grep -i cluster
+    shell: kubectl get thirdpartyresources --no-headers | grep rook.io | grep -i cluster
     register: command_result
     when: rook is defined and rook.enabled
     tags:
@@ -82,11 +85,13 @@
     until: command_result.stdout != ""
     retries: 30
     delay: 3
+    changed_when: false
 
   # This is still required...
   - name: Wait few more seconds for rook.io/, Kind=Cluster to be created
     pause: seconds=0
     when: rook is defined and rook.enabled
+    changed_when: false
 
   - name: prepare rook-cluster.yml file
     template:
@@ -111,7 +116,7 @@
   - name: rook cluster deploy sanity - wait for all installed pods to become Running
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
     register: command_result
     when: rook is defined and rook.enabled
     tags:
@@ -120,6 +125,7 @@
     until: command_result.stdout == ""
     retries: 30
     delay: 3
+    changed_when: false
 
   - name: prepare rook-ceph_conf-ConfigMap.yml file
     template:
@@ -157,7 +163,7 @@
   - name: rook client tools deploy sanity - wait for all installed pods to become Running
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
     register: command_result
     when: rook.client_tools_url is defined and rook.enabled
     tags:
@@ -180,6 +186,7 @@
     until: command_result.stdout == ""
     retries: 30
     delay: 3
+    changed_when: false
 
   - name: rook-client create rook sharedfs
     environment:
@@ -214,7 +221,7 @@
   - name: wait for rook.io/, Kind=Pool to be created
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: kubectl get thirdpartyresources | tail -n +2 | grep rook.io | grep -i pool
+    shell: kubectl get thirdpartyresources --no-headers | grep rook.io | grep -i pool
     register: command_result
     when: rook is defined and rook.enabled and rook.rbd is defined and rook.rbd.enabled
     tags:
@@ -223,6 +230,7 @@
     until: command_result.stdout != ""
     retries: 30
     delay: 3
+    changed_when: false
 
   - name: prepare rook-pool.yml file
     template:

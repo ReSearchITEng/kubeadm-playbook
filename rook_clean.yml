@@ -63,7 +63,7 @@
   - name: rook post cleanup/reset sanity
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl get --all-namespaces pods | tail -n +2 | grep -v -w 'Running' || true "
+    shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
     when: rook is defined and rook.enabled
     register: command_result
     tags:
@@ -73,6 +73,7 @@
     until: command_result.stdout == ""
     retries: 30
     delay: 3
+    changed_when: false
 
 - hosts: all
   become: yes

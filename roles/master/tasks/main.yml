@@ -36,6 +36,7 @@
 
 - name: "This is the kubeadm_master_config to be used"
   debug: var=kubeadm_master_config
+  changed_when: false
 
 - name: Writing kubeadm_master_config to /etc/kubernetes/kubeadm-master.conf
   copy: content="{{ kubeadm_master_config | to_nice_yaml }}" dest="/etc/kubernetes/kubeadm-master.conf" force=yes
@@ -51,6 +52,7 @@
   command: bash -c '/usr/bin/kubeadm token list | tail -n 1| cut -f 1 -d" "'
   register: kubeadm_token
   when: kubeadm_master_config.token is not defined
+  changed_when: false
 
 #- name: populate the token in the kubeadm_master_config
 #  set_fact:
@@ -98,21 +100,24 @@
 
 - name: Wait few seconds for images pulls and cluster services to start
   pause: seconds=3
+  changed_when: false
 
 - name: Forcing restart of services
   meta: flush_handlers
 
 - name: Wait few seconds for images pulls and cluster services to start
   pause: seconds=10
+  changed_when: false
 
 - name: "sanity - wait for alls pod to be running (besides kube-dns which won't be ready yet)"
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  shell: "kubectl get --namespace kube-system pods | tail -n +2 | grep -v -w 'Running' | grep -v 'kube-dns' || true "
+  shell: "kubectl get --namespace kube-system pods --no-headers | grep -v -w 'Running' | grep -v 'kube-dns' || true "
   register: command_result
   tags:
   - sanity
   until: command_result.stdout == ""
   retries: 20
   delay: 3
+  changed_when: false
 

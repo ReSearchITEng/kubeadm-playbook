@@ -9,7 +9,6 @@
   tags:
   - always
 
-
 - name: Join cluster using kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:
@@ -24,6 +23,7 @@
     state: present
     timeout: 30
     delay: 3
+  changed_when: false
 
 #This is required when proxy is used, and the inventory_hostname is defined with fqdn
 #to ensure the connection to local server is not going via proxy (expecially when applying addons)

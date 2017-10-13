@@ -9,9 +9,10 @@
   - node
   tasks:
   - name: get all pvcs
-    shell: kubectl get --all-namespaces pvc -- | tail -n +2 | awk '{print "--namespace " $1 " pvc/" $2}'
+    shell: kubectl get --all-namespaces pvc --no-headers -- | awk '{print "--namespace " $1 " pvc/" $2}'
     register: command_results
     when: storage.delete_pvs is defined and storage.delete_pvs
+    changed_when: false
 
   - name: delete all pvcs
     command: kubectl delete {{ item }}
@@ -19,18 +20,20 @@
     when: storage.delete_pvs is defined and storage.delete_pvs
 
   - name: wait till all pvcs are removed/cleaned
-    shell: "kubectl get pvc -- | tail -n +2 || true"
+    shell: "kubectl get pvc --no-headers -- || true"
     register: command_result
     until: command_result.stdout == ""
     retries: 10
     delay: 3
     when: storage.delete_pvs is defined and storage.delete_pvs
+    changed_when: false
 
   - name: wait till all pvs are removed/cleaned
-    shell: "kubectl get pv -- | tail -n +2 || true"
+    shell: "kubectl get pv --no-headers -- || true"
     register: command_result
     until: command_result.stdout == ""
     retries: 40
     delay: 3
     when: storage.delete_pvs is defined and storage.delete_pvs
+    changed_when: false
 

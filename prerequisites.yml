@@ -17,6 +17,7 @@
     failed_when: command_result.stdout != ""
     tags:
     - check_etc_hosts
+    changed_when: false
 
   - name: Install in CentOS/RHEL docker (if does not exist)
     package: state=installed name={{ item }} #-{{version}}
@@ -183,6 +184,7 @@
     command: 'docker info'
     tags:
     - check_docker
+    changed_when: false
 
   - name: check docker hello world # It will not work if there is no internet connection
     shell: docker run -i hello-world | awk '/Hello/ {print $1}' 
@@ -191,6 +193,7 @@
     tags:
     - check_docker
     - docker
+    changed_when: false
 
 # Ideally, to ensure there is no x509 certificate error like:
 #' docker pull gcr.io/google_containers/kube-apiserver-amd64:v1.7.2

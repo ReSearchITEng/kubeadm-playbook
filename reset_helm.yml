@@ -19,6 +19,7 @@
     shell: helm list | tail -n +2 | awk '{print $1}'
     register: command_results
     ignore_errors: yes
+    changed_when: false
 
   - name: helm delete purge all apps
     environment: '{{env_kc}}'
@@ -37,4 +38,5 @@
     until: command_result.stdout == ""
     retries: 20
     delay: 3
+    changed_when: false
 
