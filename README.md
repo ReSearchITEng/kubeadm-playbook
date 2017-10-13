@@ -17,14 +17,14 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 - support proxy
 
 ### PROS:
-- quick (3-7 min) full cluster (re)installation
+- quick (3-7 min) full cluster installation
 - all in one shop for a cluster which you can start working right away, without mastering the details
 - applies fixes for quite few issues currently k8s installers have
 - deploys plugins to all creation of dynamical persistent volumes via: vsphere, rook or self deployed NFS
 
 ### CONS:
-- no HA: for now, kubeadm cannot install clusters with master/etcd HA (yet; but planned).
-- during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how.
+- no HA: for now (kubeadm cannot install clusters with master/etcd HA yet - but planned).
+- during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how (also see gluster project for hints).
 
 ## Prerequisites:
 - ansible min. 2.1
@@ -76,16 +76,18 @@ e.g.  ``` curl -SLk 'http://k8s-master.ap/#!/overview?namespace=_all' | grep bro
 
 For testing the Persistent volume, one may use/tune the files in the demo folder.
 ```shell
-kubectl exec -it demo-pod -- bash -c "echo Hello DEMO >> /usr/share/nginx/html/index.html "
+kubectl exec -it demo-pod -- bash -c "echo Hello TEST >> /usr/share/nginx/html/index.html "
 ```
 and check the http://pv.cloud.corp.example.com page.
 
-For load-ballancing, one may want to check also:
+# load-ballancing
+For LB, one may want to check also:
 - https://github.com/kubernetes/contrib/tree/master/service-loadbalancer
 - https://github.com/cloudlabs/kube-router/wiki
 - https://github.com/kubernetes/contrib/tree/master/keepalived-vip
 
-PS: work inspired from: @sjenning - thanks. PRs & suggestions from: @carlosedp - Thanks.
+# DEMO:
+Installation demo k8s 1.7.8 on CentOS 7.4: https://asciinema.org/a/Ii7NDu3eL9DsuM1fEFM9PMVTM
 
 ## Installation USING with Vagrant 
 For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script: vagrant_bridged_demo.sh.
@@ -110,6 +112,7 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 - https://github.com/gluster/gluster-kubernetes/blob/master/vagrant/ -> it's much more simple, no ingress, helm, addons, proxy support, and persistent volumes
  only focused on glusterfs. (only focused on CentOS).
 
+PS: work inspired from: @sjenning - thanks. PRs & suggestions from: @carlosedp - Thanks.
 URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
 Project's code is on Github : https://github.com/ReSearchITEng/kubeadm-playbook
 License: Public Domain 
