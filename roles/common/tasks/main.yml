@@ -172,12 +172,9 @@
     dest: /etc/sysconfig/docker
     regexp: '^# INSECURE_REGISTRY='
     line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
-  when:
-    kubeadm_docker_insecure_registry is defined
   notify:
   - Restart docker
-er
-  when: docker_setup is defined and docker_setup and ansible_os_family == "RedHat"
+  when: docker_setup is defined and docker_setup and ansible_os_family == "RedHat" and kubeadm_docker_insecure_registry is defined
 
 #- name: Use overlay docker storage driver (note: overlay2 is not currently supported by k8s)
 #  lineinfile:
