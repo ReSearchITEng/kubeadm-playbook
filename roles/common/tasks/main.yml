@@ -287,6 +287,19 @@
     state: present
   when: shell is undefined or shell == 'bash'
 
+- name: kubectl aliases to ~/.bash_profile
+  lineinfile:
+    dest: ~/.bash_profile
+    line: "{{ item }}"
+    state: present
+  when: shell is undefined or shell == 'bash'
+  with_items:
+  - "alias k='kubectl ' "
+  - "alias ks='kubectl -n kube-system ' "
+  - "alias kg='kubectl get --all-namespaces -o wide --show-labels '"
+  - "alias wp='kubectl get --all-namespaces -o wide --show-labels -w po '"
+  - "alias wipt='watch -n1 iptables -vnL ' "
+
 - name: create dir /var/log/journal (so node-problem-detector finds any issues with the nodes, should there be any)
   file:
     path: /var/log/journal

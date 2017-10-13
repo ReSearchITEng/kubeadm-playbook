@@ -1,4 +1,5 @@
 # Only one master is allowed
+# Use FullyQualifiedDomainNames (FQDN) (e.g. .corp.example.com)
 [master]
 master.corp.example.com
 
