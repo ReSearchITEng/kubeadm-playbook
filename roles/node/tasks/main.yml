@@ -40,3 +40,10 @@
   notify:
   - Restart kubelet
 
+- name: export KUBECONFIG in nodes' ~/.bash_profile
+  lineinfile:
+    dest: ~/.bash_profile
+    line: "export KUBECONFIG=/etc/kubernetes/kubelet.conf"
+    state: present
+  when: shell is undefined or shell == 'bash'
+
