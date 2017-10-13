@@ -163,6 +163,18 @@
     - OUTPUT
     when: iptables_setup is defined and iptables_setup
 
+  - name: remove the REJECT rules on all chains from the /etc/sysconfig/iptables (persisting the change)
+    lineinfile:
+      name: /etc/sysconfig/iptables
+      state: absent
+      line: "{{ item }}"
+    with_items:
+    - '-A INPUT -j REJECT --reject-with icmp-host-prohibited'
+    - '-A FORWARD -j REJECT --reject-with icmp-host-prohibited'
+    when: iptables_setup is defined and iptables_setup and ansible_os_family == "RedHat"
+
+## TODO: Maybe similarly iptables should be persisted for Debian ?
+
 # Debug iptables with: 
 # watch -n1 iptables -vnL
 # http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf

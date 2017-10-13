@@ -70,7 +70,10 @@ vi group_vars/all <modify vars as needed>
 ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
 ```
 
+# Check the installation of dashboard
 If the wildcard DNS was properly set up ( *.k8s.cloud.corp.example.com pointing to master machine public IP), at this stage one should be able to see the dashboard at: http://dashboard.cloud.corp.example.com
+e.g.  ``` curl -SLk 'http://k8s-master.ap/#!/overview?namespace=_all' | grep browsehappy ```
+
 For testing the Persistent volume, one may use/tune the files in the demo folder.
 ```shell
 kubectl exec -it demo-pod -- bash -c "echo Hello DEMO >> /usr/share/nginx/html/index.html "
@@ -84,15 +87,7 @@ For load-ballancing, one may want to check also:
 
 PS: work inspired from: @sjenning - thanks. PRs & suggestions from: @carlosedp - Thanks.
 
-Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
-- https://github.com/kubernetes/contrib/tree/master/ansible -> the official k8s ansible, but without kubeadm, therefore the processes will run on the nodes, not in docker containers
-- https://github.com/dcj/ansible-kubeadm-cluster -> very simple cluster, does not (currently) have: ingresses, helm, addons, proxy support, vagrant support, persistent volumes, etc.
-- https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades 
-- https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
-
-URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
-
-## USING with Vagrant 
+## Installation USING with Vagrant 
 For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script: vagrant_bridged_demo.sh.
 
 ### Steps to start Vagrant deployment:
@@ -106,5 +101,15 @@ After preparations (edit group_vars/all, etc.), run the ansible installation nor
 Using vagrant keeping NAT as 1st interface (usually with only one machine) was not tested and the Vagrantfile may requires some changes.
 There was no focus on this option as it's more complicated to use afterwards: one must export the ports manually to access ingresses like dashboard from the browser, and usually does not support more than one machine.
 
+# How does it compare to other projects:
+Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
+- https://github.com/kubernetes/contrib/tree/master/ansible -> the official k8s ansible, but without kubeadm, therefore the processes will run on the nodes, not in docker containers
+- https://github.com/dcj/ansible-kubeadm-cluster -> very simple cluster, does not (currently) have: ingresses, helm, addons, proxy support, vagrant support, persistent volumes, etc.
+- https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades
+- https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
+- https://github.com/gluster/gluster-kubernetes/blob/master/vagrant/ -> it's much more simple, no ingress, helm, addons, proxy support, and persistent volumes
+ only focused on glusterfs. (only focused on CentOS).
 
-Project on Github : https://github.com/ReSearchITEng/kubeadm-playbook
+URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
+Project's code is on Github : https://github.com/ReSearchITEng/kubeadm-playbook
+License: Public Domain 
