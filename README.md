@@ -109,8 +109,8 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 - https://github.com/dcj/ansible-kubeadm-cluster -> very simple cluster, does not (currently) have: ingresses, helm, addons, proxy support, vagrant support, persistent volumes, etc.
 - https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades
 - https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
-- https://github.com/gluster/gluster-kubernetes/blob/master/vagrant/ -> it's much more simple, no ingress, helm, addons, proxy support, and persistent volumes
- only focused on glusterfs. (only focused on CentOS).
+- https://github.com/gluster/gluster-kubernetes/blob/master/vagrant/ -> it's much more simple, no ingress, helm, addons, proxy support, and persistent volumes only using glusterfs. Entire project is only focused on CentOS.
+- https://github.com/kubernetes-incubator/kubespray & https://github.com/kubernetes/kops (amazon) -> Neither of them use the official installtion tool: kubeadm, and that makes them heavy/big and require knowledge of "internals". With kubeadm-playbook we are focused on kubeadm as it's the official tool k8s should be installed with (but still in beta). Using kubeadm (which is released with every k8s release) you have a guarantee to be in sync with the official code. Unfortunatelly for now there is no HA with kubeadm, but it's in the works by k8s project.
 
 PS: work inspired from: @sjenning - thanks. PRs & suggestions from: @carlosedp - Thanks.
 URL page of this project: https://researchiteng.github.io/kubeadm-playbook/
