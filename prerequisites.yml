@@ -19,6 +19,33 @@
     - check_etc_hosts
     changed_when: false
 
+  - name: ntpd and ntpdate | it is mandatory to have the time from all machines in sync
+    package: state=installed name={{ item }}
+    environment: '{{ proxy_env | default ({}) }}'
+    with_items:
+    - ntp
+    tags:
+    - ntp
+    when: ntp_setup is defined and ntp_setup
+    register: ntp_output
+
+  - name: ntpd configuration
+    copy: content={{ntp_conf}} dest=/etc/ntp.conf backup=yes
+    when: ntp_setup is defined and ntp_setup and ntp_conf is defined 
+    tags:
+    - ntp
+
+  - name: Reload systemd
+    command: systemctl daemon-reload
+    tags:
+    - ntp
+
+  - name: Restart ntpd
+    systemd: name=ntpd state=restarted enabled=yes
+    when: ntp_setup is defined and ntp_setup
+    tags:
+    - ntp
+
   - name: Install in CentOS/RHEL docker (if does not exist)
     package: state=installed name={{ item }} #-{{version}}
     environment: '{{ proxy_env | default ({}) }}'

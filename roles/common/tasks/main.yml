@@ -294,6 +294,7 @@
     state: present
   when: shell is undefined or shell == 'bash'
   with_items:
+  - "alias watch='watch ' "
   - "alias k='kubectl ' "
   - "alias ks='kubectl -n kube-system ' "
   - "alias kg='kubectl get --all-namespaces -o wide --show-labels '"

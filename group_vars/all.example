@@ -33,13 +33,24 @@ turn_swapoff: true #false # default true # Important for 1.8+
 # full_kube_reinstall: True
 #####
 
-iptables_setup: True # Default: True. When undefined, means False. It will disable&mask firewalld service (if exists), set default policies ACCEPT, and it will remove REJECT rules from all chains (INPUT,FW,OUT) with a commands like: iptables -D INPUT -j REJECT --reject-with icmp-host-prohibited (for each).
-# If still issues, debug iptables on both master and nodes with:
-# watch -n1 iptables -vnL
-# http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
+iptables_setup: True ## Default: True. When undefined, means False. It will disable&mask firewalld service (if exists), set default policies ACCEPT, and it will remove REJECT rules from all chains (INPUT,FW,OUT) with a commands like: iptables -D INPUT -j REJECT --reject-with icmp-host-prohibited (for each).
+## If still issues, debug iptables on both master and nodes with:
+## watch -n1 iptables -vnL
+## http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
 
-docker_setup: True # Default: True. When undefined, means False. It will install docker (if not yet installed), set it up (with overlay2 storage driver) and (re)start it
-                   # It works on CentOS/RHEL 7.4. For any other OS make docker_setup: False and ensure docker is already installed.
+docker_setup: True ## Default: True. When undefined, means False. It will install docker (if not yet installed), set it up (with overlay2 storage driver) and (re)start it
+                   ## It works on CentOS/RHEL 7.4. For any other OS make docker_setup: False and ensure docker is already installed.
+
+#####
+## NTP SETUP
+## it is mandatory to have the time from all machines in sync
+ntp_setup: True
+## ntp does not work via proxy, so, if ntp cannot reach external servers, define here the internal ntp server:
+#ntp_conf: |
+#  server pool.ntp.org
+#  server 127.127.1.0
+#  server ntp.corp.example.com
+#####
 
 pre_pull_k8s_images: True
 #pre_pull_k8s_images: False
@@ -47,11 +58,11 @@ pre_pull_k8s_images: True
 # iptables_reset: False # False is default
 #####
 
-## ensure you have the DNS set for wildcard, and pointing all the trafic to master or similar setup
-## It is used only for setting up the 2nd dashboard ingress (url), the first url is on the master machine
+## ensure you have a wildcard DNS set for the domain of each cluster, and pointing all the trafic to master or similar setup
+## Not mandatory. It is used only for setting up the 2nd dashboard ingress (url), the first url is on the master machine
 custom:
   networking:
-   dnsDomain: "mycluster1.k8s.corp.example.com"
+   dnsDomain: "mynewcluster1.k8s.corp.example.com"
 
 #####
 # reset_gracefully: False # False is default
@@ -174,6 +185,7 @@ helm:
     - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head' } #with all admin permissions, development version. For prod, use the below entry:
 #    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.0' } # secure & stable prod version
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
+#    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},alertmanager.persistentVolume.enabled=False --set server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}},server.persistentVolume.enabled=False --set pushgateway.ingress.enabled=True,pushgateway.ingress.hosts[0]=pushgateway.{{custom.networking.dnsDomain}},pushgateway.persistentVolume.enabled=False
 #    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}}'
 #    - { name: moodle, repo: stable/moodle, options: '--set moodleUsername=admin,moodlePassword=password,mariadb.mariadbRootPassword=secretpassword,serviceType=ClusterIP' }
 
