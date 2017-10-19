@@ -59,7 +59,7 @@ Vagrant.configure(2) do |config|
       #s.args= "node"
      end
      node.vm.provision "shell", inline: <<-SHELL
-      sudo cp -r ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
+      sudo cp -rf ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
       #chmod 755 /vagrant/dockerize.sh
       #/vagrant/dockerize.sh
      SHELL
@@ -84,7 +84,7 @@ Vagrant.configure(2) do |config|
     end
 
     k8smaster.vm.provision "shell", inline: <<-SHELL
-     sudo cp -r ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
+     sudo cp -rf ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
      #chmod 755 /vagrant/dockerize.sh
      #/vagrant/dockerize.sh
      # curl -SL https://github.com/ReSearchITEng/kubeadm-playbook/archive/master.tar.gz | tar xvz # already in /vagrant

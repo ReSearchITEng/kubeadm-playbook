@@ -104,7 +104,7 @@ echo "  List of FQDN for the vagrant machines: $runningVagrM_FQDN"
 echo "### (re)Generating a ssh_config to be used by ssh (partially reusing vagrant generated ssh keys and config)"
 rm -f ssh_config
 for runningVagrM in $all_runningVagrMs ; do
-  vagrant ssh-config $runningVagrM | sed "s|^Host .*|Host ${runningVagrM}\*|g" | sed "/^ *HostName .*/d" | sed "s|^ *Port .*|  Port 22|g" >>ssh_config
+  vagrant ssh-config $runningVagrM | sed "s|^Host .*|Host ${runningVagrM}\*|g" | sed "/^ *HostName .*/d" | sed "s|^ *Port .*|  Port 22|g" | sed "s|User vagrant|User root|g" >>ssh_config
 done
 
 ###
@@ -128,7 +128,7 @@ echo
 echo "### Creating an ./ansible.cfg to based on the above ssh_config file and some more options, for ansible to be able to login "
 cat << EOF >ansible.cfg
 [defaults]
-remote_user=vagrant
+#remote_user=vagrant
 become=true
 become_method=sudo
 
