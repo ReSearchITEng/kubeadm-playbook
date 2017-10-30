@@ -1,0 +1,93 @@
+---
+### iptables:
+- block:
+  # Currently it will disable the REJECT rules and change policy to allow all.
+  # For making pin-pointed rules, one may look at:
+  # https://github.com/kubernetes/contrib/blob/master/ansible/roles/node/tasks/iptables.yml
+
+  - name: Disable firewalld (CentOS/RHEL)
+    systemd: name=firewalld state=stopped enabled=no
+    when:  ansible_os_family == "RedHat"
+    # For developing firewalld friendly solution, check:
+    # https://github.com/kubernetes/contrib/tree/master/ansible/roles/
+
+  - name: Install iptables-services (if does not exist)
+    package: state=installed name={{ item }} #-{{version}}
+    environment: '{{ proxy_env | default ({}) }}'
+    with_items:
+    - iptables-services
+    notify:
+    - Restart iptables
+
+  - name: iptables default policies need to be ACCEPT on all chains
+    iptables:
+      chain: '{{item}}'
+      policy: ACCEPT
+    with_items:
+    - INPUT
+    - FORWARD
+    - OUTPUT
+
+  - name: remove the REJECT rules on all chains
+    iptables:
+      chain: '{{item}}'
+      state: absent
+      reject_with: 'icmp-host-prohibited'
+    with_items:
+    - INPUT
+    - FORWARD
+    - OUTPUT
+
+  - name: remove the REJECT rules on all chains from the /etc/sysconfig/iptables (persisting the change)
+    lineinfile:
+      name: /etc/sysconfig/iptables
+      state: absent
+      line: "{{ item }}"
+    with_items:
+    - '-A INPUT -j REJECT --reject-with icmp-host-prohibited'
+    - '-A FORWARD -j REJECT --reject-with icmp-host-prohibited'
+    when: ansible_os_family == "RedHat"
+
+  - name: Save iptables rules
+    command: service iptables save
+    when: ansible_os_family == "Debian" # For RH we removed the reject rules from /etc/sysconfig/iptables
+
+  when: iptables_setup is defined and iptables_setup
+  tags:
+  - iptables
+  - firewall
+
+# Debug iptables with:
+# watch -n1 iptables -vnL
+# Check ports: https://kubernetes.io/docs/setup/independent/install-kubeadm/
+
+### TODO: test min. ports to be allowed
+# sudo iptables -I INPUT -p tcp --dport 6443 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# ### sudo iptables -I FORWARD -p tcp --dport 6443 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -I OUTPUT -p tcp --sport 6443 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+
+# sudo iptables -I INPUT -p tcp --dport 10250 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# ### sudo iptables -D FORWARD -p tcp --dport 10250 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -I OUTPUT -p tcp --sport 10250 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+# ### sudo iptables -I INPUT -p tcp --dport 9898 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -D FORWARD -p tcp --dport 9898 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# ### sudo iptables -I OUTPUT -p tcp --sport 9898 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+# sudo iptables -D INPUT -p udp --dport 53 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -I FORWARD -p udp --dport 53 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -D OUTPUT -p udp --sport 53 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+# sudo iptables -I FORWARD -p udp --sport 53 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -I FORWARD -p tcp --dport 9100 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# sudo iptables -I FORWARD -p tcp --sport 9100 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+
+
+# http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
+# iptables -N LOGGINGA
+# iptables -I FORWARD 9 -j LOGGINGA
+# # iptables -D FORWARD -j LOGGINGA
+# iptables -A LOGGINGA -m limit --limit 10/min -j LOG --log-prefix "IPTables-A: " --log-level 4
+# iptables -A LOGGINGA -j DROP
+

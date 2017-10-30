@@ -1,16 +1,17 @@
 ---
-- hosts: master
-  become: yes
-  become_method: sudo
-  tags:
-  - helm
-  tasks:
+#- hosts: master
+#  become: yes
+#  become_method: sudo
+#  tags:
+#  - helm
+#  tasks:
 
-  - set_fact:
-      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
-    tags:
-    - always
-  
+- set_fact:
+    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+  tags:
+  - always
+
+- block:
   - name: 'Download {{ helm.install_script_url }}'
     environment: '{{ proxy_env | default ({}) }}'
     get_url: url={{ helm.install_script_url | default ("") }} dest=/tmp/helm_install_script force=yes mode="0755"
@@ -85,7 +86,7 @@
     shell: "kubectl get --namespace kube-system pods --no-headers | grep -w 'tiller-deploy' | grep -v -w 'Running' || true "
     register: command_result
     tags:
-    - sanity_helm
+    - helm_sanity
     - sanity
     - helm
     until: command_result.stdout == ""
@@ -137,7 +138,7 @@
     register: command_result
     #failed_when: '"/" in command_result.stdout'
     tags:
-    - sanity_helm
+    - helm_sanity
     - sanity
     - helm
     until: command_result.stdout == ""
@@ -182,4 +183,6 @@
     retries: 60
     delay: 3
     changed_when: false
+  tags:
+  - helm
 

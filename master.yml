@@ -1,8 +1,0 @@
----
-- hosts: master
-  become: yes
-  become_method: sudo
-  tags:
-  - master
-  roles:
-  - master

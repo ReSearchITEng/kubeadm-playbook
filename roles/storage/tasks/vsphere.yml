@@ -1,0 +1,15 @@
+---
+  - set_fact:
+      env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    tags:
+    - always
+
+## vsphere/vmware/vcenter
+  - name: Create vsphere storage class
+    command: /usr/bin/kubectl apply -f {{ item }}
+    with_items: "{{ vsphere_storageclass_urls | default ([]) }}"
+    environment: '{{env_kc}}'
+    when: vsphere_storageclass_urls is defined and kubeadm_master_config.cloudProvider is defined and kubeadm_master_config.cloudProvider == 'vsphere'
+    tags:
+    - vsphere_storageclass_urls
+    - vsphere

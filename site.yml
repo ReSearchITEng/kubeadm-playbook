@@ -1,18 +1,106 @@
 ---
-- include: pre_sanity.yml
-- include: reset_helm.yml
-- include: remove_pvs.yml
-- include: reset_nfs.yml
-- include: reset_drain.yml
-- include: reset.yml
-- include: reset-weave.yml
-- include: prerequisites.yml
-- include: common.yml
-- include: master.yml
-- include: network.yml
-- include: node.yml
-- include: post_cluster_deploy.yml
-- include: helm.yml
-- include: rook_clean.yml
-- include: rook.yml
-- include: sanity.yml
+#- include: pre_sanity.yml # TODO
+#- include: reset_helm.yml #done, but not really working
+#- include: remove_pvs.yml #done
+#- include: reset_nfs.yml  #done
+#- include: reset_drain.yml#done
+#- include: reset.yml      #done
+#- include: reset-weave.yml#done
+#- include: prerequisites.yml#done (does not exist any longer)
+#- include: common.yml     #done
+#- include: master.yml     #done
+#- include: node.yml       #done
+#- include: network.yml    #done (moved to post_deploy) 
+#- include: post_cluster_deploy.yml 
+#- include: helm.yml
+#- include: rook_clean.yml
+#- include: rook.yml
+#- include: sanity.yml
+
+- hosts: master
+  become: yes
+  become_method: sudo
+  tags:
+  - reset
+  - master
+  roles:
+  - { role: helm, task: helm_reset, tags: [ 'reset', 'helm_reset' ] }
+  - { role: storage, task: remove_pvs, tags: [ 'reset', 'storage_reset', 'pvs_reset' ] }
+  - { role: storage, task: nfs_reset, tags: [ 'reset', 'storage_reset', 'nfs_reset' ] }
+  - { role: storage, task: rook_reset, tags: [ 'reset', 'storage_reset', 'rook_reset' ] }
+  - { role: tools, task: reset_drain, tags: [ 'reset', 'node_reset', 'drain', 'node_drain' ] } #done on master, affecting nodes
+
+- hosts: node
+  become: yes
+  become_method: sudo
+  tags:
+  - node
+  roles:
+  - { role: tools, task: reset, tags: [ 'reset', 'node_reset' ] }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave', 'weave_reset' ] }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node', 'node_install'] }
+
+- hosts: master
+  become: yes
+  become_method: sudo
+  tags:
+  - master
+  roles:
+  - { role: tools, task: reset, tags: [ 'reset', 'master_reset' ] }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'master_reset', 'network_reset', 'weave', 'weave_reset' ] }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'master_install'] }
+
+- hosts: master
+  become: yes
+  become_method: sudo
+  tags:
+  - master
+  - install
+  roles:
+  - { role: master, tags: [ 'master', 'install', 'master_install'] } #, task: all }
+
+- hosts: node
+  become: yes
+  become_method: sudo
+  tags:
+  - node
+  - install
+  - node_install
+  roles:
+  - { role: node, tags: [ 'node', 'install', 'node_install' ] } #, task: all }
+
+### Post deploy
+- hosts: master
+  become: yes
+  become_method: sudo
+  tags:
+  - post_deploy
+  roles:
+  - { role: post_deploy, task: all, tags: [ 'post_deploy' ] }
+  - { role: storage, task: create_all, tags: [ 'storage', 'rook', 'nfs', 'vsphere' ] }
+  - { role: helm, task: all, tags: [ 'helm', 'post_deploy' ] }
+
+### Generic Sanity
+- hosts: master
+  become: yes
+  become_method: sudo
+  tags:
+  - sanity
+  - node_install
+  - node
+  - master_install
+  - master
+  roles:
+  - { role: tools, task: cluster_sanity, tags: [ 'cluster_sanity', 'sanity' ] }
+  - { role: tools, task: postinstall_messages, tags: [ 'cluster_sanity', 'sanity' ] }
+
+## to reset/add only node:
+##   1. keep in hosts only:
+##      - the master
+##      - the affected node (all other nodes should not be there)
+##   2. Have the token defined in the group_vars/all
+##   3. Run using only this/these tag(s):
+## ansible-playbook -i hosts -v site.yml --tags "node,cluster_sanity,cluster_info"  # same with: ansible-playbook -i hosts -v site.yml --tags "node_reset,node_install,cluster_sanity,cluster_info"
+
+## To get cluster info/sanity:
+## ansible-playbook -i hosts -v site.yml --tags "cluster_sanity,cluster_info"

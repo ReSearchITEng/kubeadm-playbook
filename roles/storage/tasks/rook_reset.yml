@@ -1,31 +1,27 @@
 ---
-- hosts: master
-  become: yes
-  become_method: sudo
-  tags:
-  - rook
-  - reset
-  tasks:
+# - hosts: master
+#   become: yes
+#   become_method: sudo
+#   tags:
+#   - rook
+#   - reset
+#   tasks:
 
+- block:
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
     tags:
     - always
 
-
   - name: deploy rook operator (using helm chart) - prefered method
     environment: '{{env_kc}}'
     command: 'helm delete --purge rook-operator '
-    when: rook is defined and rook.enabled and rook.operator_url is not defined
+    when: rook.operator_url is not defined
     ignore_errors: yes
-    tags:
-    - rook
-    - reset
 
   - name: clean install rook operator
     environment: '{{env_kc}}'
     command: /usr/bin/kubectl delete {{ item }}
-    when: rook is defined and rook.enabled
     with_items:
     - "-n rook po/rook-client"
     - "-n rook po/rook-tools"
@@ -41,14 +37,13 @@
     - "namespace rook"
     - "sc rook-block"
     tags:
-    - rook
     - reset
     ignore_errors: yes
 
   - name: clean install rook operator
     environment: '{{env_kc}}'
     command: /usr/bin/kubectl delete {{ item }}
-    when: rook is defined and rook.enabled and rook.operator_url is defined
+    when: rook.operator_url is defined
     with_items:
     - "-f {{ rook.operator_url }}"
 
@@ -56,7 +51,7 @@
     # TODO: scan all namespaces and remove it. Do not rely on the previously defined rook.allowed_consumer_namespaces
     environment: '{{env_kc}}'
     command: /usr/bin/kubectl delete -n {{ item }} secret rook-admin
-    when: rook is defined and rook.enabled and rook.allowed_consumer_namespaces is defined
+    when: rook.allowed_consumer_namespaces is defined
     with_items: "{{ rook.allowed_consumer_namespaces }}"
     ignore_errors: yes
 
@@ -64,26 +59,21 @@
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
     shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
-    when: rook is defined and rook.enabled
     register: command_result
     tags:
-    - rook
     - sanity
-    - reset
     until: command_result.stdout == ""
     retries: 30
     delay: 3
     changed_when: false
 
-- hosts: all
-  become: yes
-  become_method: sudo
-  tasks:
   - name: clean rook ceph persistant storage directories
     file: path=/storage/rook/* state=absent force=yes
     tags:
-    - reset
-    - rook
     - uninstall
-    when: rook is defined and rook.enabled and rook.reset.storage_delete is defined and rook.reset.storage_delete
+    when: rook.reset.storage_delete is defined and rook.reset.storage_delete
 
+  when: rook is defined and rook.enabled
+  tags:
+  - rook
+  - reset

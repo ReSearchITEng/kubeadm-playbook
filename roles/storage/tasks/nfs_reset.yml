@@ -1,13 +1,12 @@
 ---
-- hosts: master
-  gather_facts: False
-  become: yes
-  become_method: sudo
-  tags:
-  - reset
-  - nfs_storage
-  - master
-  tasks:
+# - hosts: master
+#   gather_facts: False
+#   become: yes
+#   become_method: sudo
+#   tags:
+#   - reset
+#   - nfs_storage
+#   tasks:
 
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
@@ -20,6 +19,7 @@
     shell: "kubectl delete --namespace kube-system -f /tmp/nfs.yml"
     when: nfs_k8s is defined and nfs_k8s.enabled
     tags:
+    - reset
     - nfs_storage
     ignore_errors: yes
 
@@ -27,6 +27,7 @@
     file: path={{nfs_k8s.host_path}} state=absent
     when: nfs_k8s is defined and nfs_k8s.enabled and nfs_k8s.wipe
     tags:
+    - reset
     - nfs_storage
     ignore_errors: yes
 

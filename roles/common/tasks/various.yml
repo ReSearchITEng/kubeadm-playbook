@@ -1,0 +1,29 @@
+---
+- name: set hostname with fqdn
+  hostname:
+    name: "{{ inventory_hostname }}"
+  when: set_hostname_to_inventory_hostname | default ( False )
+
+- name: set hostname with fqdn - sol2
+  shell: hostnamectl set-hostname {{ inventory_hostname }}
+  when: set_hostname_to_inventory_hostname | default ( False )
+  # This does not require restart (as per docs)
+
+- name: create dir /var/log/journal (so node-problem-detector finds any issues with the nodes, should there be any)
+  file:
+    path: /var/log/journal
+    state: directory
+    mode: 0755
+
+- name: Pull images on node (e.g. kube-proxy)
+  command: /usr/bin/docker pull "{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
+  with_items:
+  - "gcr.io/google_containers/kube-proxy-amd64"
+  tags:
+  - prepull_images
+  register: command_result
+  changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
+  when: pre_pull_k8s_images is defined and pre_pull_k8s_images and kubeadm_master_config.kubernetesVersion is defined
+
+# Forcing restart of services
+#- meta: flush_handlers

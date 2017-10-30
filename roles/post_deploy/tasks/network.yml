@@ -1,13 +1,22 @@
 ---
-- hosts: master
-  become: yes
-  become_method: sudo
-  tasks:
+# - hosts: master
+#   become: yes
+#   become_method: sudo
+#   tasks:
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
     tags:
     - always
-
+  
+  # Not clear if mandatory for weave: 
+  # https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
+  - name: Copy weave net script
+    environment: '{{ proxy_env | default ({}) }}'
+    get_url: url=https://raw.githubusercontent.com/weaveworks/weave/master/weave dest=/usr/local/bin/weave mode=u+rxw force=yes
+    ignore_errors: yes  # Currently there is no way to check if the user is using weave
+    tags:
+    - weave
+    
   - name: Create cluster network
     command: /usr/bin/kubectl apply -f {{ item }}
     with_items: "{{ k8s_network_addons_urls | default ([]) }}"

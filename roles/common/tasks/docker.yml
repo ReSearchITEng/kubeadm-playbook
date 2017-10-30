@@ -1,0 +1,196 @@
+---
+- name: check docker hello world - test 2/2 # It will not work if there is no internet connection; change img as desired
+  shell: docker run -i hello-world | awk '/Hello/ {print $1}'
+  register: docker_result
+  #failed_when: docker_result.stdout != "Hello"
+  tags:
+  - check_docker
+  - docker
+  changed_when: false
+  ignore_errors: yes
+
+- block:
+  - name: Install in CentOS/RHEL docker (if does not exist)
+    package: state=installed name={{ item }} #-{{version}}
+    environment: '{{ proxy_env | default ({}) }}'
+    with_items:
+    - docker
+    tags:
+    - docker
+    when: ansible_os_family == "RedHat"
+    notify:
+    - Restart docker
+
+  - name: Install in debian docker (if does not exist)
+    package: state=installed name={{ item }} #-{{version}}
+    environment: '{{ proxy_env | default ({}) }}'
+    with_items:
+    - docker-engine
+    tags:
+    - docker
+    when: ansible_os_family == "Debian"
+    notify:
+    - Restart docker
+
+  - name: prepare docker-storage-setup (CentOS/RHEL)
+    copy:
+      content: |
+        EXTRA_STORAGE_OPTIONS="--storage-opt overlay2.override_kernel_check=true"
+        STORAGE_DRIVER="overlay2"
+      dest: /etc/sysconfig/docker-storage-setup
+      backup: yes
+    run_once: yes
+    tags:
+    - docker
+    when: ansible_os_family == "RedHat"
+    notify:
+    - Restart docker-storage-setup
+    - Restart docker
+    # CURRENTLY tested in CentOS/RHEL.
+    # For Ubuntu/Debian probably this should go to: /etc/default/docker # Or keep the defaults (loopback for tests)
+
+  - name: remove previous /etc/sysconfig/docker-storage (CentOS/RHEL)
+    file:
+      path: /etc/sysconfig/docker-storage
+      state: absent
+    when: ansible_os_family == "RedHat"
+    tags:
+    - docker
+    notify:
+    - Restart docker-storage-setup
+    - Restart docker
+
+  - name: Restart docker-storage-setup  (CentOS/RHEL)
+    systemd: name=docker-storage-setup state=restarted
+    when: ansible_os_family == "RedHat"
+    tags:
+    - docker
+    notify:
+    - Restart docker
+
+  - name: set https proxy in docker (CentOS/RHEL)
+    lineinfile:
+      name: /etc/sysconfig/docker
+      state: present
+      line: "https_proxy={{proxy_env.https_proxy | default ([]) }}"
+    when: proxy_env is defined and  ansible_os_family == "RedHat"
+    tags:
+    - docker
+    notify:
+    - Restart docker
+
+  - name: set http proxy in docker (CentOS/RHEL)
+    lineinfile:
+      name: /etc/sysconfig/docker
+      state: present
+      line: "http_proxy={{proxy_env.http_proxy | default ([]) }}"
+    when: proxy_env is defined and  ansible_os_family == "RedHat"
+    tags:
+    - docker
+    notify:
+    - Restart docker
+
+  - name: set no_proxy in docker (CentOS/RHEL)
+    lineinfile:
+      name: /etc/sysconfig/docker
+      state: present
+      line: "no_proxy={{proxy_env.no_proxy | default ([]) }}"
+    when: proxy_env is defined and  ansible_os_family == "RedHat"
+    tags:
+    - docker
+    notify:
+    - Restart docker
+
+  - name: set https_proxy in docker (Debian)
+    lineinfile:
+      name: /etc/default/docker
+      state: present
+      line: "https_proxy={{proxy_env.https_proxy | default ([]) }}"
+    when: proxy_env is defined and  ansible_os_family == "Debian"
+    tags:
+    - docker
+    notify:
+    - Restart docker
+
+  - name: set http_proxy in docker (Debian)
+    lineinfile:
+      name: /etc/default/docker
+      state: present
+      line: "http_proxy={{proxy_env.http_proxy | default ([]) }}"
+    when: proxy_env is defined and  ansible_os_family == "Debian"
+    tags:
+    - docker
+    notify:
+    - Restart docker
+
+  - name: set no_proxy in docker (Debian)
+    lineinfile:
+      name: /etc/default/docker
+      state: present
+      line: "no_proxy={{proxy_env.no_proxy | default ([]) }}"
+    when: proxy_env is defined and  ansible_os_family == "Debian"
+    tags:
+    - docker
+    notify:
+    - Restart docker
+
+  - name: Add docker insecure registry
+    lineinfile:
+      dest: /etc/sysconfig/docker
+      regexp: '^# INSECURE_REGISTRY='
+      line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
+    notify:
+    - Restart docker
+    when: ansible_os_family == "RedHat" and kubeadm_docker_insecure_registry is defined
+
+  #- name: Use json-file docker logging driver
+  #  lineinfile:
+  #    dest: /etc/sysconfig/docker
+  #    regexp: '^OPTIONS='
+  #    line: "OPTIONS='--selinux-enabled --log-driver=json-file --signature-verification=false'"
+  #  notify:
+  #  - Restart docker
+  #  tags:
+  #  - docker
+
+  ## END BLOCK WITH CONDITION
+  when: ( docker_setup is defined and docker_setup=="force" ) or
+        ( (docker_setup is not defined or docker_setup=="auto" ) and docker_result | failed )
+
+#- name: Use overlay docker storage driver (note: overlay2 is not currently supported by k8s)
+#  lineinfile:
+#    dest: /etc/sysconfig/docker-storage
+#    regexp: '^DOCKER_STORAGE_OPTIONS='
+#    line: 'DOCKER_STORAGE_OPTIONS="--storage-driver=overlay"'
+#  notify:
+#  - Restart docker
+#  tags:
+#  - docker
+
+- name: Flush handlers like docker-storage-setup, docker, etc
+  meta: flush_handlers
+  tags:
+  - docker
+
+- name: check docker is running
+  command: 'docker info'
+  tags:
+  - check_docker
+  - docker
+  changed_when: false
+
+- name: check docker hello world - test 2/2 # It will not work if there is no internet connection
+  shell: docker run -i hello-world | awk '/Hello/ {print $1}'
+  register: command_result
+  failed_when: command_result.stdout != "Hello"
+  tags:
+  - check_docker
+  - docker
+  changed_when: false
+
+# Ideally, to ensure there is no x509 certificate error like:
+#' docker pull gcr.io/google_containers/kube-apiserver-amd64:v1.7.2
+#Trying to pull repository gcr.io/google_containers/kube-apiserver-amd64 ...
+#Get https://gcr.io/v1/_ping: x509: certificate signed by unknown authority '
+# yum check-update ca-certificates; (($?==100)) && yum update ca-certificates || yum reinstall ca-certificates
+# update-ca-trust extract

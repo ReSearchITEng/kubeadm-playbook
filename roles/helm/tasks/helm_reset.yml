@@ -1,19 +1,19 @@
 ---
-- hosts: master
-  become: yes
-  become_method: sudo
+#- hosts: master
+#  become: yes
+#  become_method: sudo
+#  tags:
+#  - helm_reset
+#  - helm
+#  - reset
+#  tasks:
+
+- set_fact:
+    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
   tags:
-  - helm_reset
-  - helm
-  - reset
-  - master
-  tasks:
+  - always
 
-  - set_fact:
-      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
-    tags:
-    - always
-
+- block:
   - name: helm list all apps
     environment: '{{env_kc}}'
     shell: helm list | tail -n +2 | awk '{print $1}'
@@ -39,4 +39,7 @@
     retries: 20
     delay: 3
     changed_when: false
+  tags:
+  - helm_reset
+  - reset
 

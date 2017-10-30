@@ -1,0 +1,7 @@
+---
+- include: remove_pvs.yml
+- include: nfs_reset.yml
+- include: nfs.yml
+- include: rook_reset.yml
+- include: rook.yml
+- include: vsphere.yml

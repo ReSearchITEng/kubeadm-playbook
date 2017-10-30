@@ -1,0 +1,27 @@
+---
+### ntpd:
+- block:
+  - name: ntpd and ntpdate | it is mandatory to have the time from all machines in sync
+    package: state=installed name={{ item }}
+    environment: '{{ proxy_env | default ({}) }}'
+    with_items:
+    - ntp
+    tags:
+    - ntp
+    register: ntp_output
+    notify:
+    - Restart ntpd
+
+  - name: ntpd configuration
+    copy: content={{ntp_conf}} dest=/etc/ntp.conf backup=yes
+    when: ntp_conf is defined
+    tags:
+    - ntp
+    notify:
+    - Restart ntpd
+
+  - name: Restart ntpd
+    systemd: name=ntpd state=restarted enabled=yes
+    tags:
+    - ntp
+  when: ntp_setup is defined and ntp_setup

@@ -1,0 +1,6 @@
+---
+  - name: Disable firewalld (CentOS/RHEL)
+    systemd: name=firewalld state=stopped enabled=no
+    when:  ansible_os_family == "RedHat"
+    # For developing firewalld friendly solution, check:
+    # https://github.com/kubernetes/contrib/tree/master/ansible/roles/

@@ -1,0 +1,99 @@
+---
+# - hosts: master
+#   become: yes
+#   become_method: sudo
+#   environment:
+#     KUBECONFIG: /etc/kubernetes/admin.conf
+#   tasks:
+
+- block:
+  - name: kubectl get nodes
+    shell: "kubectl get nodes --no-headers | grep -v -w 'Ready' || true "
+    register: command_result
+    tags:
+    - node_sanity
+    until: command_result.stdout == ""
+    retries: 40
+    delay: 3
+    changed_when: false
+
+  - name: kubectl get nodes
+    shell: "kubectl get --namespace kube-system pods --no-headers | grep -v -w 'Running' || true "
+    register: command_result
+    tags:
+    - pod_sanity
+    until: command_result.stdout == ""
+    retries: 30
+    delay: 3
+    changed_when: false
+
+# Too much
+  # - name: Get events
+  #   command: kubectl get events --all-namespaces
+  #   register: command_result
+  #   changed_when: false
+  #   tags:
+  #   - cluster_info
+  #   - cluster_status
+
+  # - name: Display events
+  #   debug:
+  #     var: command_result.stdout_lines
+  #   changed_when: false
+  #   tags:
+  #   - cluster_info
+  #   - cluster_status
+
+  - name: Get pods
+    command: kubectl get pods -o wide --all-namespaces --show-all=true --show-labels=true --show-kind=true
+    register: command_result
+    changed_when: false
+    tags:
+    - cluster_info
+    - cluster_status
+
+  - name: Display pods
+    debug:
+      var: command_result.stdout_lines
+    changed_when: false
+    tags:
+    - cluster_info
+    - cluster_status
+
+  - name: Get nodes
+    command: kubectl get nodes
+    register: command_result
+    changed_when: false
+    tags:
+    - node_sanity
+    - cluster_info
+    - cluster_status
+
+  - name: Display nodes
+    debug:
+      var: command_result.stdout_lines
+    changed_when: false
+    tags:
+    - node_sanity
+    - cluster_info
+    - cluster_status
+
+# >= and not == because we may use this role to only to add nodes also.
+  - name: Check all nodes were registered
+    shell: "/usr/bin/test $(kubectl get nodes | grep -ow Ready | wc -l) -ge {{ groups['node'] | length + groups['master'] | length }}"
+    register: command_result
+    retries: 10
+    delay: 3
+    until: command_result | success
+    changed_when: false
+    tags:
+    - cluster_info
+    - cluster_status
+    - node_sanity
+
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  tags:
+  - sanity
+  - cluster_sanity
+

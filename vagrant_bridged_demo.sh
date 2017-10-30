@@ -7,7 +7,23 @@ set -e
 HOST_BRIDGED_INTERFACE=`ip route | grep default | head -1 | cut -d" " -f5`
 # This is the same interface you may want to set in the Vagrantfile (or prompting you for)
 # This entire script works only with virtualbox provider
+# The script also modifies storage controller from IDE to SATA, and moves the disk from IDE to the newly created SATA 
 ###
+
+if [ $# -eq 0 ];then
+
+cat <<EOF
+Use any of these options:
+--full # which does: vagrant destroy (if anything existed before), vagrant up (create machines),i vagrant halt (for config), fix bridged adaptor, start machines with VBoxManage startvm, generate ansible.cfg and hosts file (ansible inventory).
+--bridged_adapter <host_adapter> | auto # which does:  vagrant halt (for config), fix bridged adaptor, change from IDE to SATA, start machines with VBoxManage startvm, generate ansible.cfg and hosts file (inventory).
+--restart # which does only: vagrant halt and  start machines with VBoxManage startvm.
+--regenerate_config # which only regenerates ansible.cfg and hosts file (ansible inventory)
+NOTE: ONLY ONE OPTION AT A TIME
+EOF
+
+exit 1
+fi
+
 
 # Optionally, when started with params like reset or init, it also does vagrant up, etc.
 while [ $# -gt 0 ]; do
@@ -16,19 +32,25 @@ while [ $# -gt 0 ]; do
     vagrant destroy -f || true
     vagrant up
     shift
+    break
   ;;
   --bridged_adapter)
-    HOST_BRIDGED_INTERFACE=$2
+    if [ "${2}x" != "autox" ]; then
+      HOST_BRIDGED_INTERFACE=$2
+    fi
     shift
     shift
+    break
   ;;
   --restart)
     ACTIONS=restart
     shift
+    break
   ;;
   --regenerate_config)
     ACTIONS=regenerate_config
     shift
+    break
   ;;
  esac
 done
@@ -58,9 +80,10 @@ if [ "${ACTIONS}x" != "regenerate_configx" ];then
  if [ "${ACTIONS}" = "restartx" ];then
   echo "### Restart VMs"
   for vagrantM in ${filter_machines_offvagm}; do
-   for vboxM in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM | grep $filter_machines_local_directory | cut -d'"' -f2  ); do
-    VBoxManage startvm $vboxM --type headless  # DO NOT USE 'vagrant up', use VBoxManage startvm command
-   done
+    #for vboxM in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM | grep $filter_machines_local_directory | cut -d'"' -f2  ); do
+    for vboxMUUID in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM | grep $filter_machines_local_directory | cut -d'{' -f2 | tr -d '}' ); do #UsesUUID
+      VBoxManage startvm $vboxMUUID --type headless  # DO NOT USE 'vagrant up', use VBoxManage startvm command
+    done
   done
   vagrant status
   echo "Start vm triggered (via VBoxManage startvm). Once up, proceed with login using ssh -F ssh_config <host>; to check status use: vagrant status"
@@ -68,15 +91,37 @@ if [ "${ACTIONS}x" != "regenerate_configx" ];then
  fi
 
  ###
- echo "### Reconfigure the interfaces, disabling the NAT and making first interface bridged with "
+ echo "### Reconfiguring machines ${filter_machines_offvagm}"
  #set -vx
  for vagrantM in ${filter_machines_offvagm}; do
-  for vboxM in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM | grep $filter_machines_local_directory | cut -d'"' -f2  ); do
+  vagrantM_nodot=$(echo $vagrantM| tr -d ".")
+  #for vboxM in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM | grep $filter_machines_local_directory | cut -d'"' -f2  ); do #Uses names
+  for vboxMUUID in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM_nodot | grep $filter_machines_local_directory | cut -d'{' -f2 | tr -d '}' ); do #UsesUUID
+    echo "Modifying the interfaces, disabling the NAT and making first interface bridged with for vagrantM=$vagrantM (vboxMUUID=$vboxMUUID)"
+    #### Change VM's network interfaces, NAT to bridged:
+
     #VBoxManage showvminfo $M | grep -i nic    #"--machinereadable"
-    VBoxManage modifyvm $vboxM --nic1 none --nic2 none --nic3 none --nic4 none --nic5 none --nic6 none --nic7 none --nic8 none 
-    VBoxManage modifyvm $vboxM --nic1 bridged --bridgeadapter1 $HOST_BRIDGED_INTERFACE --nictype1 82540EM --macaddress1 auto
-    #VBoxManage modifyvm $vboxM --nic2 nat --nictype2 82540EM --macaddress2 auto --natnet2 "10.0.2.0/24" --natpf2 "ssh,tcp,127.0.0.1,2222,,22" --natdnsproxy2 off --natdnshostresolver2 off # This is optional
-    VBoxManage startvm $vboxM --type headless  # DO NOT USE 'vagrant up', use VBoxManage startvm command
+    VBoxManage modifyvm $vboxMUUID --nic1 none --nic2 none --nic3 none --nic4 none --nic5 none --nic6 none --nic7 none --nic8 none 
+    VBoxManage modifyvm $vboxMUUID --nic1 bridged --bridgeadapter1 $HOST_BRIDGED_INTERFACE --nictype1 virtio --macaddress1 auto
+    #VBoxManage modifyvm $vboxMUUID --nic1 bridged --bridgeadapter1 $HOST_BRIDGED_INTERFACE --nictype1 82540EM --macaddress1 auto
+    #VBoxManage modifyvm $vboxMUUID --nic2 nat --nictype2 82540EM --macaddress2 auto --natnet2 "10.0.2.0/24" --natpf2 "ssh,tcp,127.0.0.1,2222,,22" --natdnsproxy2 off --natdnshostresolver2 off # This is optional
+
+    #### (optional but recommended), change disk IDE TO SATA". Centos comes by default with unperformant controller: IDE (not SATA/SCSI/etc)
+    echo "Modifying the controller from IDE to SATA for vagrantM=$vagrantM (vboxMUUID=$vboxMUUID)"
+    # Get disk
+    #IDE_VMDK_PATH=$(VBoxManage showvminfo --machinereadable $vboxMUUID | grep -i "IDE" | grep '\.vmdk' | cut -d '"' -f4)
+    IDE_VMDK_ImageUUID=$(VBoxManage showvminfo --machinereadable $vboxMUUID | grep -i "IDE" | grep ImageUUID | cut -d '"' -f4)
+    if [ "${IDE_VMDK_ImageUUID}x" != "x" ]; then
+      echo "Changind disk from IDE to SATA for disk IDE_VMDK_ImageUUID=$IDE_VMDK_ImageUUID "
+      VBoxManage storagectl $vboxMUUID --name "IDE Controller" --remove  # remove IDE controller
+      VBoxManage storagectl $vboxMUUID --name "SATA" --add sata --portcount 3 --hostiocache on --bootable on  # Add SATA controller
+      VBoxManage storageattach $vboxMUUID --storagectl "SATA" --port 0 --type hdd --nonrotational on --medium $IDE_VMDK_ImageUUID  # Attach the previous disk to the new SATA controller
+      #For SSD optionally add also: "--nonrotational on"
+
+    fi
+
+    #### Start the VM:
+    VBoxManage startvm $vboxMUUID --type headless  # DO NOT USE 'vagrant up', use VBoxManage startvm command
   done
  done
 

@@ -1,0 +1,131 @@
+---
+# Debian based (includes Ubuntu)
+- name: Install apt-transport-https
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - apt-transport-https
+  when: ansible_os_family == "Debian"
+
+- apt_key:
+    url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+    state: present
+  environment: '{{ proxy_env | default ({}) }}'
+  when: ansible_os_family == "Debian"
+
+- apt_repository:
+    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+    state: present
+    #filename: 'kubernetes.list'
+    update_cache: yes
+  environment: '{{ proxy_env | default ({}) }}'
+  when: ansible_os_family == "Debian"
+
+# RedHat based (includes CentOS, RHEL, Fedora, Oracle, etc.)
+- name: Create kubernetes yum repository
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    gpgcheck: 0
+  when: ansible_os_family == "RedHat"
+
+- name: add proxy for the repo
+  ini_file:
+    dest: /etc/yum.repos.d/kubernetes.repo
+    section: "{{item}}"
+    option: proxy
+    value: "{{proxy_env.https_proxy | default ([]) }}"
+  with_items: [ 'kubernetes' ]
+  when: proxy_env is defined and ansible_os_family == "RedHat"
+
+- name: Clean yum metadata
+  command: yum clean all
+  args:
+    warn: no
+  when: ansible_os_family == "RedHat" and package_state is defined and package_state == "latest"
+
+- name: apt-get clean metadata
+  command: apt-get clean ; apt-file purge
+  args:
+    warn: no
+  when: ansible_os_family == "Debian" and package_state is defined and package_state == "latest"
+
+# End OS dependent repo setup
+
+### kubelet
+- name: Install kubelet
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubelet
+  when: kubelet_version is not defined
+
+- name: Install kubelet
+  package: name={{ item }}-{{kubelet_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubelet
+  when: kubelet_version is defined and ( kubelet_version!='installed' or kubelet_version!='latest' )
+
+- name: Install kubelet
+  package: name={{ item }}-{{kubelet_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubelet
+  when: kubelet_version is defined and ( kubelet_version=='installed' or kubelet_version=='latest' )
+
+### kubectl
+- name: Install kubectl
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubectl
+  when: kubectl_version is not defined
+
+- name: Install kubectl
+  package: name={{ item }}-{{kubectl_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubectl
+  when: kubectl_version is defined and ( kubectl_version!='installed' or kubectl_version!='latest' )
+
+- name: Install kubectl
+  package: name={{ item }}-{{kubectl_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubectl
+  when: kubectl_version is defined and ( kubectl_version=='installed' or kubectl_version=='latest' )
+
+### kubeadm
+- name: Install kubeadm
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is not defined
+
+- name: Install kubeadm
+  package: name={{ item }}-{{kubeadm_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is defined and ( kubeadm_version!='installed' or kubeadm_version!='latest' )
+
+- name: Install kubeadm
+  package: name={{ item }}-{{kubeadm_version}} state=installed
+  environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is defined and ( kubeadm_version=='installed' or kubeadm_version=='latest' )
+
+#- name: Install packages
+#  package: name={{ item }} state={{ package_state | default ('latest') }}
+#  environment: '{{ proxy_env | default ({}) }}'
+#  with_items:
+  #- kubernetes-cni # already installed by kubelet anyway
+  #- docker # for RH, but could be installed manually, so no checks here.
+  #- kubeadm
+  #- docker.io # for ubuntu
+
+

@@ -1,0 +1,47 @@
+---
+
+### Post install messages
+- block:
+  - name: Get nodes
+    command: kubectl get nodes
+    register: command_result
+    changed_when: false
+
+  - name: Display nodes
+    debug:
+      var: command_result.stdout_lines
+    changed_when: false
+
+  - name: Get cluster info
+    command: kubectl cluster-info
+    register: command_result
+    changed_when: false
+
+  - name: cluster-info
+    debug:
+      var: command_result.stdout_lines    
+    changed_when: false
+
+  - name: Print cluster information and other useful commands.
+    vars:
+      msg: |
+           Your cluster should be up and running !
+           Now you may:
+           - type: alias to see the predefined aliases
+           - for a command line "dashboard", on master type:
+             - wp     # watch pods in all namespaces (optionally --show-labels )
+             - kg po  # kg='kubectl get --all-namespaces -o wide' <po|ing|etc...>
+             - ks     # ks='kubectl -n kube-system ' get po
+           - k top node / pod # More tips: https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/
+           
+           - browse your master (using fqdn) to see the dashboard:
+             http://{{groups["master"][0]}}
+               or (depending what was defined in config)
+             http://dashboard.{{ custom.networking.dnsDomain }}
+    debug:
+      msg: "{{ msg.split('\n') }}"
+
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  tags:
+  - cluster_info

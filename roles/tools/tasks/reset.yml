@@ -1,29 +1,28 @@
 ---
-- hosts: all
-  gather_facts: False
-  become: yes
-  become_method: sudo
-  tags:
-  - reset
-  - master
-  - node
-  tasks:
+#- hosts: all
+#  gather_facts: False
+#  become: yes
+#  become_method: sudo
+#  tags:
+#  - reset
+#  tasks:
 
+- block:
+
+  - name: Reset weave network # if it was used
+    shell: /usr/local/bin/weave reset
+    ignore_errors: yes
+  
   - name: remove pods NFS mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     shell: umount -f $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~nfs' | awk '{print $3}')
-    with_items:
-    - kubelet
     tags:
-    - kubelet
-    - uninstall
-    - reset
+    - umount
+    - nfs_reset
     ignore_errors: yes
 
   - name: Reset cluster
     command: /usr/bin/kubeadm reset
     ignore_errors: yes
-    tags:
-    - reset
 
   - name: ensure old kubeadm config files were removed
     file: state=absent path={{ item }}
@@ -32,8 +31,6 @@
     - /etc/kubernetes/kubeadm-master.config
     - /etc/kubernetes/kubeadm-master.conf
     - /etc/kubernetes/cloud-config
-    tags:
-    - reset
 
   - name: ensure old /etc/kubernetes/ is removed when full_kube_reinstall is true
     file: state=absent path={{ item }}
@@ -41,13 +38,11 @@
     - /etc/kubernetes/
     - /var/lib/etcd
     when: full_kube_reinstall is defined and full_kube_reinstall
-    tags:
-    - reset
 
   - name: systemctl stop kube*.*.slice
     shell: 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done'
     tags:
-    - reset
+    - umount
 
   - name: Remove before reinstall packages
     package: name={{ item }} state=absent
@@ -60,7 +55,6 @@
     tags:
     - kubelet
     - uninstall
-    - reset
 
   - name: stop kubelet for cleanup activities
     systemd: name={{ item }} state=stopped
@@ -69,29 +63,22 @@
     tags:
     - kubelet
     - uninstall
-    - reset
     ignore_errors: yes
 
   - name: remove plugins mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     #shell: 'umount $(mount | grep " on /var/lib/kubelet/plugins/kubernetes.io/" | cut -f1 -d" ")'
     shell: umount -f $(mount | grep '/kubelet/plugins/kubernetes.io/' | awk '{print $3}')
     #shell: 'umount $(mount | grep "/kubelet/plugins/kubernetes.io/" | cut -f1 -d" ")'
-    with_items:
-    - kubelet
     tags:
     - kubelet
     - uninstall
-    - reset
     ignore_errors: yes
 
   - name: remove pods mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     shell: umount -f $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~' | awk '{print $3}')
-    with_items:
-    - kubelet
     tags:
     - kubelet
     - uninstall
-    - reset
     ignore_errors: yes
 
   #https://github.com/kubernetes/kubernetes/issues/39557
@@ -100,15 +87,13 @@
     ignore_errors: yes
     tags:
     - uninstall
-    - reset
 
-  - name: Reset iptables rules
+  - name: Reset iptables rules # THIS TASK SHOULD BE REMOVED, is not maintained
     shell: iptables-save | awk '/^[*]/ { print $1 } /^:[A-Z]+ [^-]/ { print $1 " ACCEPT" ; } /COMMIT/ { print $0; }' | iptables-restore
     when: iptables_reset is defined and iptables_reset
     ignore_errors: yes
     tags:
     - uninstall
-    - reset
 
   #- name: restart kubelet for cleanup activities
   #  systemd: name={{ item }} state=restarted
@@ -118,6 +103,7 @@
   #  tags:
   #  - kubelet
   #  - uninstall
-  #  - reset
   #  ignore_errors: yes
 
+  tags:
+  - reset

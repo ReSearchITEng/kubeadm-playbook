@@ -1,0 +1,5 @@
+---
+- include: network.yml
+- include: post_cluster_deploy.yml
+- include: sanity.yml
+- include: taints.yml

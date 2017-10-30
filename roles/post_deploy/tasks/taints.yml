@@ -1,0 +1,23 @@
+---
+  - name: apply taints_master
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: 'kubectl taint nodes {{ inventory_hostname_short }} {{ item }} --overwrite'
+    when: taints_master is defined
+    with_items: '{{ taints_master }}'
+    tags:
+    - taints
+
+  - name: apply master_uncordon
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: 'kubectl uncordon {{ inventory_hostname_short }} '
+    when: master_uncordon is defined
+    tags:
+    - taints
+
+  - name: 'Wait few seconds for taints/uncordon on master take effect'
+    pause: seconds=3
+    when: taints_master is defined or master_uncordon is defined
+    tags:
+    - taints

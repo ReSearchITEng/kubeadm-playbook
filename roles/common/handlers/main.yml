@@ -2,8 +2,24 @@
 - name: Restart docker
   systemd: name=docker state=restarted enabled=yes
 
+- name: Restart docker-storage-setup
+  systemd: name=docker-storage-setup state=restarted
+
 - name: Reload systemd
   command: systemctl daemon-reload
 
 - name: Restart kubelet
-  systemd: name=kubelet state=restarted enabled=yes
+  systemd: name=kubelet state=restarted enabled=yes daemon_reload=yes
+
+- name: Restart ntpd
+  systemd: name=ntpd state=restarted enabled=yes
+
+- name: Restart iptables
+  systemd: name=iptables state=restarted enabled=yes
+
+- name: Reboot
+  shell: sleep 2 && /sbin/shutdown -r now 
+  async: 1
+  poll: 0
+  ignore_errors: yes
+  when: allow_restart | default ( false )

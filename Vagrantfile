@@ -7,8 +7,9 @@
 # you're doing.
 
 $instance_name_prefix = "k8s"
-$num_instances = 1
-
+$num_instances = 1   # Number of nodes, excluding master which is always created.
+$custom_networking_dnsDomain = ".ap"  # put same value like custom.networking.dnsDomain in ansible's group_vars/all, BUT this time WITH THE DOT in front!
+                       #E.g.  ".demo.k8s.ap",
 # https://www.virtualbox.org/manual/ch08.html#vboxmanage-natnetwork
 #def nat(config)
 ### Cannot be used, as the rest of vagrant commands fail...
@@ -23,10 +24,6 @@ Vagrant.configure(2) do |config|
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
 
-  # Every Vagrant development environment requires a box. You can search for
-  # boxes at https://atlas.hashicorp.com/search.
-
-  config.vm.box = "centos/7"
   #config.vm.box_check_update = "false"  # If there is no internet access to get new updates
 
   #config.vm.network "public_network", type: "dhcp", bridge: "enp3s0"
@@ -40,14 +37,18 @@ Vagrant.configure(2) do |config|
   #config.ssh.password = "your_password"
 
   config.vm.provider "virtualbox" do |vb|
-     vb.gui = false
+     vb.gui = false     # Set to true to view the window in graphical mode
      vb.memory = "6144" #"4096" #"3072" # 6144
      vb.cpus = 4
+     #vb.customize ["storagectl", :id, "--name", "IDE Controller", "--remove"] # Make sure it does not use IDE
+     #vb.customize ["storagectl", :id, "--name", "SATA Controller", "--add", "sata"]   # Make it use SATA: faster and less issues
+     # optionally add: , "--hostiocache", "on", "--bootable", "on"] # like here: https://www.virtualbox.org/manual/ch08.html#vboxmanage-storagectl
   end
+  config.vm.box = "centos/7"
 
   # NODES:
   (1..$num_instances).each do |i|
-    config.vm.define vm_name = "%s-%02d" % [$instance_name_prefix, i] do |node|
+    config.vm.define vm_name = "%s-%02d%s" % [$instance_name_prefix, i, $custom_networking_dnsDomain] do |node|
      #node.vm.synced_folder ".vagrant", "/vagrant", type: "rsync" #, rsync__exclude: ".local_only" #rsync__include: ".vagrant/"
      node.vm.box = "centos/7"
      #node.vm.box = "centos/atomic-host"
@@ -68,7 +69,7 @@ Vagrant.configure(2) do |config|
   end
 
   # MASTER:
-  config.vm.define vm_name = "%s-master" % [$instance_name_prefix] , primary: true do |k8smaster|
+  config.vm.define vm_name = "%s-master%s" % [$instance_name_prefix, $custom_networking_dnsDomain] , primary: true do |k8smaster|
     #k8smaster.vm.synced_folder ".vagrant", "/vagrant", type: "rsync" #, rsync__exclude: ".local_only" #rsync__include: ".vagrant/"
     #k8smaster.vm.hostname = "#{k8smaster}"
     #k8smaster.vm.hostname = "%s" % [ k8smaster ]

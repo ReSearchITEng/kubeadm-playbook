@@ -1,0 +1,77 @@
+---
+### prepare cloud-config
+- block:
+  - name: prepare cloud-config file for cloudProvider {{kubeadm_master_config.cloudProvider}}
+    set_fact: fact_cloud_provider='--cloud-provider={{ kubeadm_master_config.cloudProvider }} --cloud-config=/etc/kubernetes/cloud-config'
+    tags:
+    - always
+
+  - name: prepare cloud-config file
+    template:
+      src: cloud-config.j2
+      dest: /etc/kubernetes/cloud-config
+      force: yes
+    tags:
+    - init
+    notify:
+    - Restart kubelet
+  # BLOCK ENDS with its condition:
+  when: kubeadm_master_config.cloudProvider is defined
+  tags:
+  - kubelet
+
+### kubeadm settings:
+- name: Replace {{kubeadm_master_config.networking.dnsDomain}} under cluster-domain in kubelet.service.d/10-kubeadm.conf
+  replace:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '(--cluster-domain=)[A-Za-z0-9\-\.]+(.*)'
+    replace: '\1{{ kubeadm_master_config.networking.dnsDomain | default("cluster.local") }}\2'
+    #backup: yes
+  when: kubeadm_master_config.networking.dnsDomain is defined
+  notify:
+  - Reload systemd # already by other handler
+  - Restart kubelet
+  tags:
+  - kubeadm
+  - kubelet
+
+- name: Create kubeadm sysctl file
+  copy: src=90-kubeadm.conf dest=/etc/sysctl.d/90-kubeadm.conf
+  tags:
+  - kubeadm
+  - kubelet
+
+- name: Set sysctl settings
+  command: sysctl --system
+  tags:
+  - kubeadm
+  - kubelet
+
+### kubelet settings:
+- name: Remove existing kubelet args from drop-in unit
+  lineinfile:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    regexp: '^Environment="KUBELET_EXTRA_ARGS'
+    state: absent
+  notify:
+  - Reload systemd # already by other handler
+  - Restart kubelet
+  tags:
+  - kubelet
+
+# newer versions (e.g. 1.7+) already have a new variable:
+# Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd" 
+# but we want to support older versions also.
+# To support 1.8, we also need to add --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice , due to:
+# https://stackoverflow.com/questions/46726216/kubelet-fails-to-get-cgroup-stats-for-docker-and-kubelet-services
+# As pre 1.7 versions do not have KUBELET_CGROUP_ARGS, so we still use KUBELET_EXTRA_ARGS
+- name: Use systemd kubelet cgroup driver
+  lineinfile:
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    insertafter: '^Environment=\"KUBELET_AUTHZ_ARGS'
+    line: Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice {{ fact_cloud_provider | default ('') }} "
+  notify:
+  - Reload systemd # already by other handler
+  - Restart kubelet
+  tags:
+  - kubelet

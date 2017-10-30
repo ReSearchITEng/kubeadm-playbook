@@ -24,6 +24,9 @@
     timeout: 30
     delay: 3
   changed_when: false
+  tags:
+  - init
+  - node
 
 #This is required when proxy is used, and the inventory_hostname is defined with fqdn
 #to ensure the connection to local server is not going via proxy (expecially when applying addons)
@@ -40,10 +43,50 @@
   notify:
   - Restart kubelet
 
+### SANITY : At this stage it will not be "Ready", as there is no network deployed yet.
+# - block:
+#   # At this stage it will not be "Ready", as there is no network deployed yet.
+#   - name: kubectl get nodes
+#     shell: "kubectl get nodes --no-headers | grep {{ inventory_hostname }}"   # | grep -v -w 'Ready' || true "
+#     register: command_result
+#     until: command_result.stdout != ""
+#     retries: 40
+#     delay: 3
+#     changed_when: false
+    
+#   - name: Get nodes
+#     command: kubectl get nodes
+#     register: command_result
+#     changed_when: false
+
+#   - name: Display nodes
+#     debug:
+#       var: command_result.stdout_lines
+#     changed_when: false
+
+#   - name: Check all nodes were registered
+#     shell: "/usr/bin/test $(kubectl get nodes --no-headers | grep -ow Ready | wc -l) >= {{ groups['node'] | length + groups['master'] | length }}"
+#     register: command_result
+#     retries: 10
+#     delay: 3
+#     until: command_result | success
+#     changed_when: false
+ 
+#   environment:
+#     KUBECONFIG: /etc/kubernetes/kubelet.conf
+#   tags:
+#   - node
+#   - node_sanity
+
+### 
 - name: export KUBECONFIG in nodes' ~/.bash_profile
   lineinfile:
     dest: ~/.bash_profile
     line: "export KUBECONFIG=/etc/kubernetes/kubelet.conf"
     state: present
   when: shell is undefined or shell == 'bash'
+  tags:
+  - node
+
+
 

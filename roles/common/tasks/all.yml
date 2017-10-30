@@ -1,0 +1,15 @@
+---
+#- include: reset.yml
+- include: selinux.yml # THIS MIGHT REBOOT MACHINE!!!
+- include: install_k8s_packages.yml
+- include: docker.yml
+- include: iptables.yml
+- include: firewalld.yml
+- include: kube_config.yml
+- include: swap.yml
+- include: ntpd.yml
+  when: ntp_setup | default (True)
+- include: rook.yml
+  when: rook is defined and rook.enabled | default (False)
+- include: various.yml
+- include: alias_completion.yml
