@@ -33,11 +33,11 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 - if one needs ceph(rook) persistent storage, disks or folders should be prepared and properly sized (e.g. /storage/rook)
 
 ## This playbook will:
-* pre-sanity: docker sanity (soon)
+* pre-sanity: docker sanity
 * Install the kubeadm repo
 * Install kubeadm, kubelet, kubernetes-cni, and kubectl
 * Disable SELinux :disappointed: (current prerequisite of kubeadm)
-* Set kubelet `--cgroup-driver=systemd`
+* Set kubelet `--cgroup-driver=systemd` , swap-off, and many other settings required by kubelet to work # see settings
 * Reset activities (like kubeadm reset, unmount of `/var/lib/kubelet/*` mounts, ip link delete cbr0, cni0 , etc.) - important for reinstallations.
 * Initialize the cluster on master with `kubeadm init`
 * Install user specified pod network from `group_vars/all`
@@ -45,13 +45,13 @@ The project is for those who want to quickly create&recreate k8s cluster, with a
 * Install helm
 * Install nginx ingress controller via helm (control via `group_vars/all`)
 * Join the nodes to the cluster with 'kubeadm join'
-* Planned: Install prometheus via ~~Helm~~ operator (control via `group_vars/all`)
+* Planned: Install prometheus via Hel (control via `group_vars/all`)
 * Sanity: checks if nodes are ready and if all pods are running
 * when enabled, it will create ceph storage cluster using rook operator
 * when enabled, it will create vsphere persistent storage class and all required setup. Please fill in vcenter u/p/url,etc `group_vars/all`, and follow all initial steps there.
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.
-This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1 - 1.6.6 and 1.7.0**
+This has been tested with **RHEL&CentOS 7.3** and **Kubernetes v1.6.1 - 1.6.11 and 1.7.0-1.7.9 and 1.8.1-1.8.2**
 For installing k8s v1.7 one must also use kubeadm 1.7 (kubeadm limitation)
 
 If for any reason anyone needs to relax RBAC, they can do: 
@@ -89,14 +89,14 @@ For LB, one may want to check also:
 # DEMO:
 Installation demo k8s 1.7.8 on CentOS 7.4: https://asciinema.org/a/Ii7NDu3eL9DsuM1fEFM9PMVTM
 
-## Installation USING with Vagrant 
+## Vagrant 
 For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script: vagrant_bridged_demo.sh.
 
 ### Steps to start Vagrant deployment:
 1. edit ./Vagrant file and set desired number of machines, sizing, etc.
 2. run:
 ```shell
-./vagrant_bridged_demo.sh --full [ --bridged_adapter <desired host interface> ] # bridged_adapter defaults to ip route | grep default | head -1 
+./vagrant_bridged_demo.sh --full [ --bridged_adapter <desired host interface|auto>  ] # bridged_adapter defaults to ip route | grep default | head -1 
 ```
 After preparations (edit group_vars/all, etc.), run the ansible installation normally.
 
