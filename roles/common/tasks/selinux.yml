@@ -7,7 +7,8 @@
     state:  "{{ selinux_state  | default ('permissive') }}"
   when: ansible_os_family == "RedHat"
   register: command_result
-  changed_when: command_result.reboot_required #'"state change will take effect next reboot in command_result.stdout'
+  # changed_when: command_result.reboot_required # works in Ansible 2.4+. To support 2.3, we keep current solution which reboots when there is any time of change...
+  # changed_when: "'state change will take effect next reboot' in command_result.stdout" 
 #  notify:
 #  - Reboot
   tags:
@@ -17,13 +18,15 @@
   command: /bin/true
   notify:
   - Reboot
-  when: command_result.reboot_required
+  #when: command_result.reboot_required
+  when: command_result.changed
   tags:
   - selinux
 
 - name: flush_handlers (trigger reboot when required)
   meta: flush_handlers
-  changed_when: command_result.reboot_required 
+  changed_when: command_result.changed
+  #changed_when: command_result.reboot_required 
   tags:
   - selinux
 

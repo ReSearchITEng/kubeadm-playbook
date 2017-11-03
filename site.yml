@@ -94,13 +94,13 @@
   - { role: tools, task: cluster_sanity, tags: [ 'cluster_sanity', 'sanity' ] }
   - { role: tools, task: postinstall_messages, tags: [ 'cluster_sanity', 'sanity' ] }
 
-## to reset/add only node:
+## to reset/add only some (more) nodes:
 ##   1. keep in hosts only:
 ##      - the master
 ##      - the affected node (all other nodes should not be there)
 ##   2. Have the token defined in the group_vars/all
 ##   3. Run using only this/these tag(s):
-## ansible-playbook -i hosts -v site.yml --tags "node,cluster_sanity,cluster_info"  # same with: ansible-playbook -i hosts -v site.yml --tags "node_reset,node_install,cluster_sanity,cluster_info"
+## ansible-playbook -i hosts -v site.yml --tags "node"   # same with: ansible-playbook -i hosts -v site.yml --tags "node_reset,node_install,cluster_sanity,cluster_info"
 
 ## To get cluster info/sanity:
 ## ansible-playbook -i hosts -v site.yml --tags "cluster_sanity,cluster_info"

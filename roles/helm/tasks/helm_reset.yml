@@ -20,17 +20,15 @@
     register: command_results
     ignore_errors: yes
     changed_when: false
+    tags:
+    - helm_purge
 
   - name: helm delete purge all apps
     environment: '{{env_kc}}'
     command: helm delete --purge {{ item }}
     with_items: "{{ command_results.stdout_lines }}"
     ignore_errors: yes
-
-  - name: helm remove/cleanup
-    environment: '{{env_kc}}'
-    shell: ( helm reset || true ) && ( kubectl delete deployment --namespace=kube-system tiller-deploy || true ) && ( kubectl delete service --namespace=kube-system tiller-deploy  || true ) && (  kubectl delete clusterrolebinding tiller  || true ) && (  kubectl delete --namespace=kube-system sa tiller )
-    ignore_errors: yes
+    - helm_purge
 
   - name: wait till all helm apps are deleted/purged
     shell: helm list | tail -n +2
@@ -39,6 +37,15 @@
     retries: 20
     delay: 3
     changed_when: false
+    ignore_errors: yes
+    tags:
+    - helm_purge
+
+  - name: helm remove/cleanup
+    environment: '{{env_kc}}'
+    shell: ( helm reset || true ) && ( kubectl delete deployment --namespace=kube-system tiller-deploy || true ) && ( kubectl delete service --namespace=kube-system tiller-deploy  || true ) && (  kubectl delete clusterrolebinding tiller  || true ) && (  kubectl delete --namespace=kube-system sa tiller )
+    ignore_errors: yes 
+
   tags:
   - helm_reset
   - reset

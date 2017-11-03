@@ -53,24 +53,31 @@
 
 # End OS dependent repo setup
 
+### socat
+- name: Install socat from centos/rhel/ubuntu repo
+  package: name={{ item }} state={{ package_state | default ('latest') }}
+  #environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - socat
+
 ### kubelet
 - name: Install kubelet
   package: name={{ item }} state={{ package_state | default ('latest') }}
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
   when: kubelet_version is not defined
 
 - name: Install kubelet
   package: name={{ item }}-{{kubelet_version}} state=installed
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
   when: kubelet_version is defined and ( kubelet_version!='installed' or kubelet_version!='latest' )
 
 - name: Install kubelet
   package: name={{ item }}-{{kubelet_version}} state=installed
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
   when: kubelet_version is defined and ( kubelet_version=='installed' or kubelet_version=='latest' )
@@ -78,21 +85,21 @@
 ### kubectl
 - name: Install kubectl
   package: name={{ item }} state={{ package_state | default ('latest') }}
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubectl
   when: kubectl_version is not defined
 
 - name: Install kubectl
   package: name={{ item }}-{{kubectl_version}} state=installed
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubectl
   when: kubectl_version is defined and ( kubectl_version!='installed' or kubectl_version!='latest' )
 
 - name: Install kubectl
   package: name={{ item }}-{{kubectl_version}} state=installed
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubectl
   when: kubectl_version is defined and ( kubectl_version=='installed' or kubectl_version=='latest' )
@@ -100,21 +107,21 @@
 ### kubeadm
 - name: Install kubeadm
   package: name={{ item }} state={{ package_state | default ('latest') }}
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubeadm
   when: kubeadm_version is not defined
 
 - name: Install kubeadm
   package: name={{ item }}-{{kubeadm_version}} state=installed
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubeadm
   when: kubeadm_version is defined and ( kubeadm_version!='installed' or kubeadm_version!='latest' )
 
 - name: Install kubeadm
   package: name={{ item }}-{{kubeadm_version}} state=installed
-  environment: '{{ proxy_env | default ({}) }}'
+  #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubeadm
   when: kubeadm_version is defined and ( kubeadm_version=='installed' or kubeadm_version=='latest' )
