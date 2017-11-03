@@ -28,6 +28,7 @@
     command: helm delete --purge {{ item }}
     with_items: "{{ command_results.stdout_lines }}"
     ignore_errors: yes
+    tags:
     - helm_purge
 
   - name: wait till all helm apps are deleted/purged

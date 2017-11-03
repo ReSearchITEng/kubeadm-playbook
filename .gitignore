@@ -1,6 +1,6 @@
 *.retry
 .vagrant
 ansible.cfg
-ssh_config
+ssh_config*
 /hosts
 /group_vars/all
