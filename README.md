@@ -2,14 +2,14 @@
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
-Tested on for all Centos/RHEL 7.2+, but ideally use version 7.4 (for overlay2 and automatic docker_setup).
-Optionally, then docker_setup: True, this project will also setup the docker on the host if does not exist. 
-For this it expects CentOS/RHEL 7.4. Any other OS needs manual docker pre-installed and docker_setup set to False/auto. 
+Tested on for all Centos/RHEL 7.2+, but ideally use version 7.4 (for overlay2 and automatic docker_setup).    
+Optionally, then docker_setup: True, this project will also setup the docker on the host if does not exist.     
+For this it expects CentOS/RHEL 7.4. Any other OS needs manual docker pre-installed and docker_setup set to False/auto.    
 Ubuntu/debian should work when docker is preinstalled, but not tested.
 
 ## Targets/pros&cons
-One may use it to get a fully working "production LIKE" environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.
-Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.
+One may use it to get a fully working "production LIKE" environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.    
+Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.     
 The project is for those who want to create&recreate k8s cluster using the official method (kubeadm), with all production features:
 - Ingresses (via helm chart)
 - Persistent storage (ceph or vsphere)
@@ -31,7 +31,8 @@ The project is for those who want to create&recreate k8s cluster using the offic
 
 ## Prerequisites:
 - ansible min. 2.1 (but higher is recommeneded. Tested up to now current 2.4)
-- For a perfect experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists). Note: dashboard will by default use the master machine, but also deploy under the provided domain (in parallel, only additional ingress rule)
+- For a perfect experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists).    
+Note: dashboard will by default use the master machine, but also deploy under the provided domain (in parallel, only additional ingress rule)
 - if docker_setup is True, it will also attempt to define your docker and set it up with overlay2 storage driver (one needs CentOS 7.4+)
 - if one needs ceph(rook) persistent storage, disks or folders should be prepared and properly sized (e.g. /storage/rook)
 
@@ -56,9 +57,10 @@ The project is for those who want to create&recreate k8s cluster using the offic
 * when enabled, it will create vsphere persistent storage class and all required setup. Please fill in vcenter u/p/url,etc `group_vars/all`, and follow all initial steps there.
 * it will define a set of handy aliases 
 
-NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.
-This has been tested with **RHEL&CentOS 7.3, 7.4** and **Kubernetes v1.6.1 - 1.6.11 and 1.7.0-1.7.9 and 1.8.1-1.8.2**
-For installing k8s v1.7 one must also use kubeadm 1.7 (kubeadm limitation). In general, keep the kube* tools at the same minor version with the desired k8s cluster. (even if higher kube* are supported with 1 minor version older cluster, like kube[adm/ctl/let] 1.8.* accepts kubernetes cluster 1.7.*).
+NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.    
+This has been tested with **RHEL&CentOS 7.3, 7.4** and **Kubernetes v1.6.1 - 1.6.11 and 1.7.0-1.7.9 and 1.8.1-1.8.2**     
+For installing k8s v1.7 one must also use kubeadm 1.7 (kubeadm limitation). In general, keep the kube* tools at the same minor version with the desired k8s cluster.   
+FYI, higher kube* are usually supported with 1 minor version older cluster (e.g. kube[adm/ctl/let] 1.8.* accepts kubernetes cluster 1.7.*).
 
 If for any reason anyone needs to relax RBAC, they can do: 
 ```kubectl create -f https://github.com/ReSearchITEng/kubeadm-playbook/blob/master/allow-all-all-rbac.yml```
@@ -134,7 +136,8 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 - https://github.com/gluster/gluster-kubernetes/blob/master/vagrant/ -> it's much more simple, no ingress, helm, addons, proxy support, and persistent volumes only using glusterfs. Entire project is only focused on CentOS.
 - https://github.com/kubernetes-incubator/kubespray & https://github.com/kubernetes/kops (amazon) -> Neither of them use the official installtion tool: kubeadm, and that makes them heavy/big and require knowledge of "internals". 
 
-With kubeadm-playbook we are focused on kubeadm as it's the official tool k8s should be installed with (but still in beta). Using kubeadm (which is released with every k8s release) you have a guarantee to be in sync with the official code. Unfortunatelly for now there is no HA with kubeadm, but it's in the works by k8s project. 
+With kubeadm-playbook we are focused on kubeadm as it's the official tool k8s should be installed with (but still in beta).    
+Using kubeadm (which is released with every k8s release) you have a guarantee to be in sync with the official code. Unfortunatelly for now there is no HA with kubeadm, but it's in the works by k8s project. 
 
 PRs are accepted and welcome.
 
