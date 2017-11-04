@@ -1,5 +1,5 @@
 # Update Status of the project: Stable
-[kubeadm-playboook ansible project's code is on Github:] (https://github.com/ReSearchITEng/kubeadm-playbook)
+[kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
 Tested on for all Centos/RHEL 7.2+, but ideally use version 7.4 (for overlay2 and automatic docker_setup).
@@ -139,7 +139,7 @@ With kubeadm-playbook we are focused on kubeadm as it's the official tool k8s sh
 PRs are accepted and welcome.
 
 PS: work inspired from: @sjenning - thanks. PRs & suggestions from: @carlosedp - Thanks.
-[URL page of kubeadm-playboook ansible project] (https://researchiteng.github.io/kubeadm-playbook/)
-[kubeadm-playboook ansible project's code is on Github:] (https://github.com/ReSearchITEng/kubeadm-playbook)
+[URL page of kubeadm-playboook ansible project](https://researchiteng.github.io/kubeadm-playbook/)
+[kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
 License: Public Domain 
