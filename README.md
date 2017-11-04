@@ -9,7 +9,7 @@ Ubuntu/debian should work when docker is preinstalled, but not tested.
 
 ## Targets/pros&cons
 One may use it to get a fully working "production LIKE" environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.    
-Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.     
+Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.    
 The project is for those who want to create&recreate k8s cluster using the official method (kubeadm), with all production features:
 - Ingresses (via helm chart)
 - Persistent storage (ceph or vsphere)
@@ -38,10 +38,11 @@ Note: dashboard will by default use the master machine, but also deploy under th
 
 ## This playbook will:
 * pre-sanity: docker sanity
+* Install ntp (to keep time in sync within cluster) (control via `group_vars/all`)
 * Install the kubeadm repo
 * Install kubeadm, kubelet, kubernetes-cni, and kubectl
-* Disable SELinux :disappointed: (current prerequisite of kubeadm)
-* Set kubelet `--cgroup-driver=systemd` , swap-off, and many other settings required by kubelet to work # see settings
+* Disable SELinux :disappointed: (current prerequisite of kubeadm) (control via `group_vars/all`)
+* Set kubelet `--cgroup-driver=systemd` , swap-off, and many other settings required by kubelet to work (control via `group_vars/all`)  
 * Reset activities (like kubeadm reset, unmount of `/var/lib/kubelet/*` mounts, ip link delete cbr0, cni0 , etc.) - important for reinstallations.
 * Initialize the cluster on master with `kubeadm init`
 * Install user specified pod network from `group_vars/all` (flannel, calico, weave, etc)
