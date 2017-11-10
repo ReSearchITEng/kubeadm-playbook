@@ -11,8 +11,9 @@
 - name: Restart kubelet
   systemd: name=kubelet state=restarted enabled=yes daemon_reload=yes
 
-- name: Restart ntpd
-  systemd: name=ntpd state=restarted enabled=yes
+#Debian is ntp, RedHat ntpd
+#- name: Restart ntpd
+#  systemd: name=ntpd state=restarted enabled=yes
 
 - name: Restart iptables
   systemd: name=iptables state=restarted enabled=yes

@@ -69,19 +69,27 @@
   when: kubelet_version is not defined
 
 - name: Install kubelet
-  package: name={{ item }}-{{kubelet_version}} state=installed
+  package: name="{{ item }}={{kubelet_version}}*" state=installed
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
-  when: kubelet_version is defined and ( kubelet_version!='installed' or kubelet_version!='latest' )
+  when: kubelet_version is defined and ( kubelet_version!='installed' or kubelet_version!='latest' ) and ansible_os_family == "Debian" 
 
 - name: Install kubelet
-  package: name={{ item }}-{{kubelet_version}} state=installed
+  package: name="{{ item }}-{{kubelet_version}}" state=installed
+  #environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubelet
+  when: kubelet_version is defined and ( kubelet_version!='installed' or kubelet_version!='latest' ) and ansible_os_family == "RedHat"
+
+- name: Install kubelet
+  package: name={{ item }} state={{kubelet_version}}
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
   when: kubelet_version is defined and ( kubelet_version=='installed' or kubelet_version=='latest' )
 
+##############
 ### kubectl
 - name: Install kubectl
   package: name={{ item }} state={{ package_state | default ('latest') }}
@@ -90,20 +98,28 @@
   - kubectl
   when: kubectl_version is not defined
 
-- name: Install kubectl
-  package: name={{ item }}-{{kubectl_version}} state=installed
+- name: Install kubectl # ansible bug 29705
+  package: name="{{ item }}={{kubectl_version}}*" state=installed
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubectl
-  when: kubectl_version is defined and ( kubectl_version!='installed' or kubectl_version!='latest' )
+  when: kubectl_version is defined and ( kubectl_version!='installed' or kubectl_version!='latest' ) and ansible_os_family == "Debian"
 
 - name: Install kubectl
-  package: name={{ item }}-{{kubectl_version}} state=installed
+  package: name="{{ item }}-{{kubectl_version}}" state=installed
+  #environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubectl
+  when: kubectl_version is defined and ( kubectl_version!='installed' or kubectl_version!='latest' ) and ansible_os_family == "RedHat"
+
+- name: Install kubectl
+  package: name={{ item }} state={{kubectl_version}}
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubectl
   when: kubectl_version is defined and ( kubectl_version=='installed' or kubectl_version=='latest' )
 
+#############
 ### kubeadm
 - name: Install kubeadm
   package: name={{ item }} state={{ package_state | default ('latest') }}
@@ -112,15 +128,22 @@
   - kubeadm
   when: kubeadm_version is not defined
 
+- name: Install kubeadm # ansible bug 29705
+  package: name="{{ item }}={{kubeadm_version}}*" state=installed
+  #environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - kubeadm
+  when: kubeadm_version is defined and ( kubeadm_version!='installed' or kubeadm_version!='latest' ) and ansible_os_family == "Debian"
+
 - name: Install kubeadm
   package: name={{ item }}-{{kubeadm_version}} state=installed
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubeadm
-  when: kubeadm_version is defined and ( kubeadm_version!='installed' or kubeadm_version!='latest' )
+  when: kubeadm_version is defined and ( kubeadm_version!='installed' or kubeadm_version!='latest' ) and ansible_os_family == "RedHat"
 
 - name: Install kubeadm
-  package: name={{ item }}-{{kubeadm_version}} state=installed
+  package: name={{ item }} state={{kubeadm_version}}
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubeadm

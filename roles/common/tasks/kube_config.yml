@@ -43,6 +43,7 @@
 
 - name: Set sysctl settings
   command: sysctl --system
+  ignore_errors: yes # ignore errors which appear in vm simulated with docker 
   tags:
   - kubeadm
   - kubelet

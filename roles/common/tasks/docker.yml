@@ -1,6 +1,6 @@
 ---
-- name: check docker hello world - test 2/2 # It will not work if there is no internet connection; change img as desired
-  shell: docker run -i hello-world | awk '/Hello/ {print $1}'
+- name: check docker hello world - test 1/2 # It will not work if there is no internet connection; change img as desired
+  shell: docker run -i hello-world # | awk '/Hello/ {print $1}'
   register: docker_result
   #failed_when: docker_result.stdout != "Hello"
   tags:
@@ -31,6 +31,20 @@
     when: ansible_os_family == "Debian"
     notify:
     - Restart docker
+
+#  - name: set docker storage to overlay2 (Debian) - overlay2 not always ok on ubuntu. leaving default
+#    copy:
+#      content: |
+#        {
+#          "storage-driver": "overlay2"
+#        }
+#      dest: /etc/docker/daemon.json
+#      backup: yes
+#    tags:
+#    - docker
+#    when: ansible_os_family == "Debian"
+#    notify:
+#    - Restart docker
 
   - name: prepare docker-storage-setup (CentOS/RHEL)
     copy:

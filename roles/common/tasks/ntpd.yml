@@ -6,22 +6,24 @@
     environment: '{{ proxy_env | default ({}) }}'
     with_items:
     - ntp
-    tags:
-    - ntp
     register: ntp_output
-    notify:
-    - Restart ntpd
+#    notify: # Debian & RH diff service name...
+#    - Restart ntpd
 
   - name: ntpd configuration
     copy: content={{ntp_conf}} dest=/etc/ntp.conf backup=yes
     when: ntp_conf is defined
-    tags:
-    - ntp
-    notify:
-    - Restart ntpd
+#    notify: # Debian & RH diff service name...
+#    - Restart ntpd
 
-  - name: Restart ntpd
+  - name: Restart ntpd - RedHat/CentOS
     systemd: name=ntpd state=restarted enabled=yes
-    tags:
-    - ntp
+    when: ansible_os_family == "RedHat"
+
+  - name: Restart ntp - Debian
+    systemd: name=ntp state=restarted enabled=yes
+    when: ansible_os_family == "Debian"
+
   when: ntp_setup is defined and ntp_setup
+  tags:
+  - ntp

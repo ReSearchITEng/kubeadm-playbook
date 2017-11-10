@@ -1,9 +1,10 @@
 ---
-- name: kubectl aliases to ~/.bash_profile
+- name: kubectl aliases to ~/.bash_aliases
   lineinfile:
-    dest: ~/.bash_profile
+    dest: ~/.bash_aliases
     line: "{{ item }}"
     state: present
+    create: yes
   when: shell is undefined or shell == 'bash'
   with_items:
   - "alias watch='watch ' "
@@ -30,11 +31,12 @@
   args:
     warn: no
 
-- name: kubeadm completion to ~/.bash_profile
+- name: kubeadm completion to ~/.bash_aliases
   lineinfile:
-    dest: ~/.bash_profile
+    dest: ~/.bash_aliases
     line: '[[ -x ${HOME}/.kube/kubeadm_completion.bash.inc ]] && source ${HOME}/.kube/kubeadm_completion.bash.inc'
     state: present
+    create: yes
   when: shell is undefined or shell == 'bash'
 
 - name: kubectl completion shell
@@ -42,10 +44,11 @@
   args:
     warn: no
 
-- name: kubectl completion to ~/.bash_profile
+- name: kubectl completion to ~/.bash_aliases
   lineinfile:
-    dest: ~/.bash_profile
+    dest: ~/.bash_aliases
     line: '[[ -x ${HOME}/.kube/completion.bash.inc ]] && source ${HOME}/.kube/completion.bash.inc'
     state: present
+    create: yes
   when: shell is undefined or shell == 'bash'
 

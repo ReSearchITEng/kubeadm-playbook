@@ -12,13 +12,21 @@
     # For developing firewalld friendly solution, check:
     # https://github.com/kubernetes/contrib/tree/master/ansible/roles/
 
-  - name: Install iptables-services (if does not exist)
+  - name: Install iptables-services (if does not exist) - RedHat/CentOS
     package: state=installed name={{ item }} #-{{version}}
     #environment: '{{ proxy_env | default ({}) }}'
+    when:  ansible_os_family == "RedHat"
     with_items:
     - iptables-services
     notify:
     - Restart iptables
+
+  - name: Install netfilter-persistent required for saving iptables rule - Debian
+    package: state=installed name={{ item }} #-{{version}}
+    #environment: '{{ proxy_env | default ({}) }}'
+    when:  ansible_os_family == "Debian"
+    with_items:
+    - netfilter-persistent
 
   - name: iptables default policies need to be ACCEPT on all chains
     iptables:
@@ -39,7 +47,7 @@
     - FORWARD
     - OUTPUT
 
-  - name: remove the REJECT rules on all chains from the /etc/sysconfig/iptables (persisting the change)
+  - name: remove the REJECT rules on all chains from the /etc/sysconfig/iptables (persisting the change) on RH/CentOS
     lineinfile:
       name: /etc/sysconfig/iptables
       state: absent
@@ -49,9 +57,14 @@
     - '-A FORWARD -j REJECT --reject-with icmp-host-prohibited'
     when: ansible_os_family == "RedHat"
 
-  - name: Save iptables rules
-    command: service iptables save
-    when: ansible_os_family == "Debian" # For RH we removed the reject rules from /etc/sysconfig/iptables
+# alternative option to previous persistence solution with /etc/sysconfig/iptables
+  #- name: Save iptables rules - sol2
+  #  command: service iptables save
+  #  when: ansible_os_family == "Redhat"
+
+  - name: save iptables rules (Debian)
+    shell: netfilter-persistent save
+    when: ansible_os_family == "Debian"
 
   when: iptables_setup is defined and iptables_setup
   tags:
