@@ -44,7 +44,10 @@ Vagrant.configure(2) do |config|
      #vb.customize ["storagectl", :id, "--name", "SATA Controller", "--add", "sata"]   # Make it use SATA: faster and less issues
      # optionally add: , "--hostiocache", "on", "--bootable", "on"] # like here: https://www.virtualbox.org/manual/ch08.html#vboxmanage-storagectl
   end
+
+  #### CHOOSE DESIRED OS: 
   config.vm.box = "centos/7"
+  #config.vm.box = "ubuntu/xenial64"
 
   # NODES:
   (1..$num_instances).each do |i|
@@ -56,11 +59,12 @@ Vagrant.configure(2) do |config|
      #node.ssh.host = vm_name
      #node.vm.provision "shell", inline: "echo hello from %s" % [node.vm.hostname]
      node.vm.provision "shell" do |s|
-      s.path= "dockerize.sh"
+      #s.path= "dockerize.sh"  # no longer required, handled by ansible
       #s.args= "node"
      end
      node.vm.provision "shell", inline: <<-SHELL
-      sudo cp -rf ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
+      sudo cp -rf ~vagrant/.ssh ~root/ || true  # This will allow us to ssh into root with existing vagrant key
+      sudo cp -rf ~ubuntu/.ssh ~root/ || true  # This will allow us to ssh into root with existing vagrant key
       #chmod 755 /vagrant/dockerize.sh
       #/vagrant/dockerize.sh
      SHELL
@@ -80,12 +84,13 @@ Vagrant.configure(2) do |config|
 
     #k8smaster.vm.provision :shell, inline: "echo hello from %s" % [k8smaster.vm.hostname]
     k8smaster.vm.provision "shell" do |s|
-     s.path= "dockerize.sh"
+     #s.path= "dockerize.sh"  # no longer required, handled by ansible
      #s.args= "master"
     end
 
     k8smaster.vm.provision "shell", inline: <<-SHELL
-     sudo cp -rf ~vagrant/.ssh ~root/  # This will allow us to ssh into root with existing vagrant key
+     sudo cp -rf ~vagrant/.ssh ~root/ || true  # This will allow us to ssh into root with existing vagrant key
+     sudo cp -rf ~ubuntu/.ssh ~root/ || true # This will allow us to ssh into root with existing vagrant key
      #chmod 755 /vagrant/dockerize.sh
      #/vagrant/dockerize.sh
      # curl -SL https://github.com/ReSearchITEng/kubeadm-playbook/archive/master.tar.gz | tar xvz # already in /vagrant
