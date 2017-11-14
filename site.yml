@@ -1,23 +1,26 @@
 ---
-#- include: pre_sanity.yml # TODO
-#- include: reset_helm.yml #done, but not really working
-#- include: remove_pvs.yml #done
-#- include: reset_nfs.yml  #done
-#- include: reset_drain.yml#done
-#- include: reset.yml      #done
-#- include: reset-weave.yml#done
-#- include: prerequisites.yml#done (does not exist any longer)
-#- include: common.yml     #done
-#- include: master.yml     #done
-#- include: node.yml       #done
-#- include: network.yml    #done (moved to post_deploy) 
-#- include: post_cluster_deploy.yml 
-#- include: helm.yml
-#- include: rook_clean.yml
-#- include: rook.yml
-#- include: sanity.yml
+## Preparations:
+- hosts: all
+  gather_facts: False
+  become: yes
+  become_method: sudo
+  pre_tasks:
+  - name: Install python2 for Ansible (usually required on ubuntu, which defaults to python3) # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal) || (yum install -y python2 python-simplejson)
+    register: output
+    changed_when: output.stdout != ""
+    tags: always
+  - setup: # aka gather_facts
+    tags: always # required for tags, see ansible issue: #14228
+  - name: test min. vars (group_vars/all) are set
+    debug: msg='Make sure min. vars are set (e.g. in file group_vars/all)'
+    when: kubeadm_master_config is not defined
+    failed_when: kubeadm_master_config is not defined
+    tags: always # always check if we have vars in place
 
+## proper reset of any previous cluster (if any)
 - hosts: master
+  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -30,7 +33,9 @@
   - { role: storage, task: rook_reset, tags: [ 'reset', 'storage_reset', 'rook_reset' ] }
   - { role: tools, task: reset_drain, tags: [ 'reset', 'node_reset', 'drain', 'node_drain' ] } #done on master, affecting nodes
 
+## nodes -> reset and install common part (for all machines)
 - hosts: node
+  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -40,7 +45,9 @@
   - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave', 'weave_reset' ] }
   - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node', 'node_install'] }
 
+## master -> reset and install common part (for all machines)
 - hosts: master
+  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -50,7 +57,9 @@
   - { role: tools, task: weave_reset, tags: [ 'reset', 'master_reset', 'network_reset', 'weave', 'weave_reset' ] }
   - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'master_install'] }
 
+## master -> install master (kubeadm init, etc)
 - hosts: master
+  gather_facts: all # smart
   become: yes
   become_method: sudo
   tags:
@@ -59,7 +68,9 @@
   roles:
   - { role: master, tags: [ 'master', 'install', 'master_install'] } #, task: all }
 
+## node -> install nodes (kubeadm join, etc)
 - hosts: node
+  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -69,8 +80,9 @@
   roles:
   - { role: node, tags: [ 'node', 'install', 'node_install' ] } #, task: all }
 
-### Post deploy
+## Post deploy (network, storage, helm installation, helm charts deploy, any other addons)
 - hosts: master
+  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -80,8 +92,9 @@
   - { role: storage, task: create_all, tags: [ 'storage', 'rook', 'nfs', 'vsphere' ] }
   - { role: helm, task: all, tags: [ 'helm', 'post_deploy' ] }
 
-### Generic Sanity
+## Generic Sanity
 - hosts: master
+  gather_facts: smart
   become: yes
   become_method: sudo
   tags:

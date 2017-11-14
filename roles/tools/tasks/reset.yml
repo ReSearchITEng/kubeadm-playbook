@@ -10,7 +10,7 @@
 - block:
 
   - name: Reset weave network # if it was used
-    shell: /usr/local/bin/weave reset
+    shell: /usr/local/bin/weave reset --force
     ignore_errors: yes
   
   - name: remove pods NFS mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
@@ -23,24 +23,33 @@
   - name: Reset cluster
     command: /usr/bin/kubeadm reset
     ignore_errors: yes
+    # TODO: if cluster is installed, but kubedm is no longer available on the machine, we will not have a reset of cluster...
 
   - name: ensure old kubeadm config files were removed
     file: state=absent path={{ item }}
     with_items:
-    - /etc/kubernetes/kubeadm.conf
-    - /etc/kubernetes/kubeadm-master.config
-    - /etc/kubernetes/kubeadm-master.conf
-    - /etc/kubernetes/cloud-config
+    - /etc/kubernetes/
+    #- /etc/kubernetes/kubeadm.conf
+    #- /etc/kubernetes/kubeadm-master.config
+    #- /etc/kubernetes/kubeadm-master.conf
+    #- /etc/kubernetes/cloud-config
 
-  - name: ensure old /etc/kubernetes/ is removed when full_kube_reinstall is true
+#  - name: ensure old /etc/kubernetes/ is removed when full_kube_reinstall is true
+#    file: state=absent path={{ item }}
+#    with_items:
+#    - /etc/kubernetes/
+#    #- /var/lib/etcd # there might be cases 
+#    when: full_kube_reinstall is defined and full_kube_reinstall
+
+
+  - name: ensure old /var/lib/etcd is removed
     file: state=absent path={{ item }}
     with_items:
-    - /etc/kubernetes/
     - /var/lib/etcd
-    when: full_kube_reinstall is defined and full_kube_reinstall
+    when: etcd_clean | default(true)
 
   - name: systemctl stop kube*.*.slice
-    shell: 'for i in $(/usr/bin/systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done'
+    shell: 'for i in $(systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done'
     tags:
     - umount
 
@@ -51,7 +60,7 @@
     - kubeadm
     - kubectl
     - kubernetes-cni
-    when: full_kube_reinstall is defined and full_kube_reinstall
+    when: full_kube_reinstall | default (True) #is defined and full_kube_reinstall
     tags:
     - kubelet
     - uninstall

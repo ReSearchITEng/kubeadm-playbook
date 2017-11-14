@@ -46,14 +46,15 @@ Vagrant.configure(2) do |config|
   end
 
   #### CHOOSE DESIRED OS: 
-  #config.vm.box = "centos/7"
-  config.vm.box = "ubuntu/xenial64"
+  config.vm.box = "centos/7"
+  #config.vm.box = "centos/atomic-host" # NEVER TESTED
+  #config.vm.box = "ubuntu/xenial64"
 
   # NODES:
   (1..$num_instances).each do |i|
     config.vm.define vm_name = "%s-%02d%s" % [$instance_name_prefix, i, $custom_networking_dnsDomain] do |node|
      #node.vm.synced_folder ".vagrant", "/vagrant", type: "rsync" #, rsync__exclude: ".local_only" #rsync__include: ".vagrant/"
-     node.vm.box = "centos/7"
+     #node.vm.box = "centos/7"
      #node.vm.box = "centos/atomic-host"
      node.vm.hostname = vm_name
      #node.ssh.host = vm_name

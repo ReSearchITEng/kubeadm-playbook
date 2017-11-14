@@ -16,7 +16,7 @@
     notify:
     - Restart kubelet
   # BLOCK ENDS with its condition:
-  when: kubeadm_master_config.cloudProvider is defined
+  when: kubeadm_master_config is defined and kubeadm_master_config.cloudProvider is defined
   tags:
   - kubelet
 
@@ -27,7 +27,7 @@
     regexp: '(--cluster-domain=)[A-Za-z0-9\-\.]+(.*)'
     replace: '\1{{ kubeadm_master_config.networking.dnsDomain | default("cluster.local") }}\2'
     #backup: yes
-  when: kubeadm_master_config.networking.dnsDomain is defined
+  when: kubeadm_master_config is defined and  kubeadm_master_config.networking is defined and kubeadm_master_config.networking.dnsDomain is defined
   notify:
   - Reload systemd # already by other handler
   - Restart kubelet
@@ -60,6 +60,25 @@
   tags:
   - kubelet
 
+
+- name: detect docker's cgroup-driver
+  shell: docker info 2>/dev/null |grep -i cgroup | cut -d":" -f2 | tr -d " "
+  register: docker_cgroup_driver
+  changed_when: false
+
+- name: INFO message
+  debug: msg="detect docker's cgroup-driver is {{ docker_cgroup_driver.stdout }}. (Usually RH/CentOS is systemd, Ubuntu cgroupfs"
+  changed_when: false
+  verbose: 2
+
+- name: kubelet_version
+  shell: kubelet --version | cut -d" " -f2 | cut -d"v" -f2
+  register: kubelet_version
+  changed_when: false
+
+
+# when: kubelet_version | version_compare('1.7', '>=')
+
 # newer versions (e.g. 1.7+) already have a new variable:
 # Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd" 
 # but we want to support older versions also.
@@ -76,3 +95,5 @@
   - Restart kubelet
   tags:
   - kubelet
+  when: docker_cgroup_driver.stdout=="systemd"  # usually on: ansible_os_family == "RedHat"
+

@@ -113,7 +113,8 @@ if [ "${ACTIONS}x" != "regenerate_configx" ];then
     IDE_VMDK_ImageUUID=$(VBoxManage showvminfo --machinereadable $vboxMUUID | grep -i "IDE" | grep ImageUUID | cut -d '"' -f4)
     if [ "${IDE_VMDK_ImageUUID}x" != "x" ]; then
       echo "Changind disk from IDE to SATA for disk IDE_VMDK_ImageUUID=$IDE_VMDK_ImageUUID "
-      VBoxManage storagectl $vboxMUUID --name "IDE Controller" --remove  # remove IDE controller
+      VBoxManage storagectl $vboxMUUID --name "IDE Controller" --remove || true # remove IDE controller 
+      VBoxManage storagectl $vboxMUUID --name "IDE" --remove || true # remove IDE controller 
       VBoxManage storagectl $vboxMUUID --name "SATA" --add sata --portcount 3 --hostiocache on --bootable on  # Add SATA controller
       VBoxManage storageattach $vboxMUUID --storagectl "SATA" --port 0 --type hdd --nonrotational on --medium $IDE_VMDK_ImageUUID  # Attach the previous disk to the new SATA controller
       #For SSD optionally add also: "--nonrotational on"
@@ -176,9 +177,11 @@ cat << EOF >ansible.cfg
 #remote_user=vagrant
 become=true
 become_method=sudo
+stdout_callback = debug
 
 [ssh_connection]
 ssh_args = -C -o ControlMaster=auto -o ControlPersist=60s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -F ./ssh_config 
+pipelining = True
 EOF
 echo "  a local ./ansible.cfg has been generated with success"
 echo

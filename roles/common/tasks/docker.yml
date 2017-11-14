@@ -25,7 +25,8 @@
     package: state=installed name={{ item }} #-{{version}}
     environment: '{{ proxy_env | default ({}) }}'
     with_items:
-    - docker-engine
+    - docker.io # this is ubuntu's official version. Stable and tested
+    #- docker-engine  # this is the version from the docker project, not fully tested.
     tags:
     - docker
     when: ansible_os_family == "Debian"

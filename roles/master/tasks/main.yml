@@ -29,14 +29,17 @@
   set_fact:
     extended_cert_list: "{{ [inventory_hostname,inventory_hostname_short] | union (kubeadm_master_config.apiServerCertSANs | default([]) ) }}"
     #extended_cert_list: "{{ [inventory_hostname,inventory_hostname_short] | union (kubeadm_master_config.apiServerCertSANs | default([kubernetes]) ) }}"
+  when: kubeadm_master_config is defined and kubeadm_master_config.apiServerCertSANs is defined
 
 - name: merging {{ inventory_hostname,inventory_hostname_short }} to the kubeadm_master_config.apiServerCertSANs
   set_fact:
     kubeadm_master_config: "{{ kubeadm_master_config | combine ({ 'apiServerCertSANs' : extended_cert_list }, recursive=True) }}"
+  when: extended_cert_list is defined and kubeadm_master_config is defined
 
 - name: "This is the kubeadm_master_config to be used"
-  debug: var=kubeadm_master_config
+  debug: var=kubeadm_master_config #|to_nice_yaml
   changed_when: false
+  verbosity: 4
 
 - name: Writing kubeadm_master_config to /etc/kubernetes/kubeadm-master.conf
   copy: content="{{ kubeadm_master_config | to_nice_yaml }}" dest="/etc/kubernetes/kubeadm-master.conf" force=yes
@@ -45,14 +48,24 @@
   # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
 #  environment: '{{env_kc}}'
   command: /usr/bin/kubeadm init {{ kubeadm_init_args | default(" ") }} --config /etc/kubernetes/kubeadm-master.conf
+  register: kubeadm_init
   tags:
   - init
+
+- name: kubeadm_init output
+  debug: msg:"{{kubeadm_init.stdout_lines}}"
+
+- name: kubeadm_init output var
+  debug: var=kubeadm_init
+  verbosity: 4
 
 - name: find the token of the newly created cluster
   command: bash -c '/usr/bin/kubeadm token list | tail -n 1| cut -f 1 -d" "'
   register: kubeadm_token
-  when: kubeadm_master_config.token is not defined
+  when: kubeadm_master_config is not defined or kubeadm_master_config.token is not defined
   changed_when: false
+  tags:
+  - node  # it is required for the node to register
 
 #- name: populate the token in the kubeadm_master_config
 #  set_fact:
@@ -96,6 +109,8 @@
     dest: ~/.bash_profile
     line: "export KUBECONFIG=/etc/kubernetes/admin.conf"
     state: present
+    create: yes
+    regexp: '^export KUBECONFIG=.*'
   when: shell is undefined or shell == 'bash'
 
 - name: Wait few seconds for images pulls and cluster services to start

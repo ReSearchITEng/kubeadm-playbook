@@ -1,13 +1,16 @@
 ---
-- set_fact: kubeadm_token={{ hostvars[groups['master'][0]]['kubeadm_token'] }}
+- set_fact: kubeadm_token="{{ hostvars[groups['master'][0]]['kubeadm_token'].stdout_lines[0] }}"
   when: kubeadm_master_config.token is not defined
   tags:
-  - always
+  - node
 
 - set_fact: kubeadm_token={{ kubeadm_master_config.token }}
   when: kubeadm_master_config.token is defined
   tags:
-  - always
+  - node
+
+- name: token to be used is
+  debug: var=kubeadm_token
 
 - name: Join cluster using kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
@@ -84,9 +87,9 @@
     dest: ~/.bash_profile
     line: "export KUBECONFIG=/etc/kubernetes/kubelet.conf"
     state: present
+    create: yes
+    regexp: '^export KUBECONFIG=.*'
   when: shell is undefined or shell == 'bash'
   tags:
   - node
-
-
 

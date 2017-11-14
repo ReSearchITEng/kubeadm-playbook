@@ -28,7 +28,8 @@ kubectl_version: 1.7.8 # 1.6.11 # 1.8.1
 ## When defined, it first forces uninstall any kube* packages (rpm/deb) from hosts
 ## When full_kube_reinstall is False or undefined, it will not reinstall # and it won't remove the /etc/kubernetes/ folder before reinstall
 ## Should be used only if a downgrade in kube* tools is required, otherwise it will waste a lot of time reinstalling unnecessary.
-full_kube_reinstall: True  #disable for faster redeployments
+full_kube_reinstall: True #Default is True. #Make it False for faster redeployments (when for sure there is no need for downgrade)
+etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 #####
 
 kubeadm_init_args: "--skip-preflight-checks"
@@ -97,7 +98,7 @@ custom:
 kubeadm_master_config:
   apiVersion: kubeadm.k8s.io/v1alpha1
   kind: MasterConfiguration
-  api:
+#  api:
 #    advertiseAddress: <address|string>
 #    advertiseAddress: '10x.x...x' # Usually required when working with vagrant, as the default (eth0) address is the NAT...
 #    bindPort: <int>

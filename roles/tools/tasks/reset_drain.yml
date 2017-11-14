@@ -10,7 +10,7 @@
 
 - block:
   #- set_fact:
-  #    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+  #    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin/"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
   #  tags:
   #  - always
 
