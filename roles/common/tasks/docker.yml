@@ -33,19 +33,19 @@
     notify:
     - Restart docker
 
-#  - name: set docker storage to overlay2 (Debian) - overlay2 not always ok on ubuntu. leaving default
-#    copy:
-#      content: |
-#        {
-#          "storage-driver": "overlay2"
-#        }
-#      dest: /etc/docker/daemon.json
-#      backup: yes
-#    tags:
-#    - docker
-#    when: ansible_os_family == "Debian"
-#    notify:
-#    - Restart docker
+  - name: set docker storage to overlay2 (Debian) - overlay2 works only with ubuntu's official docker distribution (docker.io)
+    copy:
+      content: |
+        {
+          "storage-driver": "overlay2"
+        }
+      dest: /etc/docker/daemon.json
+      backup: yes
+    tags:
+    - docker
+    when: ansible_os_family == "Debian"
+    notify:
+    - Restart docker
 
   - name: prepare docker-storage-setup (CentOS/RHEL)
     copy:

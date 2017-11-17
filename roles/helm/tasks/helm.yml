@@ -12,10 +12,17 @@
   - always
 
 - block:
-  - name: 'Download {{ helm.install_script_url }}'
+  - name: 'Download {{ helm.install_script_url | default ("https://github.com/kubernetes/helm/raw/master/scripts/get") }}'
     environment: '{{ proxy_env | default ({}) }}'
-    get_url: url={{ helm.install_script_url | default ("") }} dest=/tmp/helm_install_script force=yes mode="0755"
-    when: helm.install_script_url is defined
+    get_url: url={{ helm.install_script_url | default ("https://github.com/kubernetes/helm/raw/master/scripts/get") }} dest=/tmp/helm_install_script force=yes mode="0755"
+    when: helm is defined
+    tags:
+    - helm
+
+  - name: 'Download "https://github.com/kubernetes/helm/raw/master/scripts/get" '
+    environment: '{{ proxy_env | default ({}) }}'
+    get_url: url="https://github.com/kubernetes/helm/raw/master/scripts/get" dest=/tmp/helm_install_script force=yes mode="0755"
+    when: helm is not defined
     tags:
     - helm
 
@@ -24,7 +31,18 @@
     shell: "/tmp/helm_install_script --version {{helm.helm_version | default ('latest')}}"
     register: command_result
     changed_when: '"is up-to-date" not in command_result.stdout'
-    when: helm.install_script_url is defined
+    when: helm is defined
+    args:
+      chdir: /tmp/
+    tags:
+    - helm
+
+  - name: Run /tmp/helm_install_script
+    environment: '{{env_kc}}'
+    shell: "/tmp/helm_install_script --version latest "
+    register: command_result
+    changed_when: '"is up-to-date" not in command_result.stdout'
+    when: helm is not defined
     args:
       chdir: /tmp/
     tags:
@@ -72,7 +90,7 @@
   - name: helm init
     environment: '{{env_kc}}'
     shell: "helm init --host {{ inventory_hostname }}:6443 "
-    when: helm.install_script_url is defined
+    #when: helm.install_script_url is defined
     register: command_result
     changed_when: "'Tiller is already installed' not in command_result.stdout"
     args:
@@ -113,8 +131,8 @@
     environment: '{{env_kc}}'
     command: helm repo add {{ item.name }} {{ item.url }}
     with_items: 
-      - '{{ helm.repos | default("") }}'
-    when: helm.repos is defined
+    - '{{ helm.repos | default("") }}'
+    when: helm is defined and helm.repos is defined
     tags:
     - helm
 
@@ -156,8 +174,8 @@
     environment: '{{env_kc}}'
     command: 'helm install {{ item.repo }} --namespace {{ item.namespace | default("default") }} --name {{ item.name }} {{ item.options | default ("") }}'
     with_items: 
-      - "{{ helm.packages_list }}"
-    when: helm.packages_list is defined
+    - "{{ helm.packages_list }}"
+    when: helm is defined and helm.packages_list is defined
     tags:
     - helm
     - charts_deploy

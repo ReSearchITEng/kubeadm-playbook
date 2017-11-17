@@ -2,6 +2,38 @@
 
 ### Post install messages
 - block:
+
+# Too much clutter, so disabling get events
+  # - name: Get events
+  #   command: kubectl get events --all-namespaces
+  #   register: command_result
+  #   changed_when: false
+  #   tags:
+  #   - cluster_info
+  #   - cluster_status
+
+  # - name: Display events
+  #   debug:
+  #     var: command_result.stdout_lines
+  #   changed_when: false
+  #   tags:
+  #   - cluster_info
+  #   - cluster_status
+
+  - name: Get pods
+    command: kubectl get pods -o wide --all-namespaces --show-all=true --show-labels=true --show-kind=true
+    register: command_result
+    changed_when: false
+    tags:
+    - cluster_status
+
+  - name: Display pods
+    debug:
+      var: command_result.stdout_lines
+    changed_when: false
+    tags:
+    - cluster_status
+
   - name: Get nodes
     command: kubectl get nodes
     register: command_result
@@ -12,14 +44,15 @@
       var: command_result.stdout_lines
     changed_when: false
 
-  - name: Get cluster info
+  - name: Get cluster-info
     command: kubectl cluster-info
     register: command_result
     changed_when: false
 
   - name: cluster-info
     debug:
-      var: command_result.stdout_lines    
+      msg: "{{ command_result.stdout_lines }}"
+      #var: command_result.stdout_lines    
     changed_when: false
 
   - name: Print cluster information and other useful commands.
@@ -37,11 +70,19 @@
            - browse your master (using fqdn) to see the dashboard:
              http://{{groups["master"][0]}}
                or (depending what was defined in config)
-             http://dashboard.{{ custom.networking.dnsDomain }}
-    debug:
-      msg: "{{ msg.split('\n') }}"
+             http://dashboard.{custom.networking.dnsDomain} (if defined)
+    debug: var=msg
+#     msg: "{{ msg.split('\n') }}"
+    register: command_result
+    changed_when: false
+    #http://dashboard.{{ custom.networking.dnsDomain | default ("you may want to define custom.networking.dnsDomain") }}
+
+#  - name: Print cluster information and other useful commands.
+#    debug: vars=command_result
+#    changed_when: false
 
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   tags:
   - cluster_info
+  - postinstall_messages

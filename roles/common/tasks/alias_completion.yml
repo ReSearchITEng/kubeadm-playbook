@@ -1,7 +1,7 @@
 ---
-- name: kubectl aliases to ~/.bash_aliases
+- name: kubectl aliases to ~/.bashrc
   lineinfile:
-    dest: ~/.bash_aliases
+    dest: ~/.bashrc
     line: "{{ item }}"
     state: present
     create: yes
@@ -31,9 +31,9 @@
   args:
     warn: no
 
-- name: kubeadm completion to ~/.bash_aliases
+- name: kubeadm completion to ~/.bashrc
   lineinfile:
-    dest: ~/.bash_aliases
+    dest: ~/.bashrc
     line: '[[ -x ${HOME}/.kube/kubeadm_completion.bash.inc ]] && source ${HOME}/.kube/kubeadm_completion.bash.inc'
     state: present
     create: yes
@@ -44,9 +44,9 @@
   args:
     warn: no
 
-- name: kubectl completion to ~/.bash_aliases
+- name: kubectl completion to ~/.bashrc
   lineinfile:
-    dest: ~/.bash_aliases
+    dest: ~/.bashrc
     line: '[[ -x ${HOME}/.kube/completion.bash.inc ]] && source ${HOME}/.kube/completion.bash.inc'
     state: present
     create: yes

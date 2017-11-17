@@ -39,7 +39,6 @@
 - name: "This is the kubeadm_master_config to be used"
   debug: var=kubeadm_master_config #|to_nice_yaml
   changed_when: false
-  verbosity: 4
 
 - name: Writing kubeadm_master_config to /etc/kubernetes/kubeadm-master.conf
   copy: content="{{ kubeadm_master_config | to_nice_yaml }}" dest="/etc/kubernetes/kubeadm-master.conf" force=yes
@@ -56,8 +55,7 @@
   debug: msg:"{{kubeadm_init.stdout_lines}}"
 
 - name: kubeadm_init output var
-  debug: var=kubeadm_init
-  verbosity: 4
+  debug: var=kubeadm_init verbosity=4
 
 - name: find the token of the newly created cluster
   command: bash -c '/usr/bin/kubeadm token list | tail -n 1| cut -f 1 -d" "'

@@ -77,7 +77,7 @@ if [ "${ACTIONS}x" != "regenerate_configx" ];then
  filter_machines_local_directory=$(basename `pwd`)  # note: cannot run it from /
 
  ### If the only request is restart, do it and exit
- if [ "${ACTIONS}" = "restartx" ];then
+ if [ "${ACTIONS}x" = "restartx" ];then
   echo "### Restart VMs"
   for vagrantM in ${filter_machines_offvagm}; do
     #for vboxM in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM | grep $filter_machines_local_directory | cut -d'"' -f2  ); do
@@ -92,6 +92,11 @@ if [ "${ACTIONS}x" != "regenerate_configx" ];then
 
  ###
  echo "### Reconfiguring machines ${filter_machines_offvagm}"
+
+ if [ "${HOST_BRIDGED_INTERFACE}x" = "x" ]; then
+  HOST_BRIDGED_INTERFACE=`ip route | head -1 | cut -d" " -f5`
+  echo "!WARNING!: There was no interface provided, and is no default interface on this machine. Going to use: $HOST_BRIDGED_INTERFACE"
+ fi
  #set -vx
  for vagrantM in ${filter_machines_offvagm}; do
   vagrantM_nodot=$(echo $vagrantM| tr -d ".")
@@ -103,6 +108,8 @@ if [ "${ACTIONS}x" != "regenerate_configx" ];then
     #VBoxManage showvminfo $M | grep -i nic    #"--machinereadable"
     VBoxManage modifyvm $vboxMUUID --nic1 none --nic2 none --nic3 none --nic4 none --nic5 none --nic6 none --nic7 none --nic8 none 
     VBoxManage modifyvm $vboxMUUID --nic1 bridged --bridgeadapter1 $HOST_BRIDGED_INTERFACE --nictype1 virtio --macaddress1 auto
+    #VBoxManage modifyvm $vboxMUUID --nic1 bridged --bridgeadapter1 $HOST_BRIDGED_INTERFACE --nictype1 Am79C973 --macaddress1 auto
+    #VBoxManage modifyvm $vboxMUUID --nic1 bridged --bridgeadapter1 $HOST_BRIDGED_INTERFACE --nictype1 virtio --macaddress1 auto
     #VBoxManage modifyvm $vboxMUUID --nic1 bridged --bridgeadapter1 $HOST_BRIDGED_INTERFACE --nictype1 82540EM --macaddress1 auto
     #VBoxManage modifyvm $vboxMUUID --nic2 nat --nictype2 82540EM --macaddress2 auto --natnet2 "10.0.2.0/24" --natpf2 "ssh,tcp,127.0.0.1,2222,,22" --natdnsproxy2 off --natdnshostresolver2 off # This is optional
 
@@ -135,16 +142,8 @@ fi # Up to here we did actions when if [ "${ACTIONS}" != "regenerate_configx" ]
 ###
 echo "### Generating the list of machines which are up:"
 all_runningVagrMs=$(vagrant status | grep 'running (virtualbox)' | cut -d" " -f1)
-echo "   List of machines: $all_runningVagrMs" | tr '\n' ' ' 
+echo "   List of already started machines: $all_runningVagrMs" | tr '\n' ' ' 
 echo ""
-
-### 
-echo "### Creating list of machines with FQDN"
-runningVagrM_FQDN=""
-for runningVagrM in $all_runningVagrMs ; do
-  runningVagrM_FQDN="${runningVagrM_FQDN} `ping -c 1 ${runningVagrM} | head -1 |cut -d " " -f2`"
-done
-echo "  List of FQDN for the vagrant machines: $runningVagrM_FQDN"
 
 ###
 echo "### (re)Generating a ssh_config to be used by ssh (partially reusing vagrant generated ssh keys and config)"
@@ -162,10 +161,31 @@ done
 #done
 #set +vx
 
+### 
+echo "### Creating list of machines with FQDN"
+runningVagrM_FQDN=""
+for runningVagrM in $all_runningVagrMs ; do
+  runningVagrM_FQDN="${runningVagrM_FQDN} `ping -c 1 ${runningVagrM} | head -1 |cut -d " " -f2`"
+done
+echo "  List of FQDN for the vagrant machines: $runningVagrM_FQDN"
+
+###
+number_hosts_nonfqdn=`echo $all_runningVagrMs | wc -l`
+number_hosts_fqdn=`echo $runningVagrM_FQDN | wc -l`
+
+if [ $number_hosts_nonfqdn -ne $number_hosts_fqdn ]; then
+  echo "!WARNING!: FQDN is not properly set. Trying without..."
+  use_FQDN=0
+  all_runningVagrMs_postfqdn=$all_runningVagrMs
+else
+  use_FQDN=1
+  all_runningVagrMs_postfqdn=$runningVagrM_FQDN
+fi
+
 echo "  To ssh into any of the machines, run like this: "
 echo ""
 #for M in ${all_runningVagrMs} ; do
-for M in ${runningVagrM_FQDN} ; do
+for M in ${all_runningVagrMs_postfqdn} ; do
   echo "ssh -F ./ssh_config $M "
 done
 echo
@@ -183,19 +203,27 @@ stdout_callback = debug
 ssh_args = -C -o ControlMaster=auto -o ControlPersist=60s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -F ./ssh_config 
 pipelining = True
 EOF
-echo "  a local ./ansible.cfg has been generated with success"
+
+echo "  a local ./ansible.cfg has been generated with success. Contents:"
+cat ansible.cfg
 echo
 
 ###
 echo "### Generating (guessing) inventory file based on host names (master must have word master in its name)"
 echo "[master]" > hosts
 #echo $all_runningVagrMs | tr ' ' '\n' | grep "master" >> hosts
-echo $runningVagrM_FQDN | tr ' ' '\n' | grep "master" >> hosts
+echo $all_runningVagrMs_postfqdn | tr ' ' '\n' | grep "master" >> hosts
 echo "[node]" >> hosts
 #echo $all_runningVagrMs | tr ' ' '\n' | grep -v "master" >> hosts
-echo $runningVagrM_FQDN | tr ' ' '\n' | grep -v "master" >> hosts
+echo $all_runningVagrMs_postfqdn | tr ' ' '\n' | grep -v "master" >> hosts
+number_nodes=$( $all_runningVagrMs_postfqdn | tr ' ' '\n' | grep -v "master" | wc -l )
+if [ $number_nodes -lt 1 ]; then
+  echo "no nodes were detected, so master will be also a node"
+  echo $all_runningVagrMs_postfqdn | tr ' ' '\n' | grep "master" >> hosts
+fi
+
 echo
-echo "  the prepared inventory (./hosts file) looks like this:"
+echo "  the autogenerated inventory (./hosts file) looks like this:"
 cat hosts
 
 echo -e "You may proceed reviewing configuration with:\n vi group_vars/all \n and then run ansible playbooks like site.yml \n ansible-playbook -i hosts -v site.yml "

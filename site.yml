@@ -10,10 +10,12 @@
     register: output
     changed_when: output.stdout != ""
     tags: always
+
   - setup: # aka gather_facts
     tags: always # required for tags, see ansible issue: #14228
-  - name: test min. vars (group_vars/all) are set
-    debug: msg='Make sure min. vars are set (e.g. in file group_vars/all)'
+    
+  - name: test min. vars (group_vars/all) are set (kubeadm_master_config and k8s_network_addons_urls)
+    debug: msg='Make sure min. vars are set in group_vars/all (e.g. kubeadm_master_config and k8s_network_addons_urls)'
     when: kubeadm_master_config is not defined
     failed_when: kubeadm_master_config is not defined
     tags: always # always check if we have vars in place

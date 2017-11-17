@@ -27,7 +27,7 @@
     regexp: '(--cluster-domain=)[A-Za-z0-9\-\.]+(.*)'
     replace: '\1{{ kubeadm_master_config.networking.dnsDomain | default("cluster.local") }}\2'
     #backup: yes
-  when: kubeadm_master_config is defined and  kubeadm_master_config.networking is defined and kubeadm_master_config.networking.dnsDomain is defined
+  when: kubeadm_master_config is defined and kubeadm_master_config.networking is defined and kubeadm_master_config.networking.dnsDomain is defined
   notify:
   - Reload systemd # already by other handler
   - Restart kubelet
@@ -69,19 +69,17 @@
 - name: INFO message
   debug: msg="detect docker's cgroup-driver is {{ docker_cgroup_driver.stdout }}. (Usually RH/CentOS is systemd, Ubuntu cgroupfs"
   changed_when: false
-  verbose: 2
 
 - name: kubelet_version
   shell: kubelet --version | cut -d" " -f2 | cut -d"v" -f2
   register: kubelet_version
   changed_when: false
 
-
 # when: kubelet_version | version_compare('1.7', '>=')
 
 # newer versions (e.g. 1.7+) already have a new variable:
 # Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd" 
-# but we want to support older versions also.
+# but we want to support older versions like 1.6 also.
 # To support 1.8, we also need to add --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice , due to:
 # https://stackoverflow.com/questions/46726216/kubelet-fails-to-get-cgroup-stats-for-docker-and-kubelet-services
 # As pre 1.7 versions do not have KUBELET_CGROUP_ARGS, so we still use KUBELET_EXTRA_ARGS
