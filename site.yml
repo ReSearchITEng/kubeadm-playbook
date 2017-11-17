@@ -1,5 +1,6 @@
 ---
-## Preparations:
+## Preparations
+## Making sure python exists on all nodes, so Ansible will be able to run:
 - hosts: all
   gather_facts: False
   become: yes

@@ -6,14 +6,14 @@
 #proxy_env:
 #  http_proxy: 'http://proxy.corp.example.com:8080'
 #  https_proxy: 'http://proxy.corp.example.com:8080'
-#  no_proxy: '127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost'
+#  no_proxy: '127.0.0.1,.example.com,/var/run/docker.sock,.sock,sock,localhost,.cluster.local,.local'
 #####
 
 #####
 ## PACKAGES (rpm/deb)
 ## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 ## package_state: latest # Other valid options for this context: installed
-package_state: latest #installed
+package_state: installed
 ## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
 kubeadm_version: 1.7.* # 1.6.* # 1.8.*
 kubelet_version: 1.7.* # 1.6.* # 1.8.*
@@ -52,8 +52,8 @@ set_hostname_to_inventory_hostname: True #False # Default False
 #####
 
 #####
-## Selinux
-selinux_state: disabled  # selinux_state: permissive ## By default it will try to switch to permissive
+## Selinux -> currently kube* does not fully support SELinux. It's usually recommended to disable or use permissive.
+#selinux_state: disabled  # selinux_state: permissive ## By default it will try to switch to permissive
 #selinux_policy: targeted   # selinux_policy: targeted  ## By default it will try to switch to targeted 
 #####
 
@@ -98,10 +98,10 @@ custom:
 kubeadm_master_config:
   apiVersion: kubeadm.k8s.io/v1alpha1
   kind: MasterConfiguration
-#  api:
+  api:
 #    advertiseAddress: <address|string>
 #    advertiseAddress: '10x.x...x' # Usually required when working with vagrant, as the default (eth0) address is the NAT...
-#    bindPort: <int>
+#    bindPort: <int>     # Defaults to 6443
 #  etcd:
 #    endpoints:
 #    - <endpoint1|string>
@@ -120,7 +120,7 @@ kubeadm_master_config:
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
     #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
     #podSubnet: '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.7.9' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
+  kubernetesVersion: 'v1.7.10' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
                                # 1.7.9 # 1.6.12 # 1.8.2
 #  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
 #  nodeName: <string>
@@ -178,7 +178,7 @@ k8s_network_addons_urls:
 #     newer calico 3.0 :     
 #   - https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml # ALPHA 
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
-  - https://raw.githubusercontent.com/coreos/flannel/v0.9.0/Documentation/kube-flannel.yml # For latest, replace v0.9.0 with master
+  - https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml # For latest, replace "v0.9.1" with "master"
 # OR Weave: #https://www.weave.works/docs/net/latest/kubernetes/kube-addon/ 
 # - https://cloud.weave.works/k8s/net?k8s-version={{kubeadm_master_config.kubernetesVersion}}&{{networking.podSubnet | default ('env.IPALLOC_RANGE=10.32.0.0/12') }}
 #####
@@ -188,15 +188,16 @@ k8s_network_addons_urls:
 #k8s_addons_urls:
   # - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
   # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
-  # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
+  # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml    # For "working around RBAC", should some of your apps have temporary issues
 #####
 
 vsphere_storageclass_urls:
   - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/storage-class/vsphere/default.yaml
   #- https://raw.githubusercontent.com/kubernetes/kubernetes/master/examples/volumes/vsphere/vsphere-volume-sc-fast.yaml
 
-#####
-## HELM CHARTS
+###################
+## HELM & CHARTS ##
+###################
 helm:
   #helm_version: latest #v2.5.0 + #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
@@ -206,10 +207,15 @@ helm:
 #    - { name: fabric8, url: 'https://fabric8.io/helm' }
   packages_list: # when not defined, namespace defaults to "default" namespace
     - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' } # RBAC ready
-#    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster' }
+    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster' }
+
+## DASHBOARD HEAD(latest), compatible with k8s 1.8:
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head,imagePullPolicy=Always' } # development version, for k8s 1.8, and with all admin permissions open
+# OR:
+## DASHBOARD 1.7.1, compatible with k8s 1.7.*:    
+    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
     ##gcr.io/google_containers/kubernetes-dashboard-amd64 for stable versions tagged per k8s version. For lastest (beta) versions, one may use: from docker.io kubernetesdashboarddev/kubernetes-dashboard-amd64
-    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head' } # development version, and with all admin permissions open
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
+
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
 #    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}}'
 #    - { name: moodle, repo: stable/moodle, options: '--set moodleUsername=admin,moodlePassword=password,mariadb.mariadbRootPassword=secretpassword,serviceType=ClusterIP' }

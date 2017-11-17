@@ -1,0 +1,9 @@
+[defaults]
+#remote_user=vagrant
+become=true
+become_method=sudo
+stdout_callback = debug
+
+[ssh_connection]
+ssh_args = -C -o ControlMaster=auto -o ControlPersist=60s -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -F ./ssh_config 
+pipelining = True

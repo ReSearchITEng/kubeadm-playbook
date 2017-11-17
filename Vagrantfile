@@ -7,7 +7,7 @@
 # you're doing.
 
 $instance_name_prefix = "k8s"
-$num_instances = 0   # Number of nodes, excluding master which is always created.
+$num_instances = 1   # Number of nodes, excluding master which is always created.
 #$custom_networking_dnsDomain = ".ap"  # put same value like custom.networking.dnsDomain in ansible's group_vars/all, BUT this time WITH THE DOT in front!
                        #E.g.  ".demo.k8s.ap",
 # https://www.virtualbox.org/manual/ch08.html#vboxmanage-natnetwork

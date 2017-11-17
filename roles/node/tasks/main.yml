@@ -12,8 +12,16 @@
 - name: token to be used is
   debug: var=kubeadm_token
 
-- name: Join cluster using kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
-  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:6443 --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
+
+- name: "Wait 300 seconds for master at {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} to become open"
+  wait_for:
+    port: "{{ kubeadm_master_config.api.bindPort | default (6443) }}"
+    host: "{{ groups['master'][0] }}"
+    delay: 1
+    timeout: 300
+
+- name: Join cluster using kubeadm join {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
+  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:
   - init
   - node

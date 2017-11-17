@@ -29,7 +29,7 @@
   set_fact:
     extended_cert_list: "{{ [inventory_hostname,inventory_hostname_short] | union (kubeadm_master_config.apiServerCertSANs | default([]) ) }}"
     #extended_cert_list: "{{ [inventory_hostname,inventory_hostname_short] | union (kubeadm_master_config.apiServerCertSANs | default([kubernetes]) ) }}"
-  when: kubeadm_master_config is defined and kubeadm_master_config.apiServerCertSANs is defined
+  when: kubeadm_master_config is defined 
 
 - name: merging {{ inventory_hostname,inventory_hostname_short }} to the kubeadm_master_config.apiServerCertSANs
   set_fact:
@@ -40,10 +40,13 @@
   debug: var=kubeadm_master_config #|to_nice_yaml
   changed_when: false
 
+- name: Make sure /etc/kubernetes folder exists
+  file: path=/etc/kubernetes/ state=directory mode=0755
+
 - name: Writing kubeadm_master_config to /etc/kubernetes/kubeadm-master.conf
   copy: content="{{ kubeadm_master_config | to_nice_yaml }}" dest="/etc/kubernetes/kubeadm-master.conf" force=yes
 
-- name: 'Initialize cluster with --config /etc/kubernetes/kubeadm-master.conf'
+- name: "Initialize cluster with --config /etc/kubernetes/kubeadm-master.conf"
   # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
 #  environment: '{{env_kc}}'
   command: /usr/bin/kubeadm init {{ kubeadm_init_args | default(" ") }} --config /etc/kubernetes/kubeadm-master.conf

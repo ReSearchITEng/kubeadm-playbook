@@ -52,3 +52,12 @@
     create: yes
   when: shell is undefined or shell == 'bash'
 
+- name: make sure ~/.bashrc is called
+  lineinfile:
+    dest: ~/.bash_profile
+    line: '[[ -x ${HOME}/.bashrc ]] && source ${HOME}/.bashrc'
+    state: present
+    create: yes
+  when: shell is undefined or shell == 'bash'
+
+
