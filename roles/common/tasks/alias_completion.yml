@@ -34,7 +34,7 @@
 - name: kubeadm completion to ~/.bashrc
   lineinfile:
     dest: ~/.bashrc
-    line: '[[ -x ${HOME}/.kube/kubeadm_completion.bash.inc ]] && source ${HOME}/.kube/kubeadm_completion.bash.inc'
+    line: '[[ -r ${HOME}/.kube/kubeadm_completion.bash.inc ]] && source ${HOME}/.kube/kubeadm_completion.bash.inc'
     state: present
     create: yes
   when: shell is undefined or shell == 'bash'
@@ -47,7 +47,7 @@
 - name: kubectl completion to ~/.bashrc
   lineinfile:
     dest: ~/.bashrc
-    line: '[[ -x ${HOME}/.kube/completion.bash.inc ]] && source ${HOME}/.kube/completion.bash.inc'
+    line: '[[ -r ${HOME}/.kube/completion.bash.inc ]] && source ${HOME}/.kube/completion.bash.inc'
     state: present
     create: yes
   when: shell is undefined or shell == 'bash'
@@ -55,7 +55,7 @@
 - name: make sure ~/.bashrc is called
   lineinfile:
     dest: ~/.bash_profile
-    line: '[[ -x ${HOME}/.bashrc ]] && source ${HOME}/.bashrc'
+    line: '[[ -r ${HOME}/.bashrc ]] && source ${HOME}/.bashrc'
     state: present
     create: yes
   when: shell is undefined or shell == 'bash'
