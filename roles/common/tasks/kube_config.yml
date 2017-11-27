@@ -6,6 +6,9 @@
     tags:
     - always
 
+  - name: Make sure folder /etc/kubernetes/ exists
+    file: path=/etc/kubernetes state=directory mode=0755
+    
   - name: prepare cloud-config file
     template:
       src: cloud-config.j2
