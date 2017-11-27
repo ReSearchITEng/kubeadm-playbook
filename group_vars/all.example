@@ -120,7 +120,7 @@ kubeadm_master_config:
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
     #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
     #podSubnet: '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.7.10' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
+  kubernetesVersion: 'v1.7.11' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
                                # 1.7.9 # 1.6.12 # 1.8.2
 #  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
 #  nodeName: <string>
