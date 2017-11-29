@@ -2,10 +2,8 @@
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
-Tested on for all Centos/RHEL 7.2+, but ideally use version 7.4 (for overlay2 and automatic docker_setup).    
+Tested on for all Centos/RHEL 7.2+ (ideally 7.4) and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
 Optionally, then docker_setup: True, this project will also setup the docker on the host if does not exist.     
-For this it expects CentOS/RHEL 7.4. Any other OS needs manual docker pre-installed and docker_setup set to False/auto.    
-Ubuntu/debian should work when docker is preinstalled, but not tested.
 
 ## Targets/pros&cons
 One may use it to get a fully working "production LIKE" environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.    
@@ -127,6 +125,10 @@ After preparations (edit group_vars/all, etc.), run the ansible installation nor
 
 Using vagrant keeping NAT as 1st interface (usually with only one machine) was not tested and the Vagrantfile may requires some changes.
 There was no focus on this option as it's more complicated to use afterwards: one must export the ports manually to access ingresses like dashboard from the browser, and usually does not support more than one machine.
+
+# kubeadm-ha
+Kubeadm will support HA only starting v1.10 (as per https://github.com/kubernetes/kubeadm/issues/546 )
+Till then, you may want to check this project: https://github.com/sv01a/ansible-kubeadm-ha-cluster
 
 # How does it compare to other projects:
 Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
