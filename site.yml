@@ -104,7 +104,6 @@
   - sanity
   - node_install
   - node
-  - master_install
   - master
   roles:
   - { role: tools, task: cluster_sanity, tags: [ 'cluster_sanity', 'sanity' ] }

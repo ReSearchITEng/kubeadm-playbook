@@ -16,6 +16,7 @@
     ignore_errors: yes  # Currently there is no way to check if the user is using weave
     tags:
     - weave
+    - network
     
   - name: Create cluster network
     command: /usr/bin/kubectl apply -f {{ item }}
@@ -25,6 +26,7 @@
     #when: k8s_network_addons_urls is defined
     tags:
     - k8s_network_addons
+    - network
 
   - name: sanity - wait for alls pod to be running (besides kube-dns for now, as it might be forced to a node if master did not allow it due to tains)
     environment:
@@ -34,6 +36,7 @@
     tags:
     - k8s_network_addons
     - sanity
+    - network
     until: command_result.stdout == ""
     retries: 40
     delay: 3

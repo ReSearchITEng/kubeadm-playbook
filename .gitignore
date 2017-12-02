@@ -1,4 +1,5 @@
 *.retry
+*.log
 .vagrant
 ansible.cfg
 ssh_config*
