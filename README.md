@@ -128,7 +128,7 @@ There was no focus on this option as it's more complicated to use afterwards: on
 
 # kubeadm-ha
 Kubeadm will support HA only starting v1.10 (as per https://github.com/kubernetes/kubeadm/issues/546 )
-Till then, you may want to check this project: https://github.com/sv01a/ansible-kubeadm-ha-cluster
+Till then, you may want to check this project: https://github.com/sv01a/ansible-kubeadm-ha-cluster and/or github.com/cookeem/kubeadm-ha.
 
 # How does it compare to other projects:
 Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
