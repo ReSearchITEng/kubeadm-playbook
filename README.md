@@ -131,6 +131,20 @@ Kubeadm will support HA only starting v1.10 (as per https://github.com/kubernete
 Till then, you may want to check this project: https://github.com/sv01a/ansible-kubeadm-ha-cluster and/or github.com/cookeem/kubeadm-ha.
 
 # How does it compare to other projects:
+
+## Kubeadm -> the official k8s installer (yet to be GA).
+
+With kubeadm-playbook we are focus only kubeadm. 
+**Pros:**
+- as it's the official k8s installation tool 
+- kubeadm is released with every k8s release, and you have a guarantee to be in sync with the official code. 
+- self hosted deployment, making upgrades very smooth ; Here is a KubeCon talk presenting even more reasons to go with self-hosted k8s: https://www.youtube.com/watch?v=jIZ8NaR7msI
+
+**Cons:**
+- currenlty in beta (to be GA expected soon)
+- no HA yet (expected in next release v1.10)
+
+## Other k8s installers
 Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
 - https://github.com/kubernetes/contrib/tree/master/ansible -> the official k8s ansible, but without kubeadm, therefore the processes will run on the nodes, not in docker containers
 - https://github.com/dcj/ansible-kubeadm-cluster -> very simple cluster, does not (currently) have: ingresses, helm, addons, proxy support, vagrant support, persistent volumes, etc.
@@ -138,9 +152,6 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 - https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
 - https://github.com/gluster/gluster-kubernetes/blob/master/vagrant/ -> it's much more simple, no ingress, helm, addons, proxy support, and persistent volumes only using glusterfs. Entire project is only focused on CentOS.
 - https://github.com/kubernetes-incubator/kubespray & https://github.com/kubernetes/kops (amazon) -> Neither of them use the official installtion tool: kubeadm, and that makes them heavy/big and require knowledge of "internals". 
-
-With kubeadm-playbook we are focused on kubeadm as it's the official tool k8s should be installed with (but still in beta).    
-Using kubeadm (which is released with every k8s release) you have a guarantee to be in sync with the official code. Unfortunatelly for now there is no HA with kubeadm, but it's in the works by k8s project. 
 
 PRs are accepted and welcome.
 
