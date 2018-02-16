@@ -15,9 +15,9 @@
 ## package_state: latest # Other valid options for this context: installed
 package_state: installed
 ## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
-kubeadm_version: 1.7.* # 1.6.* # 1.8.*
-kubelet_version: 1.7.* # 1.6.* # 1.8.*
-kubectl_version: 1.7.* # 1.6.* # 1.8.*
+kubeadm_version: 1.8.* # 1.6.* # 1.8.*
+kubelet_version: 1.8.* # 1.6.* # 1.8.*
+kubectl_version: 1.8.* # 1.6.* # 1.8.*
 # To find the possible versions, check: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubeadm' | grep ver
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubelet' | grep ver
@@ -32,8 +32,8 @@ full_kube_reinstall: True #Default is True. #Make it False for faster redeployme
 etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 #####
 
-kubeadm_init_args: "--skip-preflight-checks"
-kubeadm_join_args: "--skip-preflight-checks" #  For 1.8+ you may want to add: --discovery-token-unsafe-skip-ca-verification"
+kubeadm_init_args: "" # If needed: "--ignore-preflight-check-errors=all" #"--skip-preflight-checks" -> for pre 1.8
+kubeadm_join_args: "--discovery-token-unsafe-skip-ca-verification" # 1.8 and above
 turn_swapoff: True #false # default true # Important for 1.8+
 
 #####
@@ -120,7 +120,7 @@ kubeadm_master_config:
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
     #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
     #podSubnet: '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.7.12' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
+  kubernetesVersion: 'v1.8.8' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
                                # 1.7.12 # 1.6.12 # 1.8.8
 #  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
 #  nodeName: <string>
@@ -212,8 +212,8 @@ helm:
 ## DASHBOARD HEAD(latest), compatible with k8s 1.8:
 #    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head,imagePullPolicy=Always' } # development version, for k8s 1.8, and with all admin permissions open
 # OR:
-## DASHBOARD 1.7.1, compatible with k8s 1.7.*:    
-    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
+## DASHBOARD 1.8.3, compatible with k8s 1.8+:    
+    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3' } # other vers: v1.6.3. All secure & stable prod version
     ##gcr.io/google_containers/kubernetes-dashboard-amd64 for stable versions tagged per k8s version. For lastest (beta) versions, one may use: from docker.io kubernetesdashboarddev/kubernetes-dashboard-amd64
 
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
