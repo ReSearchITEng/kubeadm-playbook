@@ -15,9 +15,9 @@
 ## package_state: latest # Other valid options for this context: installed
 package_state: installed
 ## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
-kubeadm_version: 1.8.* # 1.6.* # 1.8.*
-kubelet_version: 1.8.* # 1.6.* # 1.8.*
-kubectl_version: 1.8.* # 1.6.* # 1.8.*
+kubeadm_version: 1.9.* # 1.6.* # 1.8.*
+kubelet_version: 1.9.* # 1.6.* # 1.8.*
+kubectl_version: 1.9.* # 1.6.* # 1.8.*
 # To find the possible versions, check: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubeadm' | grep ver
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubelet' | grep ver
@@ -48,7 +48,7 @@ ntp_setup: True  # Default True
 #####
 ## hostname fix: set_hostname_to_inventory_hostname
 ## to make sure the hostname in inventory (usually fqdn) is in sync with the hostname as seen inside the host (usually required by vangrant)
-set_hostname_to_inventory_hostname: True #False # Default False
+set_hostname_to_inventory_hostname: False # Default False
 #####
 
 #####
@@ -58,8 +58,8 @@ set_hostname_to_inventory_hostname: True #False # Default False
 #####
 
 #####
-## Allow restart (if required, e.g. if ansible's selinux module sets reboot_required to true )
-allow_restart: True ## Default False
+## Allow restart of machine (node) (if required, e.g. if ansible's selinux module sets reboot_required to true )
+# allow_restart: True # Default False
 #####
 
 #####
@@ -120,7 +120,7 @@ kubeadm_master_config:
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
     #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
     #podSubnet: '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.8.8' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
+  kubernetesVersion: 'v1.9.3' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
                                # 1.7.12 # 1.6.12 # 1.8.8
 #  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
 #  nodeName: <string>
@@ -176,9 +176,9 @@ k8s_network_addons_urls:
 ## CALICO # For Calico one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 192.168.0.0/16 )
 #   - https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml # versions are 2.4,2.5,2.6
 #     newer calico 3.0 :     
-#   - https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml # ALPHA 
+#   - https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml  
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
-  - https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml # For latest, replace "v0.9.1" with "master"
+  - https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml # For latest, replace "v0.9.1" with "master"
 # OR Weave: #https://www.weave.works/docs/net/latest/kubernetes/kube-addon/ 
 # - https://cloud.weave.works/k8s/net?k8s-version={{kubeadm_master_config.kubernetesVersion}}&{{networking.podSubnet | default ('env.IPALLOC_RANGE=10.32.0.0/12') }}
 #####
@@ -210,7 +210,7 @@ helm:
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
 
 ## DASHBOARD HEAD(latest), compatible with k8s 1.8:
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head,imagePullPolicy=Always' } # development version, for k8s 1.8, and with all admin permissions open
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},image.repository=kubernetesdashboarddev/kubernetes-dashboard-amd64,image.tag=head,image.pullPolicy=Always' } # development version, for k8s 1.8, and with all admin permissions open
 # OR:
 ## DASHBOARD 1.8.3, compatible with k8s 1.8+:    
     - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3' } # other vers: v1.6.3. All secure & stable prod version
