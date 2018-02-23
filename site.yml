@@ -43,10 +43,38 @@
   become_method: sudo
   tags:
   - node
-  roles:
-  - { role: tools, task: reset, tags: [ 'reset', 'node_reset' ] }
-  - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave', 'weave_reset' ] }
-  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node', 'node_install'] }
+  tasks:
+  - name: node_reset
+    include_role:
+      name: tools
+      tasks_from: reset
+    when: inventory_hostname not in groups['master']
+    tags:
+    - reset
+    - node_reset
+    
+  - name: weave_reset
+    include_role:
+      name: tools
+      tasks_from: weave_reset
+    when: inventory_hostname not in groups['master']
+    tags:
+    - reset
+    - node_reset
+    - network_reset
+    - weave
+    - weave_reset
+  
+  - name: node_reset
+    include_role:
+      name: common
+      tasks_from: all
+    when: inventory_hostname not in groups['master']
+    tags:
+    - common
+    - install
+    - common_install
+    - node_install
 
 ## master -> reset and install common part (for all machines)
 - hosts: master
