@@ -80,8 +80,11 @@
   - node
   - install
   - node_install
-  roles:
-  - { role: node, tags: [ 'node', 'install', 'node_install' ] } #, task: all }
+  tasks:
+  - name: node conditional role
+    include_role:
+      name: node
+    when: inventory_hostname not in groups['master']
 
 ## Post deploy (network, storage, helm installation, helm charts deploy, any other addons)
 - hosts: master
