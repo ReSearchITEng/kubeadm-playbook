@@ -73,12 +73,12 @@
   debug: msg="detect docker's cgroup-driver is {{ docker_cgroup_driver.stdout }}. (Usually RH/CentOS is systemd, Ubuntu cgroupfs"
   changed_when: false
 
-- name: kubelet_version
+- name: determine version of the installed kubelet
   shell: kubelet --version | cut -d" " -f2 | cut -d"v" -f2
-  register: kubelet_version
+  register: version_installed_kubelet
   changed_when: false
 
-# when: kubelet_version | version_compare('1.7', '>=')
+# when: version_installed_kubelet | version_compare('1.7', '>=')
 
 # newer versions (e.g. 1.7+) already have a new variable:
 # Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd" 
