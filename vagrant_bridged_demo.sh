@@ -47,6 +47,11 @@ while [ $# -gt 0 ]; do
     shift
     break
   ;;
+  --start)
+    ACTIONS=start
+    shift
+    break
+  ;;
   --regenerate_config)
     ACTIONS=regenerate_config
     shift
@@ -60,25 +65,31 @@ VAGRANT_LOG=info # debug,info,warn,error
 #vagrant up
 
 if [ "${ACTIONS}x" != "regenerate_configx" ];then
+ if [ "${ACTIONS}x" != "startx" ];then
  ###  Stop all machines for reconfiguration and/or restart, but not when we only want to regenerate config
  for runningVagrM in $(vagrant status | grep 'running (virtualbox)' | cut -d" " -f1); do
-   vagrant halt $runningVagrM
+   echo "going to run: vagrant halt -f $runningVagrM "
+   vagrant halt -f $runningVagrM
  done
+ fi
 
  ### Get list of all already powered off machines:
+ echo "Getting the list of already powered off machines"
  filter_machines_offvagm=$(vagrant status | grep 'poweroff (virtualbox)' | cut -d" " -f1)
 
  if [ "${filter_machines_offvagm}x" = "x" ]; then
    echo "There is no machine to manage, exit now"
    exit 1 # && error_now
+ else
+   echo "list of already powered off machines: ${filter_machines_offvagm}"
  fi
 
  ### Get list of machines created for local Vagrantfile in the current directory
  filter_machines_local_directory=$(basename `pwd`)  # note: cannot run it from /
 
  ### If the only request is restart, do it and exit
- if [ "${ACTIONS}x" = "restartx" ];then
-  echo "### Restart VMs"
+ if [ "${ACTIONS}x" = "restartx" -o "${ACTIONS}x" = "startx" ];then
+  echo "### startng VMs ${filter_machines_offvagm}"
   for vagrantM in ${filter_machines_offvagm}; do
     #for vboxM in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM | grep $filter_machines_local_directory | cut -d'"' -f2  ); do
     for vboxMUUID in $(VBoxManage list vms | grep -v inaccessible | grep $vagrantM | grep $filter_machines_local_directory | cut -d'{' -f2 | tr -d '}' ); do #UsesUUID
