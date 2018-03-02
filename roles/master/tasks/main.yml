@@ -125,7 +125,13 @@
   pause: seconds=10
   changed_when: false
 
-- name: "sanity - wait for alls pod to be running (besides kube-dns which won't be ready yet)"
+- name: apply master_uncordon when cluster is one machine only
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  shell: 'kubectl uncordon {{ inventory_hostname_short }} '
+  when: groups['all'] | length == 1
+
+- name: "sanity - wait for alls pod to be running (besides kube-dns which won't be ready yet on multi machine cluster)"
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   shell: "kubectl get --namespace kube-system pods --no-headers | grep -v -w 'Running' | grep -v 'kube-dns' || true "
