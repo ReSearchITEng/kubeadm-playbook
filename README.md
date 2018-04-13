@@ -2,7 +2,7 @@
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
-Tested on for all Centos/RHEL 7.2+ (ideally 7.4) and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
+Tested on for all Centos/RHEL 7.2+ (ideally 7.4/7.5) and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
 Optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist.     
 
 ## Targets/pros&cons
@@ -22,14 +22,14 @@ The project is for those who want to create&recreate k8s cluster using the offic
 - all in one shop for a cluster which you can start working right away, without mastering the details
 - applies fixes for quite few issues currently k8s installers have
 - deploys plugins to all creation of dynamical persistent volumes via: vsphere, rook or self deployed NFS
+- kubeadm is the only official tool specialized to install k8s
 
 ### CONS:
-- kubeadm is officially in beta
-- no HA: for now (kubeadm cannot install clusters with master/etcd HA yet - but planned by kubernetes).
+- no HA: for now but planned.
 - during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how (also see gluster project for hints).
 
 ## Prerequisites:
-- ansible min. 2.1 (but higher is recommeneded. Tested up to current 2.4)
+- ansible min. 2.1 (but higher is recommeneded. Tested up to current 2.5)
 - For a perfect experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists).    
 Note: dashboard will by default use the master machine, but also deploy under the provided domain (in parallel, only additional ingress rule)
 - if docker_setup is True, it will also attempt to define your docker and set it up with overlay2 storage driver (one needs CentOS 7.4+)
@@ -58,7 +58,7 @@ Note: dashboard will by default use the master machine, but also deploy under th
 * it will define a set of handy aliases 
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.    
-This has been tested with **RHEL&CentOS 7.3, 7.4 and Ubuntu 16.04** and **Kubernetes v1.6.1 - 1.6.11 and 1.7.0-1.7.9 and 1.8.1-1.8.2 and 1.9.3**     
+This has been tested with **RHEL&CentOS 7.3-7.5 and Ubuntu 16.04** and **Kubernetes v1.6.1 - v1.10.1**     
 In general, keep the kube* tools at the same minor version with the desired k8s cluster. (e.g. For installing k8s v1.7 one must also use kubeadm 1.7 (kubeadm limitation).)    
 FYI, higher kube* are usually supported with 1 minor version older cluster (e.g. kube[adm/ctl/let] 1.8.* accepts kubernetes cluster 1.7.*).
 
