@@ -106,9 +106,12 @@ and check the http://pv.cloud.corp.example.com page.
 
 # load-ballancing
 For LB, one may want to check also:
+
+- github.com/cloudnativelabs/kube-router/wiki & https://github.com/cloudnativelabs/kube-router/blob/master/docs/kubeadm.md & https://github.com/cloudnativelabs/kube-router/blob/master/docs/how-it-works.md
+- https://github.com/google/metallb/ (implements a LB type)
+- https://github.com/kubernetes/contrib/tree/master/keepalived-vip (HA)
 - https://github.com/kubernetes/contrib/tree/master/service-loadbalancer
-- https://github.com/cloudlabs/kube-router/wiki
-- https://github.com/kubernetes/contrib/tree/master/keepalived-vip
+
 
 # DEMO:
 Installation demo k8s 1.7.8 on CentOS 7.4: [kubeadm ansible playbook install demo asciinema video](https://asciinema.org/a/Ii7NDu3eL9DsuM1fEFM9PMVTM)
