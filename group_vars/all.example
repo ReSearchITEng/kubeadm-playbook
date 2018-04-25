@@ -206,7 +206,7 @@ helm:
 #    - { name: rook, url: 'http://charts.rook.io' }
 #    - { name: fabric8, url: 'https://fabric8.io/helm' }
   packages_list: # when not defined, namespace defaults to "default" namespace
-    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local' } # RBAC ready
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" ' }
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
 
 ## DASHBOARD HEAD(latest), compatible with k8s 1.8:
