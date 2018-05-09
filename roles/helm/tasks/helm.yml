@@ -73,6 +73,7 @@
     - helm
     ignore_errors: yes
 
+  ## https://github.com/kubernetes/helm/blob/master/docs/rbac.md
   - name: create helm related RBAC (tiller sa)
     environment: '{{env_kc}}'
     shell: kubectl --namespace=kube-system create sa tiller
@@ -90,7 +91,7 @@
   - name: helm init
     environment: '{{env_kc}}'
     #shell: "helm init --host {{ inventory_hostname }}:6443 "
-    shell: "helm init --host {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }}"
+    shell: "helm init --host {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --service-account tiller"
     #when: helm.install_script_url is defined
     register: command_result
     changed_when: "'Tiller is already installed' not in command_result.stdout"
