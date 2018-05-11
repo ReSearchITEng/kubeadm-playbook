@@ -118,6 +118,7 @@
     shell: 'kubectl -n kube-system patch deploy/tiller-deploy -p ''{"spec": {"template": {"spec": {"serviceAccountName": "tiller"}}}}'''
     register: command_result
     changed_when: '"not patched" not in command_result.stdout'
+    ignore_errors: yes
     tags:
     - helm
     - rbac
