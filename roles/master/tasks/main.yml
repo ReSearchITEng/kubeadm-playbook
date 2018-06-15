@@ -12,12 +12,12 @@
 #  - ceph-common
 
 - name: Pull images on master
-  command: /usr/bin/docker pull "{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
+  command: /usr/bin/docker pull "{{ images.repo |default ('k8s.gcr.io') }}/{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
   with_items:
-  - "gcr.io/google_containers/kube-proxy-amd64"
-  - "gcr.io/google_containers/kube-controller-manager-amd64"
-  - "gcr.io/google_containers/kube-apiserver-amd64"
-  - "gcr.io/google_containers/kube-scheduler-amd64"
+  - "kube-proxy-amd64"
+  - "kube-controller-manager-amd64"
+  - "kube-apiserver-amd64"
+  - "kube-scheduler-amd64"
   tags:
   - prepull_images
   register: command_result
