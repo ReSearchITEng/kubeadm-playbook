@@ -16,9 +16,9 @@
     mode: 0755
 
 - name: Pull images on node (e.g. kube-proxy)
-  command: /usr/bin/docker pull "{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
+  command: /usr/bin/docker pull "{{ images.repo |default ('k8s.gcr.io') }}/{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
   with_items:
-  - "gcr.io/google_containers/kube-proxy-amd64"
+  - "kube-proxy-amd64"
   tags:
   - prepull_images
   register: command_result
