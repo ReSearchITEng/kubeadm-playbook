@@ -28,7 +28,7 @@ kubectl_version: 1.9.* # 1.6.* # 1.8.*
 #####
 ## Docker images repo
 ## If you have your internal docker registry which proxies them (e.g. a nexus3 with docker proxy), replace the value here:
-images.repo: "k8s.gcr.io"
+images_repo: "k8s.gcr.io"
 #####
 
 ## When defined, it first forces uninstall any kube* packages (rpm/deb) from hosts
