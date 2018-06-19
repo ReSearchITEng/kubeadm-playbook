@@ -12,7 +12,7 @@
 #  - ceph-common
 
 - name: Pull images on master
-  command: /usr/bin/docker pull "{{ images.repo |default ('k8s.gcr.io') }}/{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
+  command: /usr/bin/docker pull "{{ images_repo |default ('k8s.gcr.io') }}/{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
   with_items:
   - "kube-proxy-amd64"
   - "kube-controller-manager-amd64"
