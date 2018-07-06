@@ -97,6 +97,9 @@
     insertafter: "^    - --"
     line: "    - --cloud-config=/etc/kubernetes/cloud-config"
   when: kubeadm_master_config.cloudProvider is defined
+  # starting 1.11 this is not required and it will also resolve to false as kubeadm_master_config.cloudProvider was moved under api extra args. 
+  # we keep this section for now for backward compatibility. TO BE removed in the future
+  # TODO
   with_items:
   - /etc/kubernetes/manifests/kube-apiserver.yaml
   - /etc/kubernetes/manifests/kube-controller-manager.yaml
