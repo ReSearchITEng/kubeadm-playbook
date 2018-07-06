@@ -103,6 +103,7 @@ custom:
 ## Structure comes from: https://kubernetes.io/docs/admin/kubeadm/#config-file
 kubeadm_master_config:
   apiVersion: kubeadm.k8s.io/v1alpha1
+  # this should be updated to v1alpha2 , starting 1.11. Keeping it for now, for backward compat.
   kind: MasterConfiguration
   api:
 #    advertiseAddress: <address|string>
@@ -128,7 +129,8 @@ kubeadm_master_config:
     #podSubnet: '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
   kubernetesVersion: 'v1.11.0' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
                                # 1.7.12 # 1.6.12 # 1.8.8
-#  cloudProvider: 'vsphere' # this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
+#  cloudProvider: 'vsphere' # 1.10 and older; this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
+                            # 1.11 this has been moved under apiServerExtraArgs and controllerManagerExtraArgs
 #  nodeName: <string>
 #  authorizationModes:
 #  - <authorizationMode1|string>
