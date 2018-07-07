@@ -12,6 +12,9 @@
 - name: token to be used is
   debug: var=kubeadm_token
 
+- name: add api section to the kubeadm_master_config (if does not exist)
+  set_fact:
+    kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'api': kubeadm_master_config.api | default ({}) } ) }}"
 
 - name: "Wait 300 seconds for master at {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} to become open"
   wait_for:

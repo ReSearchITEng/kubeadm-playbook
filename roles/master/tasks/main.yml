@@ -12,6 +12,7 @@
 #  - ceph-common
 
 - name: Pull images on master
+  #TODO: to be removed/replaced in 1.11 with the kubeadm pull command, but better remove, as kubeadm pre-flight does the pull now anyway...
   command: /usr/bin/docker pull "{{ images_repo |default ('k8s.gcr.io') }}/{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
   with_items:
   - "kube-proxy-amd64"
@@ -36,8 +37,33 @@
     kubeadm_master_config: "{{ kubeadm_master_config | combine ({ 'apiServerCertSANs' : extended_cert_list }, recursive=True) }}"
   when: extended_cert_list is defined and kubeadm_master_config is defined
 
+  ## Add the cloud-config to the kubeadm_master_config for kubeadm.k8s.io/v1alpha2 and above
+  ## as the kubeadm_master_config.cloudProvider has been deprecated. We use kubeadm_master_config.cloudProvider as conditional for triggering below
+  ## as well as triggering updates to the /etc/systemd/system/kubelet.service.d/10-kubeadm.conf (in some other step)
+- block:
+   - name: add cloud-config to apiServerExtraVolumes
+     set_fact:
+       kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiServerExtraVolumes': kubeadm_master_config.apiServerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
+
+   - name: add cloud-config to apiServerExtraArgs
+     set_fact:
+       kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiServerExtraArgs': kubeadm_master_config.apiServerExtraArgs | default ({}) | combine ( {'cloud-provider': kubeadm_master_config.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
+
+   - name: add cloud-config to controllerManagerExtraVolumes
+     set_fact:
+       kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'controllerManagerExtraVolumes': kubeadm_master_config.controllerManagerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
+
+   - name: add cloud-config to controllerManagerExtraArgs
+     set_fact:
+       kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'controllerManagerExtraArgs': kubeadm_master_config.controllerManagerExtraArgs | default ({}) | combine ( {'cloud-provider': kubeadm_master_config.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
+
+   when:
+   - kubeadm_master_config is defined
+   - kubeadm_master_config.cloudProvider is defined
+   - ( kubeadm_master_config.apiVersion >= "kubeadm.k8s.io/v1alpha2" ) or (kubeadm_master_config.apiVersion == "kubeadm.k8s.io/v1")
+
 - name: "This is the kubeadm_master_config to be used"
-  debug: var=kubeadm_master_config #|to_nice_yaml
+  debug: var=kubeadm_master_config
   changed_when: false
 
 - name: Make sure /etc/kubernetes folder exists
@@ -96,8 +122,10 @@
     dest: '{{ item }}'
     insertafter: "^    - --"
     line: "    - --cloud-config=/etc/kubernetes/cloud-config"
-  when: kubeadm_master_config.cloudProvider is defined
-  # starting 1.11 this is not required and it will also resolve to false as kubeadm_master_config.cloudProvider was moved under api extra args. 
+  when: 
+  - kubeadm_master_config.cloudProvider is defined
+  - kubeadm_master_config.apiVersion == "kubeadm.k8s.io/v1alpha1"
+  # starting 1.11 (v1alpha2) this is not required and it will also resolve to false as kubeadm_master_config.cloudProvider was moved under api extra args. 
   # we keep this section for now for backward compatibility. TO BE removed in the future
   # TODO
   with_items:
