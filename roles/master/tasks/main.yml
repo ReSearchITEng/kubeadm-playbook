@@ -43,7 +43,7 @@
 - block:
   - name: add cloud-config to apiServerExtraVolumes
     set_fact:
-      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiServerExtraVolumes': kubeadm_master_config.apiServerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
+      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiServerExtraVolumes': kubeadm_master_config.apiServerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
 
   - name: add cloud-config to apiServerExtraArgs
     set_fact:
@@ -51,7 +51,7 @@
 
   - name: add cloud-config to controllerManagerExtraVolumes
     set_fact:
-      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'controllerManagerExtraVolumes': kubeadm_master_config.controllerManagerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
+      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'controllerManagerExtraVolumes': kubeadm_master_config.controllerManagerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
 
   - name: add cloud-config to controllerManagerExtraArgs
     set_fact:
