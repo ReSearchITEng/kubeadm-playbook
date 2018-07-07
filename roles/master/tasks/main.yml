@@ -11,8 +11,8 @@
 #  - jq
 #  - ceph-common
 
-- name: Pull images on master
-  #TODO: to be removed/replaced in 1.11 with the kubeadm pull command, but better remove, as kubeadm pre-flight does the pull now anyway...
+- name: Pull images on master (from provided repo)
+  #TODO: to be removed/replaced in 1.11 with the kubeadm pull command (which now does not support vers), but better remove, as kubeadm pre-flight does the pull now anyway...
   command: /usr/bin/docker pull "{{ images_repo |default ('k8s.gcr.io') }}/{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
   with_items:
   - "kube-proxy-amd64"
@@ -23,8 +23,32 @@
   - prepull_images
   register: command_result
   changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
-  when: pre_pull_k8s_images is defined and pre_pull_k8s_images and kubeadm_master_config.kubernetesVersion is defined
+  when: 
+  - pre_pull_k8s_images is defined 
+  - pre_pull_k8s_images 
+  - kubeadm_master_config.kubernetesVersion is defined
+  - images_repo is defined
+  #- kubeadm_master_config.apiVersion == "kubeadm.k8s.io/v1alpha1"
   #when: full_kube_reinstall is defined and full_kube_reinstall and kubeadm_master_config.kubernetesVersion is defined
+
+- name: Pull images on master (from internet when images_repo is not defined)
+  #TODO: to be removed/replaced in 1.11 with the kubeadm pull command, but better remove, as kubeadm pre-flight does the pull now anyway...
+  command: kubeadm config images pull
+  with_items:
+  - "kube-proxy-amd64"
+  - "kube-controller-manager-amd64"
+  - "kube-apiserver-amd64"
+  - "kube-scheduler-amd64"
+  tags:
+  - prepull_images
+  register: command_result
+  changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
+  when: 
+  - pre_pull_k8s_images is defined 
+  - pre_pull_k8s_images 
+  - kubeadm_master_config.kubernetesVersion is not defined
+  - images_repo is not defined
+  - ( kubeadm_master_config.apiVersion >= "kubeadm.k8s.io/v1alpha2" ) or ( kubeadm_master_config.apiVersion == "kubeadm.k8s.io/v1" )
 
 - name: adding {{ inventory_hostname,inventory_hostname_short }} to the kubeadm_master_config.apiServerCertSANs
   set_fact:
