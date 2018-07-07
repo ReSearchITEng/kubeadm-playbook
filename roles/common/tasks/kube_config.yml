@@ -21,7 +21,9 @@
   # BLOCK ENDS with its condition:
   when: 
   - kubeadm_master_config is defined 
-  - kubeadm_master_config.cloudProvider is defined or ( kubeadm_master_config.apiServerExtraArgs is defined and kubeadm_master_config.apiServerExtraArgs.cloud-provider is defined )
+  - kubeadm_master_config.cloudProvider is defined
+  #or ( kubeadm_master_config.apiServerExtraArgs is defined and kubeadm_master_config.apiServerExtraArgs.cloud-provider is defined )
+  #TODO 1.11; currently ansible does not support vars with "-", like "cloud-provider"
   tags:
   - kubelet
   # as of 1.11 cloud definition moved from: kubeadm_master_config.cloudProvider to: kubeadm_master_config.apiServerExtraArgs.cloud-provider
