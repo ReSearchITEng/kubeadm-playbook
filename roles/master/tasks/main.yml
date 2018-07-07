@@ -41,26 +41,25 @@
   ## as the kubeadm_master_config.cloudProvider has been deprecated. We use kubeadm_master_config.cloudProvider as conditional for triggering below
   ## as well as triggering updates to the /etc/systemd/system/kubelet.service.d/10-kubeadm.conf (in some other step)
 - block:
-   - name: add cloud-config to apiServerExtraVolumes
-     set_fact:
-       kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiServerExtraVolumes': kubeadm_master_config.apiServerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
+  - name: add cloud-config to apiServerExtraVolumes
+    set_fact:
+      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiServerExtraVolumes': kubeadm_master_config.apiServerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
 
-   - name: add cloud-config to apiServerExtraArgs
-     set_fact:
-       kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiServerExtraArgs': kubeadm_master_config.apiServerExtraArgs | default ({}) | combine ( {'cloud-provider': kubeadm_master_config.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
+  - name: add cloud-config to apiServerExtraArgs
+    set_fact:
+      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiServerExtraArgs': kubeadm_master_config.apiServerExtraArgs | default ({}) | combine ( {'cloud-provider': kubeadm_master_config.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
 
-   - name: add cloud-config to controllerManagerExtraVolumes
-     set_fact:
-       kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'controllerManagerExtraVolumes': kubeadm_master_config.controllerManagerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
+  - name: add cloud-config to controllerManagerExtraVolumes
+    set_fact:
+      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'controllerManagerExtraVolumes': kubeadm_master_config.controllerManagerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
 
-   - name: add cloud-config to controllerManagerExtraArgs
-     set_fact:
-       kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'controllerManagerExtraArgs': kubeadm_master_config.controllerManagerExtraArgs | default ({}) | combine ( {'cloud-provider': kubeadm_master_config.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
-
-   when:
-   - kubeadm_master_config is defined
-   - kubeadm_master_config.cloudProvider is defined
-   - ( kubeadm_master_config.apiVersion >= "kubeadm.k8s.io/v1alpha2" ) or (kubeadm_master_config.apiVersion == "kubeadm.k8s.io/v1")
+  - name: add cloud-config to controllerManagerExtraArgs
+    set_fact:
+      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'controllerManagerExtraArgs': kubeadm_master_config.controllerManagerExtraArgs | default ({}) | combine ( {'cloud-provider': kubeadm_master_config.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
+  when:
+  - kubeadm_master_config is defined
+  - kubeadm_master_config.cloudProvider is defined
+  - ( kubeadm_master_config.apiVersion >= "kubeadm.k8s.io/v1alpha2" ) or (kubeadm_master_config.apiVersion == "kubeadm.k8s.io/v1")
 
 - name: "This is the kubeadm_master_config to be used"
   debug: var=kubeadm_master_config
