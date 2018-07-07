@@ -11,7 +11,8 @@
     environment: '{{env_kc}}'
     when: 
     - vsphere_storageclass_urls is defined 
-    - ( kubeadm_master_config.cloudProvider is defined and kubeadm_master_config.cloudProvider == 'vsphere' ) or ( kubeadm_master_config.apiServerExtraArgs is defined and kubeadm_master_config.apiServerExtraArgs.cloud-provider is defined and kubeadm_master_config.apiServerExtraArgs.cloud-provider == 'vsphere' )
+    - ( kubeadm_master_config.cloudProvider is defined and kubeadm_master_config.cloudProvider == 'vsphere' )
+    #or ( kubeadm_master_config.apiServerExtraArgs is defined and kubeadm_master_config.apiServerExtraArgs.cloud-provider is defined and kubeadm_master_config.apiServerExtraArgs.cloud-provider == 'vsphere' )
     tags:
     - vsphere_storageclass_urls
     - vsphere
