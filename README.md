@@ -159,6 +159,9 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 
 PRs are accepted and welcome.
 
+## Nice links:
+[Index of k8s resources](https://github.com/ramitsurana/awesome-kubernetes)
+
 PS: work inspired from: @sjenning - thanks. PRs & suggestions from: @carlosedp - Thanks.
 [URL page of kubeadm-playboook ansible project](https://researchiteng.github.io/kubeadm-playbook/)
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
