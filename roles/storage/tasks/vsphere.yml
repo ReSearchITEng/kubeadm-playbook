@@ -13,7 +13,7 @@
     - vsphere_storageclass_urls is defined 
     - kubeadm_master_config is defined 
     - kubeadm_master_config.cloudProvider is defined 
-    - kubeadm_master_config.cloudProvider == 'vsphere' )
+    - kubeadm_master_config.cloudProvider == 'vsphere'
     tags:
     - vsphere_storageclass_urls
     - vsphere
