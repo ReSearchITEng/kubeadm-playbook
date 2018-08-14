@@ -88,6 +88,10 @@
     - helm
     - rbac
 
+  - name: add api section to the kubeadm_master_config (if does not exist)
+    set_fact:
+      kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'api': kubeadm_master_config.api | default ({}) } ) }}"
+
   - name: helm init
     environment: '{{env_kc}}'
     #shell: "helm init --host {{ inventory_hostname }}:6443 "
