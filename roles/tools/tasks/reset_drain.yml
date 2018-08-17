@@ -37,7 +37,7 @@
     #with_items: "{{ groups['node'] }}"
 
   - name: kubectl get nodes must be empty by now 
-    shell: "kubectl get nodes --no-headers | grep -v 'node-role.kubernetes.io/master' | grep -v -w 'Ready' || true"
+    shell: "kubectl get nodes --no-headers --show-labels | grep -v 'node-role.kubernetes.io/master' | grep -v -w 'Ready' || true"
     register: command_result
     until: command_result.stdout == ""
     retries: 10
