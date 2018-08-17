@@ -34,7 +34,7 @@ images_repo: "k8s.gcr.io"
 ## When defined, it first forces uninstall any kube* packages (rpm/deb) from hosts
 ## When full_kube_reinstall is False or undefined, it will not reinstall # and it won't remove the /etc/kubernetes/ folder before reinstall
 ## Should be used only if a downgrade in kube* tools is required, otherwise it will waste a lot of time reinstalling unnecessary.
-full_kube_reinstall: True #Default is True. #Make it False for faster redeployments (when for sure there is no need for downgrade)
+full_kube_reinstall: False # undefined is True. #Make it False for faster redeployments. Make true when you need downgrade (ansible does not downgrade rpms autoamtically)
 etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 #####
 
@@ -127,7 +127,7 @@ kubeadm_master_config:
     podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
     #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
     #podSubnet: '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.11.0' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
+  kubernetesVersion: 'v1.11.2' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
                                # 1.7.12 # 1.6.12 # 1.8.8
 #  cloudProvider: 'vsphere' # WE NEED THIS Even after 1.11 (v1alpha2) (due to a bug in ansible on vars with "-"); this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
 #  nodeName: <string>
