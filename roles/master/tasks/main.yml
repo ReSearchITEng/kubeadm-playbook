@@ -64,6 +64,16 @@
   ## Add the cloud-config to the kubeadm_master_config for kubeadm.k8s.io/v1alpha2 and above
   ## as the kubeadm_master_config.cloudProvider has been deprecated. We use kubeadm_master_config.cloudProvider as conditional for triggering below
   ## as well as triggering updates to the /etc/systemd/system/kubelet.service.d/10-kubeadm.conf (in some other step)
+
+- name: OLD Config? Trying to force kubeadm.k8s.io/v1alpha2 instead of kubeadm.k8s.io/v1alpha1 when k8s v1.11+ and cloudProvider defined
+  set_fact:
+    kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'apiVersion': 'kubeadm.k8s.io/v1alpha2' } ) }}"
+  when:
+  - kubeadm_master_config is defined
+  - kubeadm_master_config.cloudProvider is defined
+  - kubeadm_master_config.apiVersion == "kubeadm.k8s.io/v1alpha1"
+  - kubeadm_master_config.kubernetesVersion is version_compare ( 'v1.11', '>=' )
+
 - block:
   - name: add cloud-config to apiServerExtraVolumes
     set_fact:
