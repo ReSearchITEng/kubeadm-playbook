@@ -159,7 +159,7 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 
 PRs are accepted and welcome.
 
-PS: work inspired from: @sjenning - thanks. PRs & suggestions from: @carlosedp - Thanks.
+PS: work inspired from: @sjenning - and the master ha part from @mbert. PRs & suggestions from: @carlosedp - Thanks.
 [URL page of kubeadm-playboook ansible project](https://researchiteng.github.io/kubeadm-playbook/)
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
