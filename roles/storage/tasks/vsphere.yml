@@ -9,11 +9,7 @@
     command: /usr/bin/kubectl apply -f {{ item }}
     with_items: "{{ vsphere_storageclass_urls | default ([]) }}"
     environment: '{{env_kc}}'
-    when: 
-    - vsphere_storageclass_urls is defined 
-    - kubeadm_master_config is defined 
-    - kubeadm_master_config.cloudProvider is defined 
-    - kubeadm_master_config.cloudProvider == 'vsphere'
+    when: vsphere_storageclass_urls is defined and kubeadm_master_config.cloudProvider is defined and kubeadm_master_config.cloudProvider == 'vsphere'
     tags:
     - vsphere_storageclass_urls
     - vsphere

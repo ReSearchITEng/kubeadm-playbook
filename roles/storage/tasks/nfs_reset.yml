@@ -11,7 +11,8 @@
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
     tags:
-    - always
+    - reset
+    - nfs_storage
 
   - name: delete old nfs provisioner
     environment:

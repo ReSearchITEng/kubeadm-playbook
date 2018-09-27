@@ -20,8 +20,21 @@
     - nfs_reset
     ignore_errors: yes
 
-  - name: Reset cluster
+  - name: remove kubelet
+    yum:
+      name: kubelet
+      state: absent
+    tags:
+    - yum_clean
+    when: yum_clean is defined and yum_clean is true
+    ignore_errors: yes
+
+  - name: Reset cluster (when there was no need for --force)
     command: /usr/bin/kubeadm reset
+    ignore_errors: yes
+
+  - name: Reset cluster (kubeadm reset --force)
+    command: /usr/bin/kubeadm reset --force
     ignore_errors: yes
     # TODO: if cluster is installed, but kubedm is no longer available on the machine, we will not have a reset of cluster...
 
@@ -69,6 +82,8 @@
     systemd: name={{ item }} state=stopped
     with_items:
     - kubelet
+    - keepalived
+    - etcd
     tags:
     - kubelet
     - uninstall

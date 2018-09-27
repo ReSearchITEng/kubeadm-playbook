@@ -1,7 +1,36 @@
-# Only one master is allowed
-# Use FullyQualifiedDomainNames (FQDN) (e.g. .corp.example.com)
-[master]
-master.corp.example.com
 
-[node]
+# Use FullyQualifiedDomainNames (FQDN) (e.g. machine1.corp.example.com)
+---------
+[primary-master]
+master1.corp.example.com
+
+[secondary-masters]
+# If there is only one master, make this section empty
+master[2:3].corp.example.com
+
+[masters:children]
+primary-master
+secondary-masters
+
+[master:children]
+masters
+
+[primary-etcd:children]
+primary-master
+
+[secondary-etcds:children]
+secondary-masters
+
+[etcd:children]
+primary-etcd
+secondary-etcds
+
+[nodes]
+# If there is only one machine both master and node, make this section empty
 node[1:2].corp.example.com
+
+[node:children]
+nodes
+
+[my-cluster:children]
+nodes-extended

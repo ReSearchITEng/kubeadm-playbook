@@ -7,6 +7,8 @@
 - include: firewalld.yml
 - include: kube_config.yml
 - include: swap.yml
+- include: kernel_modules.yml
+  when: kernel_modules_setup | default (True)
 - include: ntpd.yml
   when: ntp_setup | default (True)
 - include: rook.yml

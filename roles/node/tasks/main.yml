@@ -1,30 +1,71 @@
 ---
-- set_fact: kubeadm_token="{{ hostvars[groups['master'][0]]['kubeadm_token'].stdout_lines[0] }}"
-  when: kubeadm_master_config.token is not defined
+- name: extract the token from the master role  execution and set kubeadm_token
+  set_fact: kubeadm_token="{{ hostvars[groups['master'][0]]['kubeadm_token'].stdout_lines[0] }}"
+  when: kubeadm_master_config.bootstrapTokens[0].token is not defined
   tags:
   - node
 
-- set_fact: kubeadm_token={{ kubeadm_master_config.token }}
-  when: kubeadm_master_config.token is defined
+- name: set kubeadm_token to the value from kubeadm_master_config
+  set_fact: kubeadm_token={{ kubeadm_master_config.bootstrapTokens[0].token }}
+  when: 
+  - kubeadm_master_config.bootstrapTokens is defined
+  - kubeadm_master_config.bootstrapTokens[0].token is defined
   tags:
   - node
 
 - name: token to be used is
   debug: var=kubeadm_token
+  tags:
+  - node
 
 - name: add api section to the kubeadm_master_config (if does not exist)
   set_fact:
     kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'api': kubeadm_master_config.api | default ({}) } ) }}"
 
-- name: "Wait 300 seconds for master at {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} to become open"
+## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via VIP,MasterHA (for MasterHA cases)
+- name: by default set master name to inventory definition (no MasterHA case)
+  set_fact: master_name={{ groups['master'][0] }}
+  when:
+  - not custom.networking.fqdn.always
+  - not custom.networking.fqdn.master
+  - groups['master'] | length == 1
+
+- name: force use fqdn for master name (no MasterHA case)
+  set_fact: master_name={{ hostvars[groups['master'][0]]['ansible_fqdn'] }}
+  when:
+  - custom.networking.fqdn.always or custom.networking.fqdn.master
+  - groups['master'] | length == 1
+
+- name: force use fqdn for master name (MasterHA case)
+  set_fact: master_name={{ custom.networking.masterha_fqdn }}
+  when:
+  - custom.networking.fqdn.always or custom.networking.fqdn.master
+  - groups['master'] | length > 1
+
+- name: force use vip for master name (MasterHA case)
+  set_fact: master_name={{ custom.networking.masterha_vip }}
+  when:
+  - not custom.networking.fqdn.always
+  - not custom.networking.fqdn.master
+  - groups['master'] | length > 1
+
+- name: "Wait 300 seconds for master at {{ master_name }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} to become open (MasterHA)"
   wait_for:
     port: "{{ kubeadm_master_config.api.bindPort | default (6443) }}"
-    host: "{{ groups['master'][0] }}"
+    host: "{{ master_name }}"
     delay: 1
     timeout: 300
 
-- name: Join cluster using kubeadm join {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
-  command: /usr/bin/kubeadm join {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
+## Determine how to reffer to the nodes: using fqdn, or let k8s decide (based on how the machine answers on the hostname cmd)
+- name: force use fqdn for node name setting during join; else, k8s will default to (hostname like the one provided by the hostname command on the node)
+  set_fact: node_name_setting="--node-name {{ ansible_fqdn }}"
+  when: 
+  - custom.networking.fqdn.always or custom.networking.fqdn.node
+  tags:
+  - node
+
+- name: Join cluster using kubeadm join {{ master_name }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
+  command: /usr/bin/kubeadm join {{ master_name }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} {{ node_name_setting | default (" ") }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:
   - init
   - node
@@ -44,11 +85,11 @@
 
 #This is required when proxy is used, and the inventory_hostname is defined with fqdn
 #to ensure the connection to local server is not going via proxy (expecially when applying addons)
-- name: replace master api server address to {{ groups["master"][0] }} in the /etc/kubernetes/kubelet.conf
+- name: replace master api server address to {{ master_name }} in the /etc/kubernetes/kubelet.conf
   replace:
     dest: /etc/kubernetes/kubelet.conf
     regexp: '(\s+)(server: https:\/\/)[A-Za-z0-9\-\.]+:'
-    replace: '\1\2{{ groups["master"][0] }}:'
+    replace: '\1\2{{ master_name }}:'
     #backup: yes
   #when: proxy_env is defined and master is defined with fqdn in the inventory file (e.g. master.example.com)
   tags:

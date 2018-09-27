@@ -1,0 +1,16 @@
+#
+# Configure keepalived for the masters.
+#
+---
+
+- name: Install keepalived via package manager
+  package: name=keepalived-{{ KEEPALIVED_VERSION }} state=present
+
+- name: Copy check script
+  template: src=check_apiserver.sh.j2 dest=/etc/keepalived/check_apiserver.sh owner=root group=root mode=0755
+
+- name: Generate configuraton file
+  template: src=keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf
+
+- name: Enable and start keepalived
+  service: name=keepalived enabled=yes state=restarted

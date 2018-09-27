@@ -1,0 +1,55 @@
+---
+- name: kernel_modules - load ip_vs group
+  modprobe: name={{ item }} state=present
+  with_items:
+  - ip_vs_wrr
+  - ip_vs_rr
+  - ip_vs_sh
+  - ip_vs
+  - nf_conntrack_ipv4
+
+- name: kernel_modules - persist ip_vs kernel modules
+  copy:
+    dest: /etc/modules-load.d/k8s_ip_vs.conf
+    content: |
+      ip_vs_wrr
+      ip_vs_rr
+      ip_vs_sh
+      ip_vs
+      nf_conntrack_ipv4
+
+- name: load bridge kernel module ( for /proc/sys/net/bridge/bridge-nf-call-iptables )
+  modprobe: name={{item}} state=present
+  with_items:
+  - bridge
+
+- name: every reboot load bridge kernel modules
+  copy:
+    dest: "/etc/modules-load.d/k8s_bridge.conf"
+    content: |
+      bridge
+
+- name: load br_netfilter kernel module (for /proc/sys/net/bridge/bridge-nf-call-iptables in newer kernels)
+  modprobe: name={{item}} state=present
+  with_items:
+  - br_netfilter
+  register: br_netfilter_load_result
+  ignore_errors: yes # because in some old kernels br_netfilter does not exist and bridge is enough
+
+- name: every reboot load bridge and br_netfilter kernel modules (for k8s)
+  # Note: br_netfilter is available only in the newer kernel versions
+  copy:
+    dest: "/etc/modules-load.d/k8s_br_netfilter.conf"
+    content: |
+      br_netfilter
+  when:
+  - br_netfilter_load_result is not failed
+
+- name: setup kernel parameters for k8s
+  sysctl: name={{item.name}} value={{item.value}} state=present
+  with_items:
+    - {name:  "net.bridge.bridge-nf-call-iptables", value: "1" }
+
+
+
+

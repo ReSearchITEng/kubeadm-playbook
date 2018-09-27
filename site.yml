@@ -36,47 +36,31 @@
   - { role: storage, task: rook_reset, tags: [ 'reset', 'storage_reset', 'rook_reset' ] }
   - { role: tools, task: reset_drain, tags: [ 'reset', 'node_reset', 'drain', 'node_drain' ] } #done on master, affecting nodes
 
-## nodes -> reset and install common part (for all machines)
+## nodes -> reset and install common part (for all nodes)
 - hosts: node
   gather_facts: smart
   become: yes
   become_method: sudo
   tags:
   - node
-  tasks:
-  - name: node_reset
-    include_role:
-      name: tools
-      tasks_from: reset
-    when: inventory_hostname not in groups['master']
-    tags:
-    - reset
-    - node_reset
-    
-  - name: weave_reset
-    include_role:
-      name: tools
-      tasks_from: weave_reset
-    when: inventory_hostname not in groups['master']
-    tags:
-    - reset
-    - node_reset
-    - network_reset
-    - weave
-    - weave_reset
-  
-  - name: node_reset
-    include_role:
-      name: common
-      tasks_from: all
-    when: inventory_hostname not in groups['master']
-    tags:
-    - common
-    - install
-    - common_install
-    - node_install
+  roles:
+  - { role: tools, task: reset, tags: [ 'reset', 'node_reset' ], when: "inventory_hostname not in groups['master']" }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['master']" }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node_install', 'node' ], when: "inventory_hostname not in groups['master']" }
 
-## master -> reset and install common part (for all machines)
+## etcd -> reset and install common part (for all etcds, when not in the same group with master)
+- hosts: etcd
+  gather_facts: smart
+  become: yes
+  become_method: sudo
+  tags:
+  - etcd
+  roles:
+  - { role: tools, task: reset, tags: [ 'reset', 'etcd_reset' ], when: "inventory_hostname not in groups['master']" }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'etcd_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['master']" }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'etcd_install', 'node' ], when: "inventory_hostname not in groups['master']" }
+    
+## master -> reset and install common part (for all masters - and sometimes etcd when colocated with masters)
 - hosts: master
   gather_facts: smart
   become: yes
@@ -88,8 +72,36 @@
   - { role: tools, task: weave_reset, tags: [ 'reset', 'master_reset', 'network_reset', 'weave', 'weave_reset' ] }
   - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'master_install'] }
 
-## master -> install master (kubeadm init, etc)
+## etcd -> install etcd (when HA)
+- hosts: etcd
+  gather_facts: all # smart
+  become: yes
+  become_method: sudo
+  any_errors_fatal: yes
+  tags:
+  - etcd
+  - install
+  - etcd_install
+  - ha
+  roles:
+  - { role: etcd, tags: [ 'install', 'etcd_install', 'ha', 'etcd'], when: "groups['master'] | length > 1" } 
+
+## master -> install keepalived and deploy etcd client certs on masters (relevat if HA)
 - hosts: master
+  gather_facts: all # smart
+  become: yes
+  become_method: sudo
+  any_errors_fatal: yes
+  tags:
+  - master
+  - install
+  - ha
+  roles:
+  - { role: keepalived, tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived'], when: "groups['master'] | length > 1" }
+  - { role: client-certs, tags: [ 'master', 'install', 'master_install', 'ha', 'client-certs'], when: "groups['master'] | length > 1" }
+
+- hosts: primary-master 
+  name: (or master in general; applies to both ha and non-ha)
   gather_facts: all # smart
   become: yes
   become_method: sudo
@@ -97,25 +109,29 @@
   - master
   - install
   roles:
-  - { role: master, tags: [ 'master', 'install', 'master_install'] } #, task: all }
+  - { role: master, tags: [ 'primary-master', 'master', 'install', 'master_install'] } 
+
+- hosts: secondary-masters
+  gather_facts: all # smart
+  become: yes
+  become_method: sudo
+  tags:
+  - master
+  - install
+  - ha
+  roles:
+  - { role: master, tags: [ 'secondary-masters', 'master', 'install', 'master_install', 'secondary_masters'] } 
 
 ## node -> install nodes (kubeadm join, etc)
 - hosts: node
   gather_facts: smart
   become: yes
   become_method: sudo
-  tags:
-  - node
-  - install
-  - node_install
-  tasks:
-  - name: node conditional role
-    include_role:
-      name: node
-    when: inventory_hostname not in groups['master']
+  roles:
+  - { role: node, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['master']" }
 
 ## Post deploy (network, storage, helm installation, helm charts deploy, any other addons)
-- hosts: master
+- hosts: primary-master
   gather_facts: smart
   become: yes
   become_method: sudo

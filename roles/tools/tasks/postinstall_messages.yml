@@ -69,8 +69,8 @@
            
            - browse your master (using fqdn) to see the dashboard:
              http://{{groups["master"][0]}}
-               or (depending what was defined in config)
-             http://dashboard.{custom.networking.dnsDomain} (if defined)
+               or, ideally (depending what was defined in config)
+             http://dashboard.{{custom.networking.dnsDomain}} (when var custom.networking.dnsDomain properly defined and set in your dns )
     debug: var=msg
 #     msg: "{{ msg.split('\n') }}"
     register: command_result
@@ -86,3 +86,4 @@
   tags:
   - cluster_info
   - postinstall_messages
+  run_once: true

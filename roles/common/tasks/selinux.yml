@@ -1,61 +1,56 @@
 ---
 ### SELINUX
 
-- name: Disable selinux
-  selinux: 
-    policy: "{{ selinux_policy | default ('targeted') }}"
-    state:  "{{ selinux_state  | default ('permissive') }}"
-  when: ansible_os_family == "RedHat"
-  register: command_result
-  # changed_when: command_result.reboot_required # works in Ansible 2.4+. To support 2.3, we keep current solution which reboots when there is any time of change...
-  # changed_when: "'state change will take effect next reboot' in command_result.stdout" 
-#  notify:
-#  - Reboot
+- block:
+  - name: Disable selinux
+    selinux: 
+      policy: "{{ selinux_policy | default ('targeted') }}"
+      state:  "{{ selinux_state  | default ('permissive') }}"
+    register: command_result
+    # changed_when: command_result.reboot_required # works in Ansible 2.4+. To support 2.3, we keep current solution which reboots when there is any time of change...
+    # changed_when: "'state change will take effect next reboot' in command_result.stdout" 
+  #  notify:
+  #  - Reboot
+
+  - name: trigger Reboot when required due to selinux changes
+    command: /bin/true
+    notify:
+    - Reboot
+    #when: command_result.reboot_required
+    when: command_result.changed
+
+  - name: flush_handlers (trigger reboot when required)
+    meta: flush_handlers
+    changed_when: command_result.changed
+    #changed_when: command_result.reboot_required 
+
+  - name: Pause till machine is up again
+    pause:
+      seconds: 30
+    when:
+    - command_result.reboot_required | default( false ) 
+    - allow_restart | default ( false ) # Is ansible able to keep this state after reboot?
+
+  - name: Wait for server come back from restart (if selinux required it)
+    local_action: wait_for
+    args:
+      host: "{{ inventory_hostname }}"
+      port: 22
+      state: started
+      delay: 15
+      timeout: 180
+
+  #Starting Ansible 2.3 one can do:
+  #- name: Wait for system to become reachable # Ansible 2.3+
+  #  wait_for_connection:
+  #    timeout: 200
+
+  - name: Gather facts for first time after restart
+    setup:
+
   tags:
   - selinux
-
-- name: trigger Reboot when required
-  command: /bin/true
-  notify:
-  - Reboot
-  #when: command_result.reboot_required
-  when: command_result.changed
-  tags:
-  - selinux
-
-- name: flush_handlers (trigger reboot when required)
-  meta: flush_handlers
-  changed_when: command_result.changed
-  #changed_when: command_result.reboot_required 
-  tags:
-  - selinux
-
-- name: Pause till machine is up again
-  pause:
-    seconds: 30
-  when: ansible_os_family == "RedHat" and command_result.reboot_required | default( false ) and allow_restart | default ( false ) # Is ansible able to keep this state after reboot?
-  tags:
-  - selinux
-
-- name: Wait for server come back from restart (if selinux required it)
-  local_action: wait_for
-  args:
-    host: "{{ inventory_hostname }}"
-    port: 22
-    state: started
-    delay: 15
-    timeout: 180
-  when: ansible_os_family == "RedHat"  # Is ansible able to keep this state after reboot?
-  tags:
-  - selinux
-
-#Starting Ansible 2.3 one can do:
-#- name: Wait for system to become reachable # Ansible 2.3+
-#  wait_for_connection:
-#    timeout: 200
-
-- name: Gather facts for first time after restart
-  setup:
-  when: ansible_os_family == "RedHat" # Is ansible able to keep this state after reboot?
-  tags:
-  - selinux
+  when:
+  - ansible_os_family == "RedHat"  # Is ansible able to keep this state after reboot?
+  - selinux_state is defined
+  

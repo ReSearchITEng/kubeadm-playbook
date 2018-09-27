@@ -1,16 +1,18 @@
 ---
-- name: kubectl aliases to ~/.bashrc
+- name: kubectl aliases to ~/.{{ shell | default ('bash') }}rc
   lineinfile:
-    dest: ~/.bashrc
+    dest: ~/.{{ shell | default ('bash') }}rc
     line: "{{ item }}"
     state: present
     create: yes
-  when: shell is undefined or shell == 'bash'
   with_items:
   - "alias watch='watch ' "
   - "alias k='kubectl ' "
+  - "alias kk='kubectl -o wide --show-labels '"
   - "alias ks='kubectl -n kube-system ' "
   - "alias kg='kubectl get --all-namespaces -o wide '" # --show-labels '"
+  - "alias kgl='kubectl get --all-namespaces -o wide --show-labels '"
+  - "alias kgp='kubectl get --all-namespaces -o wide --show-labels po'"
   - "alias wp='watch kg po '" # -w --show-labels '"
   - "alias wipt='watch -n1 iptables -vnL ' "
 
@@ -20,44 +22,15 @@
   - bash-completion
   ignore_errors: yes
 
-- name: kubeadm completion preps
-  file:
-    path: ~/.kube/
-    state: directory
-    mode: 0755
-
-- name: kubeadm completion shell
-  shell: kubeadm completion {{ shell | default ('bash') }} > ~/.kube/kubeadm_completion.bash.inc
-  args:
-    warn: no
-
-- name: kubeadm completion to ~/.bashrc
+- name: add kubectl/kubeadm/helm shell competions to ~/.{{ shell | default ('bash') }}rc
   lineinfile:
-    dest: ~/.bashrc
-    line: '[[ -r ${HOME}/.kube/kubeadm_completion.bash.inc ]] && source ${HOME}/.kube/kubeadm_completion.bash.inc'
+    dest: ~/.{{ shell | default ('bash') }}rc
+    line: "{{ item }}"
     state: present
     create: yes
-  when: shell is undefined or shell == 'bash'
-
-- name: kubectl completion shell
-  shell: kubectl completion {{ shell | default ('bash') }} > ~/.kube/completion.bash.inc
-  args:
-    warn: no
-
-- name: kubectl completion to ~/.bashrc
-  lineinfile:
-    dest: ~/.bashrc
-    line: '[[ -r ${HOME}/.kube/completion.bash.inc ]] && source ${HOME}/.kube/completion.bash.inc'
-    state: present
-    create: yes
-  when: shell is undefined or shell == 'bash'
-
-- name: make sure ~/.bashrc is called
-  lineinfile:
-    dest: ~/.bash_profile
-    line: '[[ -r ${HOME}/.bashrc ]] && source ${HOME}/.bashrc'
-    state: present
-    create: yes
-  when: shell is undefined or shell == 'bash'
-
-
+  with_items:
+  - "# k8s shell completion; for zsh min vers is 5.2+"
+  - "source <(kubectl completion {{ shell | default ('bash') }} >/dev/null 2>&1 || true)"
+  - "source <(kubeadm completion {{ shell | default ('bash') }} >/dev/null 2>&1 || true)"
+  - "source <(helm    completion {{ shell | default ('bash') }} >/dev/null 2>&1 || true)"
+  

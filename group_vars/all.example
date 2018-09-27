@@ -6,18 +6,25 @@
 #proxy_env:
 #  http_proxy: 'http://proxy.corp.example.com:8080'
 #  https_proxy: 'http://proxy.corp.example.com:8080'
-#  no_proxy: 'localhost,127.0.0.1,.example.com,/var/run/docker.sock,.sock,.svc,.cluster.local,.local'
+#  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,/var/run/docker.sock,.sock,sock'
 #####
+
+KUBERNETES_VERSION: "1.11.3"
+# Software versions (used by installation via package manager)
+#KUBERNETES_DNS_VERSION: "1.14.7"
+#KUBERNETES_CNI_VERSION: "0.6.0"
+KEEPALIVED_VERSION: "1.3.5"
+  # Use "1.3.*" if you want the latest 1.3 provided by your already defined package repositories
 
 #####
 ## PACKAGES (rpm/deb)
 ## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 ## package_state: latest # Other valid options for this context: installed
-package_state: installed
+package_state: installed #latest #installed
 ## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
-kubeadm_version: 1.11.* # 1.6.* # 1.8.*
-kubelet_version: 1.11.* # 1.6.* # 1.8.*
-kubectl_version: 1.11.* # 1.6.* # 1.8.*
+kubeadm_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
+kubelet_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
+kubectl_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
 # To find the possible versions, check: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubeadm' | grep ver
 # curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubelet' | grep ver
@@ -25,11 +32,109 @@ kubectl_version: 1.11.* # 1.6.* # 1.8.*
 #####
 ##### NOTE ->> For the actual k8s version, please set the below: kubeadm_master_config.kubernetesVersion
 
+## HA
+CLUSTER_NAME: demo1  # used only for defining the below dnsDomain and masterha_fqdn
+
+## ensure you have the DNS set for wildcard, and pointing all the trafic to master or similar setup
+custom:
+  networking:
+    dnsDomain: "{{ CLUSTER_NAME }}.k8s.corp.example.com"  # For MasterHA, if you have dns, put the desired cluster domain here. If no DNS change possible on your side, and you want MasterHA, fix the below 2 values accordinly
+    masterha_fqdn: "master-of-{{ CLUSTER_NAME }}.corp.example.com"  # Required when you have MasterHA, in order to set apiServerCertSANs correctly
+    masterha_vip: "10.245.103.9" # Important when you have MasterHA
+    #Check below if you want to have IPs replaced with FQDN - important if you use proxy !!!
+    fqdn: 
+    # decide where to force use fqdn for non masterha and nodes. 
+    # When set to false, it will use the name as defined in the inventory file (unless specified differently)
+      always: false # makes all the below true
+      master: true  # when true, actions like wait/join will be done against dns name instead of IP
+      node: false   # when true, the join command will have --node-name set to fqdn. When false, k8s will set based on how node machine answers to the hostname command
+      etcd: false   # Relevant for MasterHA case(more than 1 node in the master group), ignored otherwise; When true, the etcd endpoints will be with fqdn, IP address otherwise
+      
+# Network settings
+# Choices are: flannel, weavenet, calico
+NETWORK_PLUGIN: flannel
+POD_NETWORK_CIDR: 10.244.0.0/16
+
+# Settings for the network plugins
+CALICO_YAML_URL: "https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml"
+WEAVENET_YAML_URL_PREFIX: "https://cloud.weave.works/k8s/net?k8s-version="
+FLANNEL_YAML_URL: "https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml"
+
+# Certificate settings (does not really matter for self-signed certificates in a private network)
+CERT_COMMON_NAME: "etcd"
+CERT_COUNTRY: "AA"
+CERT_LOCALITY: "Locality"
+CERT_ORGANISATION: "Example"
+CERT_STATE: "State"
+CERT_ORG_UNIT: "K8S"
+
+## # Tags for some images
+## COREDNS_TAG: "1.1.3"
+## PAUSE_TAG: "3.1"
+## ETCD_TAG: "3.2.18"
+## NGINX_TAG: "1.14.0"
+## ETCD_OPERATOR_TAG: "v0.9.2"
+## CONFIGMAP_RELOAD_TAG: "v0.0.1"
+## PROMETHEUS_OPERATOR_TAG: "v0.22.1"
+## PROMETHEUS_TAG: "v2.3.1"
+## BUSYBOX_TAG: "1.27.2"
+## ELASTICSEARCH_TAG: "v5.6.4"
+## ELASTICSEARCH_KUBERNETES_TAG: "6.2.3"
+## CURATOR_TAG: "5.4.0"
+## FLUENTD_ES_TAG: "v2.0.4"
+## KIBANA_OSS_TAG: "6.2.2"
+## DASHBOARD_TAG: "v1.8.3"
+## #HEAPSTER_TAG: "v1.5.3"
+## HEAPSTER_TAG: "v1.6.0-beta.1"
+## HEAPSTER_GRAFANA_TAG: "v5.0.4"
+## HEAPSTER_INFLUXDB_TAG: "v1.5.2"
+
+
+########## Image pre-pull on MASTERS (only)
+# Usually pre-pull not required, but there is this option here.
+# Depending on what images you plan to use during deployment, you 
 #####
+# pre_pull_k8s_images: False
+#####
+
+####
 ## Docker images repo
-## If you have your internal docker registry which proxies them (e.g. a nexus3 with docker proxy), replace the value here:
-images_repo: "k8s.gcr.io"
+## If you have your internal docker registry which proxies the external ones (e.g. a nexus3 with docker proxy to k8s.gcr.io and/or to docker.io), replace the value here:
+# images_repo: "myk8sgcrio.corp.example.com" # k8s.gcr.io
 #####
+
+# Images for prefetching when pre_pull_k8s_images is true and images_repo is defined
+HOST_ARCH: amd64
+DOCKER_IMAGES: [
+#  { name: "bobrik/curator", tag: "{{ CURATOR_TAG }}" },
+#  { name: "{{images_repo}}/busybox", tag: "{{ BUSYBOX_TAG }}" },
+#  #{ name: "dockerregistry.mylan.local:5000/fluentd-elasticsearch", tag: "{{ FLUENTD_ES_TAG }}" },
+#  { name: "docker.elastic.co/kibana/kibana-oss", tag: "{{ KIBANA_OSS_TAG }}" },
+#  { name: "{{images_repo}}/coredns", tag: "{{ COREDNS_TAG }}" },
+#  { name: "{{images_repo}}/elasticsearch", tag: "{{ ELASTICSEARCH_TAG }}" }, #???
+#  { name: "{{images_repo}}/etcd-{{ HOST_ARCH }}", tag: "{{ ETCD_TAG }}" },
+#  { name: "{{images_repo}}/fluentd-elasticsearch", tag: "{{ FLUENTD_ES_TAG }}" },
+#  { name: "{{images_repo}}/heapster-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_TAG }}" },
+#  { name: "{{images_repo}}/heapster-grafana-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_GRAFANA_TAG }}" },
+#  { name: "{{images_repo}}/heapster-influxdb-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_INFLUXDB_TAG }}" },
+#  { name: "{{images_repo}}/kube-apiserver-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
+#  { name: "{{images_repo}}/kube-controller-manager-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
+#  { name: "{{images_repo}}/kube-proxy-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
+#  { name: "{{images_repo}}/kube-scheduler-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
+#  { name: "{{images_repo}}/kubernetes-dashboard-{{ HOST_ARCH }}", tag: "{{ DASHBOARD_TAG }}" },
+#  { name: "{{images_repo}}/pause-{{ HOST_ARCH }}", tag: "{{ PAUSE_TAG }}" },
+#  { name: "{{images_repo}}/pause", tag: "{{ PAUSE_TAG }}" },
+#  { name: "{{images_repo}}/nginx", tag: "{{ NGINX_TAG }}" },
+#  { name: "{{images_repo}}/coreos/configmap-reload", tag: "{{ CONFIGMAP_RELOAD_TAG }}" },
+#  { name: "{{images_repo}}/coreos/etcd-operator", tag: "{{ ETCD_OPERATOR_TAG }}" },
+#  { name: "{{images_repo}}/coreos/etcd", tag: "v{{ ETCD_TAG }}" },
+#  { name: "{{images_repo}}/coreos/prometheus-config-reloader", tag: "{{ PROMETHEUS_OPERATOR_TAG }}" },
+#  { name: "{{images_repo}}/coreos/prometheus-operator", tag: "{{ PROMETHEUS_OPERATOR_TAG }}" },
+#  { name: "{{images_repo}}/pires/docker-elasticsearch-kubernetes", tag: "{{ ELASTICSEARCH_KUBERNETES_TAG }}" },
+#  { name: "{{images_repo}}/prometheus/prometheus", tag: "{{ PROMETHEUS_TAG }}" }
+]
+
+################################DONE HA
 
 ## When defined, it first forces uninstall any kube* packages (rpm/deb) from hosts
 ## When full_kube_reinstall is False or undefined, it will not reinstall # and it won't remove the /etc/kubernetes/ folder before reinstall
@@ -38,9 +143,11 @@ full_kube_reinstall: False # undefined is True. #Make it False for faster redepl
 etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 #####
 
-kubeadm_init_args: "" # If needed: "--ignore-preflight-check-errors=all" #"--skip-preflight-checks" -> for pre 1.8
-kubeadm_join_args: "--discovery-token-unsafe-skip-ca-verification" # 1.8 and above
-turn_swapoff: True #false # default true # Important for 1.8+
+#kubeadm_init_args: "--skip-preflight-checks" 
+#kubeadm_join_args: "--skip-preflight-checks" #  For 1.8+ you may want to add: --discovery-token-unsafe-skip-ca-verification"
+#--ignore-preflight-errors=all
+kubeadm_join_args: "--discovery-token-unsafe-skip-ca-verification"
+turn_swapoff: True #False #True #false # default true # Note: by default kubelet won't start if swap not disabled of or kubelet not instructed to accept swap on.
 
 #####
 ## NTP SETUP
@@ -48,34 +155,18 @@ turn_swapoff: True #false # default true # Important for 1.8+
 ntp_setup: True  # Default True
 ## ntp does not work via proxy, so, if ntp cannot reach external servers, define here the internal ntp server:
 #ntp_conf: |
+#  server ntp1.corp.example.com
 #  server pool.ntp.org
 #####
 
 #####
 ## hostname fix: set_hostname_to_inventory_hostname
 ## to make sure the hostname in inventory (usually fqdn) is in sync with the hostname as seen inside the host (usually required by vangrant)
-set_hostname_to_inventory_hostname: False # Default False
+#set_hostname_to_inventory_hostname: True #False # Default False
 #####
 
-#####
-## Selinux -> currently kube* does not fully support SELinux. It's usually recommended to disable or use permissive.
-#selinux_state: disabled  # selinux_state: permissive ## By default it will try to switch to permissive
-#selinux_policy: targeted   # selinux_policy: targeted  ## By default it will try to switch to targeted 
-#####
-
-#####
-## Allow restart of machine (node) (if required, e.g. if ansible's selinux module sets reboot_required to true )
-# allow_restart: True # Default False
-#####
-
-#####
-## Iptables
-iptables_setup: True # Default is True. It will disable&mask firewalld service (if exists), set default policies ACCEPT, and it will remove REJECT rules from all chains (INPUT,FW,OUT) with a commands like: iptables -D INPUT -j REJECT --reject-with icmp-host-prohibited (for each). 
-# If still issues, debug iptables on both master and nodes with: 
-# watch -n1 iptables -vnL
-# http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
-### # iptables_reset: False # False is default # Rarely used, this will be removed in the future
-#####
+kernel_modules_setup: True # default: True
+#It will load the required kernel modules like ip_vs, bridge, nf_conntrack_ipv4, br_netfilter ;  echo 1 >/proc/sys/net/bridge/bridge-nf-call-iptables
 
 #####
 docker_setup: "auto" # when not defined, default is "auto"
@@ -85,15 +176,28 @@ docker_setup: "auto" # when not defined, default is "auto"
 #####
 
 #####
-pre_pull_k8s_images: True
-#pre_pull_k8s_images: False
+## Selinux
+## If selinux_state is not defined, it will skip Selinux setup
+## If values are defined, you may want to enable also "allow_restart"
+#selinux_state: permissive #  OR: disabled # When undefined entire step is skipped
+#selinux_policy: targeted  # defaults to targeted
 #####
 
-## ensure you have the DNS set for wildcard, and pointing all the trafic to master or similar setup
-custom:
-  networking:
-    dnsDomain: "demo1.k8s.corp.example.com"
-    
+#####
+## Allow restart (if required, e.g. if ansible's selinux module sets reboot_required to true )
+allow_restart: True ## Default False
+#####
+
+#####
+## Iptables
+iptables_setup: True # Default is True. 
+# This is not ideal or perfect! Review code and decide. It will disable&mask firewalld service (if exists), set default policies ACCEPT, and it will remove REJECT rules from all chains (INPUT,FW,OUT) with a commands like: iptables -D INPUT -j REJECT --reject-with icmp-host-prohibited (for each). 
+# If still issues, debug iptables on both master and nodes with: 
+# watch -n1 iptables -vnL
+# http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
+### # iptables_reset: False # False is default # Rarely used, this will be removed in the future
+#####
+
 #####
 # reset_gracefully: False # False is default # Important if there was a cluster before and you want to shut it down using cordon and drain
 #####
@@ -105,11 +209,12 @@ kubeadm_master_config:
   apiVersion: kubeadm.k8s.io/v1alpha2
   # this is updated to v1alpha2 , starting 1.11. # but we must keep cloudProvider section (due to an ansible limitation)
   kind: MasterConfiguration
-#  api:
-#    advertiseAddress: <address|string>
-#    advertiseAddress: '10x.x...x' # Usually required when working with vagrant, as the default (eth0) address is the NAT...
-#    bindPort: <int>     # Defaults to 6443
-#  etcd:
+  api:
+#    advertiseAddress: <address|string>  # When MasterHA, this is set automatically by our code to custom.networking.master_fqdn & custom.networking.master_vip
+#    advertiseAddress: '10x.x...x' # Even when there is no MasterHA, usually required when working with vagrant, as the default (eth0) address is the NAT...
+#    controlPlaneEndpoint: # When MasterHA, this is set automatically by our code to custom.networking.master_vip
+#    bindPort: <int>
+#  etcd:  # When Master HA is defined, the etcd section is generated in the code
 #    endpoints:
 #    - <endpoint1|string>
 #    - <endpoint2|string>
@@ -121,37 +226,67 @@ kubeadm_master_config:
 #      <argument>: <value|string>
 #      <argument>: <value|string>
 #    image: <string>
+#    serverCertSANs:
+#    - <name1|string>
+#    - <name2|string>
+#    peerCertSANs:
+#    - <name1|string>
+#    - <name2|string>
+  kubeProxy:
+    config:
+      mode: "ipvs"
+      # Leave mode undefined or "" for the default, which usually is the old iptables method
+#      mode: <value|string>
+#      bindAddress: <address|string>
+#      clusterCIDR: <cidr>
   networking:
-#    dnsDomain: "k8s1.cluster.local"  ## default is: "cluster.local"
+#    dnsDomain: "demo1.cluster.local"  ## default is: "cluster.local"
 #    serviceSubnet: <cidr>
-    podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
+    podSubnet: "{{ POD_NETWORK_CIDR }}"
+    #podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
     #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
     #podSubnet: '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
-  kubernetesVersion: 'v1.11.2' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
+  kubernetesVersion: "v{{ KUBERNETES_VERSION }}" #'v1.10.2' #'v1.7.11' # If not defined, it will require internet access to find which is the latest one. kubeadm version has to be at least the requested k8s version.
                                # 1.7.12 # 1.6.12 # 1.8.8
-#  cloudProvider: 'vsphere' # WE NEED THIS Even after 1.11 (v1alpha2) (due to a bug in ansible on vars with "-"); this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
+  #cloudProvider: 'vsphere' # WE NEED THIS Even after 1.11 (v1alpha2) (due to a bug in ansible on vars with "-"); this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
 #  nodeName: <string>
 #  authorizationModes:
 #  - <authorizationMode1|string>
 #  - <authorizationMode2|string>
-  token: secret.token4yourbyok8s
-#  tokenTTL: <time duration>
+  bootstrapTokens:
+  - groups:
+    - system:bootstrappers:kubeadm:default-node-token
+    token: secret.token5yourbyok8s
+    ttl: 24h0m0s
+    usages:
+    - signing
+    - authentication
 #  selfHosted: <bool>
   apiServerExtraArgs: # https://kubernetes.io/docs/admin/kube-apiserver/
+    endpoint-reconciler-type: "lease"  # needs k8s 1.9+ More info: https://kubernetes.io/docs/admin/high-availability/building/#endpoint-reconciler
     service-node-port-range: '79-32767' #Default 32000-32767 ; Ensure the local ports on all nodes are set accordingly
   #  runtime-config: batch/v2alpha1  # Required if one wants to use batch jobs before 1.8
 #    <argument>: <value|string>
-#    kubelet-preferred-address-types: 'Hostname' #,ExternalIP,InternalIP'
-
-    #### DO NOT add cloud-provider sections here, these are added from the code when kubeadm_master_config.cloudProvider is defined
-
+#    kubelet-preferred-address-types: 'Hostname' #Default: [Hostname,InternalDNS,InternalIP,ExternalDNS,ExternalIP]
 #  controllerManagerExtraArgs: # https://kubernetes.io/docs/admin/kube-controller-manager/
 #    pod-eviction-timeout: '3m00s' # Default 5m0s #PodEvictionTimeout controls grace peroid for deleting pods on failed nodes.  Takes time duration string (e.g. '300ms' or '2m30s').  Valid time units are 'ns', 'us', 'ms', 's', 'm', 'h'.
 #    <argument>: <value|string>
 #  schedulerExtraArgs:
 #    <argument>: <value|string>
 #    <argument>: <value|string>
-#  apiServerCertSANs:
+#  apiServerExtraVolumes:
+#  - name: <value|string>
+#    hostPath: <value|string>
+#    mountPath: <value|string>
+#  controllerManagerExtraVolumes:
+#  - name: <value|string>
+#    hostPath: <value|string>
+#    mountPath: <value|string>
+#  schedulerExtraVolumes:
+#  - name: <value|string>
+#    hostPath: <value|string>
+#    mountPath: <value|string>
+#  apiServerCertSANs:  # Part of it is generated in the code. Even more is added when there is MasterHA
 #     - 'kubernetes'
 #    - <name1|string>
 #    - <name2|string>
@@ -174,8 +309,6 @@ kubeadm_master_config:
 #- 'dedicated=master:PreferNoSchedule'          # Safety net
 #- 'dedicated:NoExecute-'                       # Puts the previous PreferNoSchedule into action - step1
 #- 'node-role.kubernetes.io/master:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
-
-#master_uncordon: True     # This makes master like any other node. Mandatory for a single machine cluster (where master==node)
 #####
 
 #####
@@ -188,7 +321,9 @@ k8s_network_addons_urls:
 #     newer calico 3.0 :     
 #   - https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml  
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
-  - https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml # For latest, replace "v0.9.1" with "master"
+  ##- https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
+  #- https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml # For latest, replace v0.9.0 with master
+  - https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml # For latest, replace v0.9.0 with master
 # OR Weave: #https://www.weave.works/docs/net/latest/kubernetes/kube-addon/ 
 # - https://cloud.weave.works/k8s/net?k8s-version={{kubeadm_master_config.kubernetesVersion}}&{{networking.podSubnet | default ('env.IPALLOC_RANGE=10.32.0.0/12') }}
 #####
@@ -198,7 +333,7 @@ k8s_network_addons_urls:
 #k8s_addons_urls:
   # - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
   # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
-  # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml    # For "working around RBAC", should some of your apps have temporary issues
+  # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
 #####
 
 vsphere_storageclass_urls:
@@ -209,14 +344,14 @@ vsphere_storageclass_urls:
 ## HELM & CHARTS ##
 ###################
 helm:
-  #helm_version: latest #v2.5.0 + #https://github.com/kubernetes/helm/releases
+  helm_version: v2.11.0 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
     - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
 #    - { name: rook, url: 'http://charts.rook.io' }
 #    - { name: fabric8, url: 'https://fabric8.io/helm' }
   packages_list: # when not defined, namespace defaults to "default" namespace
-    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" ' }
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" --version=0.17.1 ' }
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
 
 ## DASHBOARD HEAD(latest), compatible with k8s 1.8:
@@ -225,7 +360,10 @@ helm:
 ## DASHBOARD 1.8.3, compatible with k8s 1.8+:    
     - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,rbac.clusterAdminRole=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' } # Limited to helmchart 0.5.3 for the non-tls ingress. 
     ##gcr.io/google_containers/kubernetes-dashboard-amd64 for stable versions tagged per k8s version. For lastest (beta) versions, one may use: from docker.io kubernetesdashboarddev/kubernetes-dashboard-amd64
-
+    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head,imagePullPolicy=Always' } # development version, and with all admin permissions open
+    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' }
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
 #    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
 #    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}}'
 #    - { name: moodle, repo: stable/moodle, options: '--set moodleUsername=admin,moodlePassword=password,mariadb.mariadbRootPassword=secretpassword,serviceType=ClusterIP' }
@@ -341,9 +479,10 @@ rook:
 ##### kubeadm_master_config.cloudProvider: 'vsphere'
 #####
 cloud_config: |
+    [Global]
     ## Vsphere:
     ## One must ensure:
-    ##	- all vms have this enabled: ./govc vm.change -e="disk.enableUUID=1" -vm=<machine1-x>
+    ##  - all vms have this enabled: ./govc vm.change -e="disk.enableUUID=1" -vm=<machine1-x>
     ##  - all vms are in the same VCenter
     ##  - the user below has the following roles at vcenter level:
     ## Datastore > Allocate space
@@ -372,8 +511,6 @@ cloud_config: |
       #or: ./govc vm.info -vm.dns=machine01 | grep UUID #(well formated also)
       #machine01: vm-uuid="4215e1de-26df-21ec-c79e-2105fe3f9ad1"
       #machine02: vm-uuid="4215f1e4-6abd-cff1-1a4c-71ec169d7b11"
-      #machine03: vm-uuid="4215fbc5-0851-4255-9fb7-a1f7e31ae716"
-      #machine04: vm-uuid="42151a5f-f227-e888-7d73-e148de927888"
     [Disk]
       #scsicontrollertype = lsilogic-sas
       scsicontrollertype = pvscsi
@@ -387,7 +524,7 @@ cloud_config: |
 
 #####
 # VARIOUS
-# shell for bash-completion for kubeadm and kubectl; currently only bash is fully supported, others only partially.
+# shell for bash-completion for kubectl, kubeadm, helm; currently only bash and zsh is supported.
 shell: 'bash'
 #####
 
