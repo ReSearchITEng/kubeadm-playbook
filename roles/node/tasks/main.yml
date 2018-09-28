@@ -1,26 +1,46 @@
 ---
 - name: extract the token from the master role  execution and set kubeadm_token
-  set_fact: kubeadm_token="{{ hostvars[groups['master'][0]]['kubeadm_token'].stdout_lines[0] }}"
-  when: kubeadm_master_config.bootstrapTokens[0].token is not defined
-  tags:
-  - node
+  set_fact: kubeadm_token="{{hostvars[groups['master'][0]]['kubeadm_token_whash'].stdout_lines[0]}}"
+  when: 
+  - kubeadm_master_config.bootstrapTokens[0].token is not defined
+
+- name: extract the token hash from the master role  execution and set kubeadm_token_hash
+  set_fact: kubeadm_token_hash="{{hostvars[groups['master'][0]]['kubeadm_token_whash'].stdout_lines[1]}}"
+  when: 
+  - kubeadm_master_config.bootstrapTokens[0].token is not defined
 
 - name: set kubeadm_token to the value from kubeadm_master_config
   set_fact: kubeadm_token={{ kubeadm_master_config.bootstrapTokens[0].token }}
   when: 
   - kubeadm_master_config.bootstrapTokens is defined
   - kubeadm_master_config.bootstrapTokens[0].token is defined
-  tags:
-  - node
+
+- name: set kubeadm_token to the value from kubeadm_master_config
+  set_fact: kubeadm_token={{ kubeadm_master_config.bootstrapTokens[0].token }}
+  when: 
+  - kubeadm_master_config.bootstrapTokens is defined
+  - kubeadm_master_config.bootstrapTokens[0].token is defined
+
+# - name: when there is none defined, set a dummy value for kubeadm_token_hash
+#   set_fact: kubeadm_token_hash="sha256:0000000000000000000000000000000000000000000000000000000000000000"
+#   when: 
+#   - kubeadm_master_config.bootstrapTokens[0].token is defined
+
+- name: when there is no discovery token hash, make sure kubeadm_join_args has "--discovery-token-unsafe-skip-ca-verification"
+  set_fact: kubeadm_join_args="{{ kubeadm_join_args | default (" ") }} --discovery-token-unsafe-skip-ca-verification"
+  when: 
+  - kubeadm_master_config.bootstrapTokens[0].token is defined
+
+- name: when there is discovery token hash, add to kubeadm_join_args  "--discovery-token-ca-cert-hash and the hash"
+  set_fact: kubeadm_join_args="{{ kubeadm_join_args | default (" ") }} --discovery-token-ca-cert-hash  {{ kubeadm_token_hash }}"
+  when: 
+  - kubeadm_master_config.bootstrapTokens[0].token is not defined
 
 - name: token to be used is
   debug: var=kubeadm_token
-  tags:
-  - node
 
 - name: add api section to the kubeadm_master_config (if does not exist)
-  set_fact:
-    kubeadm_master_config: "{{  kubeadm_master_config | combine ( { 'api': kubeadm_master_config.api | default ({}) } ) }}"
+  set_fact: kubeadm_master_config="{{ kubeadm_master_config | combine ( { 'api': kubeadm_master_config.api | default ({}) } ) }}"
 
 ## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via VIP,MasterHA (for MasterHA cases)
 - name: by default set master name to inventory definition (no MasterHA case)
@@ -61,14 +81,11 @@
   set_fact: node_name_setting="--node-name {{ ansible_fqdn }}"
   when: 
   - custom.networking.fqdn.always or custom.networking.fqdn.node
-  tags:
-  - node
 
 - name: Join cluster using kubeadm join {{ master_name }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   command: /usr/bin/kubeadm join {{ master_name }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} {{ node_name_setting | default (" ") }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:
   - init
-  - node
 #  args:
 #  creates: /etc/kubernetes/kubelet.conf
 
@@ -81,7 +98,6 @@
   changed_when: false
   tags:
   - init
-  - node
 
 #This is required when proxy is used, and the inventory_hostname is defined with fqdn
 #to ensure the connection to local server is not going via proxy (expecially when applying addons)
@@ -94,7 +110,6 @@
   #when: proxy_env is defined and master is defined with fqdn in the inventory file (e.g. master.example.com)
   tags:
   - init
-  - node
   notify:
   - Restart kubelet
 
@@ -142,6 +157,5 @@
     create: yes
     regexp: '^export KUBECONFIG=.*'
   when: shell is undefined or shell == 'bash'
-  tags:
-  - node
+
 

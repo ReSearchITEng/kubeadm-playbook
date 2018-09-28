@@ -200,15 +200,35 @@
   - groups['master'] | length > 1
   - inventory_hostname in groups['primary-master']
 
-- name: find the token of the newly created cluster
-  command: bash -c '/usr/bin/kubeadm token list | grep bootstrappers | tail -n 1 | cut -f 1 -d" "'
-  register: kubeadm_token
+# - name: find the token of the newly created cluster
+#   command: bash -c '/usr/bin/kubeadm token list | grep -v "<invalid>" | grep "system:bootstrappers" | grep "authentication" | tail -n 1 | cut -f 1 -d" "'
+#   register: kubeadm_token
+#   when: 
+#   - kubeadm_master_config is not defined or kubeadm_master_config.token is not defined
+#   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
+#   changed_when: false
+#   tags:
+#   - node  # it is required for the node to register
+
+- name: generate on master a join token
+  #shell: kubeadm token create --description "kubeadm-playbook-node-joining-token" --groups "system:bootstrappers:kubeadm-playbook-node-joining-token:default-node-token" --ttl 15m --usages "authentication" --usages "signing" --print-join-command  | awk '{print $5}{print $7}'
+  shell: kubeadm token create --description "kubeadm-playbook-node-joining-token" --ttl 15m --print-join-command  | awk '{print $5}{print $7}'
+  register: kubeadm_token_whash
   when: 
-  - kubeadm_master_config is not defined or kubeadm_master_config.token is not defined
   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
+  - kubeadm_master_config is not defined or kubeadm_master_config.token is not defined 
   changed_when: false
   tags:
-  - node  # it is required for the node to register
+  - node 
+
+- name: debug token
+  debug: var=kubeadm_token_whash
+  when: 
+  - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
+  - kubeadm_master_config is not defined or kubeadm_master_config.token is not defined 
+  changed_when: false  
+  tags:
+  - node 
 
 #- name: populate the token in the kubeadm_master_config
 #  set_fact:
@@ -353,5 +373,6 @@
   tags:
   - scale
   - scale_dns
+
 
 
