@@ -16,6 +16,7 @@ The project is for those who want to create&recreate k8s cluster using the offic
 - heapster (via helm chart)
 - support proxy
 - modular, clean code, supporting multiple activies by using ansible tags (e.g. add/reset a subgroup of nodes).
+- suppoer multi master
 
 ### PROS:
 - quick (3-7 min) full cluster installation
@@ -25,40 +26,41 @@ The project is for those who want to create&recreate k8s cluster using the offic
 - kubeadm is the only official tool specialized to install k8s
 
 ### CONS:
-- no HA: for now but planned.
 - during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how (also see gluster project for hints).
 
 ## Prerequisites:
-- ansible min. 2.1 (but higher is recommeneded. Tested up to current 2.5)
+- ansible min. 2.3 (but higher is recommeneded. Tested on current 2.5)
 - For a perfect experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists).    
 Note: dashboard will by default use the master machine, but also deploy under the provided domain (in parallel, only additional ingress rule)
 - if docker_setup is True, it will also attempt to define your docker and set it up with overlay2 storage driver (one needs CentOS 7.4+)
+- it will set required kernel modules (if desired)
 - if one needs ceph(rook) persistent storage, disks or folders should be prepared and properly sized (e.g. /storage/rook)
 
 ## This playbook will:
 * pre-sanity: docker sanity
+* kernel modules (load & setup for every restart)
 * Install ntp (to keep time in sync within cluster) (control via `group_vars/all`)
 * Install the kubeadm repo
 * Install kubeadm, kubelet, kubernetes-cni, and kubectl
-* Disable SELinux :disappointed: (current prerequisite of kubeadm) (control via `group_vars/all`)
+* If desired, manipulate SELinux setting (control via `group_vars/all`)
 * Set kubelet `--cgroup-driver=systemd` , swap-off, and many other settings required by kubelet to work (control via `group_vars/all`)  
 * Reset activities (like kubeadm reset, unmount of `/var/lib/kubelet/*` mounts, ip link delete cbr0, cni0 , etc.) - important for reinstallations.
 * Initialize the cluster on master with `kubeadm init`
 * Install user specified pod network from `group_vars/all` (flannel, calico, weave, etc)
-* Join the nodes to the cluster with 'kubeadm join'
+* Join the nodes to the cluster with 'kubeadm join' and full set of params.
 * Install helm
 * Install nginx ingress controller via helm (control via `group_vars/all`)
 * Install kubernetes dashboard (via helm)
 * Installs any listed helm charts in the config (via helm)
 * Installs any yaml listed in the config
-* Planned: Install prometheus via Helm (control via `group_vars/all`)
+* Planned: Install prometheus via Helm (control via `group_vars/all`) -> prometheus operator helm chart is expected soon,
 * Sanity: checks if nodes are ready and if all pods are running, and provides details of the cluster.
 * when enabled, it will create ceph storage cluster using rook operator
 * when enabled, it will create vsphere persistent storage class and all required setup. Please fill in vcenter u/p/url,etc `group_vars/all`, and follow all initial steps there.
 * it will define a set of handy aliases 
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.    
-This has been tested with **RHEL&CentOS 7.3-7.5 and Ubuntu 16.04** and **Kubernetes v1.6.1 - v1.10.1**     
+This has been tested with **RHEL&CentOS 7.3-7.5 and Ubuntu 16.04** and **Kubernetes v1.6.1 - v1.11.3**     
 In general, keep the kube* tools at the same minor version with the desired k8s cluster. (e.g. For installing k8s v1.7 one must also use kubeadm 1.7 (kubeadm limitation).)    
 FYI, higher kube* are usually supported with 1 minor version older cluster (e.g. kube[adm/ctl/let] 1.8.* accepts kubernetes cluster 1.7.*).
 
@@ -96,7 +98,7 @@ There are other operations possible against the cluster, look at the file: site.
 The output should have already presented the required info (or run again: `ansible-playbook -i hosts site.yml --tags cluster_sanity`).
 The Dashboard is set on the master host, and, additionally, if it was set, also at something like: http://dashboard.cloud.corp.example.com  (depending on the configured selected domain entry), and if the wildcard DNS was properly set up *.k8s.cloud.corp.example.com pointing to master machine public IP).
 
-e.g.  ``` curl -SLk 'http://k8s-master.ap/#!/overview?namespace=_all' | grep browsehappy ```
+e.g.  ``` curl -SLk 'http://k8s-master.example.com/#!/overview?namespace=_all' | grep browsehappy ```
 
 For testing the Persistent volume, one may use/tune the files in the demo folder.
 ```shell
@@ -111,7 +113,6 @@ For LB, one may want to check also:
 - https://github.com/google/metallb/ (implements a LB type)
 - https://github.com/kubernetes/contrib/tree/master/keepalived-vip (HA)
 - https://github.com/kubernetes/contrib/tree/master/service-loadbalancer
-
 
 # DEMO:
 Installation demo k8s 1.7.8 on CentOS 7.4: [kubeadm ansible playbook install demo asciinema video](https://asciinema.org/a/Ii7NDu3eL9DsuM1fEFM9PMVTM)
@@ -131,8 +132,10 @@ Using vagrant keeping NAT as 1st interface (usually with only one machine) was n
 There was no focus on this option as it's more complicated to use afterwards: one must export the ports manually to access ingresses like dashboard from the browser, and usually does not support more than one machine.
 
 # kubeadm-ha
-Kubeadm will support HA only starting v1.10 (as per https://github.com/kubernetes/kubeadm/issues/546 )
-Till then, you may want to check this project: https://github.com/sv01a/ansible-kubeadm-ha-cluster and/or github.com/cookeem/kubeadm-ha.
+While Kubeadm does not make multimaster (aka HA) setup easy (yet), thanks the comunity there we have it!
+Starting our playbook for v1.11, we support master HA !
+ Kubeadm will support ha OOB later -> as per https://github.com/kubernetes/kubeadm/issues/546; For now we do it using some work-arounds.
+Our HA work is based on projects like: https://github.com/mbert/kubeadm2ha ( and https://github.com/sv01a/ansible-kubeadm-ha-cluster and/or github.com/cookeem/kubeadm-ha ).
 
 # How does it compare to other projects:
 
