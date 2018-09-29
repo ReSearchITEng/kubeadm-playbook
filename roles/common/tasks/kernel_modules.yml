@@ -49,6 +49,8 @@
   sysctl: name={{item.name}} value={{item.value}} state=present
   with_items:
     - {name:  "net.bridge.bridge-nf-call-iptables", value: "1" }
+    - {name:  "net.bridge.bridge-nf-call-ip6tables", value: "1" }
+    
 
 
 
