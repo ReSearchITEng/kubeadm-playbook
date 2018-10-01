@@ -1,46 +1,47 @@
 ---
 - name: extract the token from the master role  execution and set kubeadm_token
   set_fact: kubeadm_token="{{hostvars[groups['master'][0]]['kubeadm_token_whash'].stdout_lines[0]}}"
-  when: 
+  when:
   - kubeadm_master_config.bootstrapTokens[0].token is not defined
 
 - name: extract the token hash from the master role  execution and set kubeadm_token_hash
   set_fact: kubeadm_token_hash="{{hostvars[groups['master'][0]]['kubeadm_token_whash'].stdout_lines[1]}}"
-  when: 
+  when:
   - kubeadm_master_config.bootstrapTokens[0].token is not defined
 
 - name: set kubeadm_token to the value from kubeadm_master_config
   set_fact: kubeadm_token={{ kubeadm_master_config.bootstrapTokens[0].token }}
-  when: 
+  when:
   - kubeadm_master_config.bootstrapTokens is defined
   - kubeadm_master_config.bootstrapTokens[0].token is defined
 
 - name: set kubeadm_token to the value from kubeadm_master_config
   set_fact: kubeadm_token={{ kubeadm_master_config.bootstrapTokens[0].token }}
-  when: 
+  when:
   - kubeadm_master_config.bootstrapTokens is defined
   - kubeadm_master_config.bootstrapTokens[0].token is defined
 
 # - name: when there is none defined, set a dummy value for kubeadm_token_hash
 #   set_fact: kubeadm_token_hash="sha256:0000000000000000000000000000000000000000000000000000000000000000"
-#   when: 
+#   when:
 #   - kubeadm_master_config.bootstrapTokens[0].token is defined
 
 - name: when there is no discovery token hash, make sure kubeadm_join_args has "--discovery-token-unsafe-skip-ca-verification"
   set_fact: kubeadm_join_args="{{ kubeadm_join_args | default (" ") }} --discovery-token-unsafe-skip-ca-verification"
-  when: 
+  when:
   - kubeadm_master_config.bootstrapTokens[0].token is defined
 
 - name: when there is discovery token hash, add to kubeadm_join_args  "--discovery-token-ca-cert-hash and the hash"
   set_fact: kubeadm_join_args="{{ kubeadm_join_args | default (" ") }} --discovery-token-ca-cert-hash  {{ kubeadm_token_hash }}"
-  when: 
+  when:
   - kubeadm_master_config.bootstrapTokens[0].token is not defined
 
 - name: token to be used is
   debug: var=kubeadm_token
 
 - name: add api section to the kubeadm_master_config (if does not exist)
-  set_fact: kubeadm_master_config="{{ kubeadm_master_config | combine ( { 'api': kubeadm_master_config.api | default ({}) } ) }}"
+  set_fact:
+    kubeadm_master_config: "{{ kubeadm_master_config | combine ( { 'api': kubeadm_master_config.api | default ({}) } ) }}"
 
 ## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via VIP,MasterHA (for MasterHA cases)
 - name: by default set master name to inventory definition (no MasterHA case)
@@ -79,7 +80,7 @@
 ## Determine how to reffer to the nodes: using fqdn, or let k8s decide (based on how the machine answers on the hostname cmd)
 - name: force use fqdn for node name setting during join; else, k8s will default to (hostname like the one provided by the hostname command on the node)
   set_fact: node_name_setting="--node-name {{ ansible_fqdn }}"
-  when: 
+  when:
   - custom.networking.fqdn.always or custom.networking.fqdn.node
 
 - name: Join cluster using kubeadm join {{ master_name }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
@@ -90,7 +91,7 @@
 #  creates: /etc/kubernetes/kubelet.conf
 
 - name: wait for /etc/kubernetes/kubelet.conf to be created
-  wait_for: 
+  wait_for:
     path: /etc/kubernetes/kubelet.conf
     state: present
     timeout: 30
@@ -123,7 +124,7 @@
 #     retries: 40
 #     delay: 3
 #     changed_when: false
-    
+
 #   - name: Get nodes
 #     command: kubectl get nodes
 #     register: command_result
@@ -141,14 +142,14 @@
 #     delay: 3
 #     until: command_result | success
 #     changed_when: false
- 
+
 #   environment:
 #     KUBECONFIG: /etc/kubernetes/kubelet.conf
 #   tags:
 #   - node
 #   - node_sanity
 
-### 
+###
 - name: export KUBECONFIG in nodes' ~/.bash_profile
   lineinfile:
     dest: ~/.bash_profile
@@ -157,5 +158,3 @@
     create: yes
     regexp: '^export KUBECONFIG=.*'
   when: shell is undefined or shell == 'bash'
-
-
