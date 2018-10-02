@@ -30,7 +30,7 @@
     create: yes
   with_items:
   - "# k8s shell completion; for zsh min vers is 5.2+"
-  - "source <(kubectl completion {{ shell | default ('bash') }} >/dev/null 2>&1 || true)"
-  - "source <(kubeadm completion {{ shell | default ('bash') }} >/dev/null 2>&1 || true)"
-  - "source <(helm    completion {{ shell | default ('bash') }} >/dev/null 2>&1 || true)"
+  - "source <(kubectl completion {{ shell | default ('bash') }} 2>/dev/null || true)"
+  - "source <(kubeadm completion {{ shell | default ('bash') }} 2>/dev/null || true)"
+  - "source <(helm    completion {{ shell | default ('bash') }} 2>/dev/null || true)"
   
