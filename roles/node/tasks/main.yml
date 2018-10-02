@@ -29,6 +29,7 @@
 - name: when there is no discovery token hash, make sure kubeadm_join_args has "--discovery-token-unsafe-skip-ca-verification"
   set_fact: kubeadm_join_args="{{ kubeadm_join_args | default (" ") }} --discovery-token-unsafe-skip-ca-verification"
   when:
+  - kubeadm_master_config.bootstrapTokens is defined
   - kubeadm_master_config.bootstrapTokens[0].token is defined
 
 - name: when there is discovery token hash, add to kubeadm_join_args  "--discovery-token-ca-cert-hash and the hash"
