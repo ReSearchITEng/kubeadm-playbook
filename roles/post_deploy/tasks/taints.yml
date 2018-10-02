@@ -8,13 +8,13 @@
     tags:
     - taints
 
-  - name: apply master_uncordon
-    environment:
-      KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: 'kubectl uncordon {{ inventory_hostname_short }} '
-    when: master_uncordon is defined
-    tags:
-    - taints
+#   - name: apply master_uncordon
+#     environment:
+#       KUBECONFIG: /etc/kubernetes/admin.conf
+#     shell: 'kubectl uncordon {{ inventory_hostname_short }} '
+#     when: master_uncordon is defined
+#     tags:
+#     - taints
 
   - name: 'Wait few seconds for taints/uncordon on master take effect'
     pause: seconds=3
