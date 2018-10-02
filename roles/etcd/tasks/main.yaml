@@ -2,8 +2,13 @@
 # Sets up etcd on the masters.
 #
 ---
+- name: detect docker's cgroup-driver
+  shell: docker info 2>/dev/null |grep -i cgroup | cut -d":" -f2 | tr -d " "
+  register: docker_cgroup_driver
+  changed_when: false
+
 - name: Install preliminary kubelet configuration for systemd
-  copy: "src=20-etcd-service-manager.conf dest=/etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf mode=0644 owner=root group=root"
+  template: "src=20-etcd-service-manager.conf.j2 dest=/etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf mode=0644 owner=root group=root"
 
 - name: Activate and restart kubelet
   systemd: "name=kubelet enabled=true daemon_reload=true state=restarted"
