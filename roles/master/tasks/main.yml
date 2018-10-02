@@ -217,7 +217,7 @@
   register: kubeadm_token_whash
   when: 
   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
-  - kubeadm_master_config is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
+  - kubeadm_master_config is not defined or kubeadm_master_config.bootstrapTokens is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
   #kubeadm_master_config.token is not defined 
   changed_when: false
   tags:
@@ -227,7 +227,7 @@
   debug: var=kubeadm_token_whash
   when: 
   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
-  - kubeadm_master_config is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
+  - kubeadm_master_config is not defined or kubeadm_master_config.bootstrapTokens is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
   #kubeadm_master_config.token is not defined 
   changed_when: false  
   tags:
