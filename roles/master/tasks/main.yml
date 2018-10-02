@@ -204,7 +204,8 @@
 #   command: bash -c '/usr/bin/kubeadm token list | grep -v "<invalid>" | grep "system:bootstrappers" | grep "authentication" | tail -n 1 | cut -f 1 -d" "'
 #   register: kubeadm_token
 #   when: 
-#   - kubeadm_master_config is not defined or kubeadm_master_config.token is not defined
+#   - kubeadm_master_config is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
+#     kubeadm_master_config.token is not defined
 #   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
 #   changed_when: false
 #   tags:
@@ -216,7 +217,8 @@
   register: kubeadm_token_whash
   when: 
   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
-  - kubeadm_master_config is not defined or kubeadm_master_config.token is not defined 
+  - kubeadm_master_config is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
+  #kubeadm_master_config.token is not defined 
   changed_when: false
   tags:
   - node 
@@ -225,7 +227,8 @@
   debug: var=kubeadm_token_whash
   when: 
   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
-  - kubeadm_master_config is not defined or kubeadm_master_config.token is not defined 
+  - kubeadm_master_config is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
+  #kubeadm_master_config.token is not defined 
   changed_when: false  
   tags:
   - node 
