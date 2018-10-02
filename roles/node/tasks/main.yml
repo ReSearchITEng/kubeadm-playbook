@@ -2,12 +2,12 @@
 - name: extract the token from the master role  execution and set kubeadm_token
   set_fact: kubeadm_token="{{hostvars[groups['master'][0]]['kubeadm_token_whash'].stdout_lines[0]}}"
   when:
-  - kubeadm_master_config.bootstrapTokens[0].token is not defined
+  - kubeadm_master_config.bootstrapTokens is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
 
 - name: extract the token hash from the master role  execution and set kubeadm_token_hash
   set_fact: kubeadm_token_hash="{{hostvars[groups['master'][0]]['kubeadm_token_whash'].stdout_lines[1]}}"
   when:
-  - kubeadm_master_config.bootstrapTokens[0].token is not defined
+  - kubeadm_master_config.bootstrapTokens is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
 
 - name: set kubeadm_token to the value from kubeadm_master_config
   set_fact: kubeadm_token={{ kubeadm_master_config.bootstrapTokens[0].token }}
@@ -34,7 +34,7 @@
 - name: when there is discovery token hash, add to kubeadm_join_args  "--discovery-token-ca-cert-hash and the hash"
   set_fact: kubeadm_join_args="{{ kubeadm_join_args | default (" ") }} --discovery-token-ca-cert-hash  {{ kubeadm_token_hash }}"
   when:
-  - kubeadm_master_config.bootstrapTokens[0].token is not defined
+  - kubeadm_master_config.bootstrapTokens is not defined or kubeadm_master_config.bootstrapTokens[0].token is not defined
 
 - name: token to be used is
   debug: var=kubeadm_token
