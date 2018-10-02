@@ -1,0 +1,4 @@
+[Service]
+ExecStart=
+ExecStart=/usr/bin/kubelet --pod-manifest-path=/etc/kubernetes/manifests --allow-privileged=true --cgroup-driver={{ docker_cgroup_driver.stdout }}
+Restart=always
