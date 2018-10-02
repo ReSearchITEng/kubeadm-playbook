@@ -316,10 +316,10 @@ kubeadm_master_config:
 ## it's not possible to have more than one network solution
 ## options: https://kubernetes.io/docs/admin/addons/
 k8s_network_addons_urls:
-## CALICO # For Calico one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 192.168.0.0/16 )
-#   - https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml # versions are 2.4,2.5,2.6
-#     newer calico 3.0 :     
-#   - https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml  
+## CALICO # For Calico below 3 urls are req. Also ensure above setting kubeadm_master_config.networking.podSubnet is set to 192.168.0.0/16 )
+#   - https://docs.projectcalico.org/v3.2/getting-started/kubernetes/installation/hosted/etcd.yaml
+#   - https://docs.projectcalico.org/v3.2/getting-started/kubernetes/installation/rbac.yaml
+#   - https://docs.projectcalico.org/v3.2/getting-started/kubernetes/installation/hosted/calico.yaml
 ## OR Flanned: (for Flanned one has to also ensure above setting kubeadm_master_config.networking.podSubnet is set to 10.244.0.0/16 )
   ##- https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
   #- https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml # For latest, replace v0.9.0 with master
