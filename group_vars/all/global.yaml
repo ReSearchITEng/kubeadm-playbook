@@ -1,0 +1,227 @@
+# global variables
+
+#####
+## PROXY
+## proxy environment variable, mainly for fetching addons
+#proxy_env:
+#  http_proxy: 'http://proxy.corp.example.com:8080'
+#  https_proxy: 'http://proxy.corp.example.com:8080'
+#  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,/var/run/docker.sock,.sock,sock' 
+#####
+
+KUBERNETES_VERSION: "1.12.0"
+# Software versions (used by installation via package manager)
+
+KEEPALIVED_VERSION: "1.3.5"
+  # Use "1.3.*" if you want the latest 1.3 provided by your already defined package repositories
+  # it's required only for HA
+
+#####
+## PACKAGES (rpm/deb)
+## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
+## package_state: latest # Other valid options for this context: installed
+package_state: installed #latest #installed
+## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
+kubeadm_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
+kubelet_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
+kubectl_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
+# To find the possible versions, check: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml
+# curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubeadm' | grep ver
+# curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubelet' | grep ver
+# curl -SL https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64/repodata/filelists.xml | grep -A 1 'name="kubectl' | grep ver
+#####
+##### NOTE ->> For the actual k8s version, please set the below: ClusterConfiguration.kubernetesVersion
+
+# Certificate settings (does not really matter for self-signed certificates in a private network)
+CERT_COMMON_NAME: "etcd"
+CERT_COUNTRY: "AA"
+CERT_LOCALITY: "LOCALITY"
+CERT_ORGANISATION: "Example"
+CERT_STATE: "State"
+CERT_ORG_UNIT: "ORG"
+
+
+########## Image pre-pull on MASTERS (only)
+# Usually pre-pull not required, but there is this option here.
+# Depending on what images you plan to use during deployment, you 
+#####
+pre_pull_k8s_images: True
+#####
+
+####
+## Docker images repo
+## If you have your internal docker registry which proxies them (e.g. a nexus3 with docker proxy), replace the value here:
+# images_repo: "k8s.gcr.io"
+# images_repo: "myk8sgcrio.corp.example.com"
+#####
+
+# Images for prefetching when pre_pull_k8s_images is true and images_repo is defined
+HOST_ARCH: amd64
+DOCKER_IMAGES: [
+#  { name: "bobrik/curator", tag: "{{ CURATOR_TAG }}" },
+#  { name: "{{images_repo}}/busybox", tag: "{{ BUSYBOX_TAG }}" },
+#  #{ name: "dockerregistry.mylan.local:5000/fluentd-elasticsearch", tag: "{{ FLUENTD_ES_TAG }}" },
+#  { name: "docker.elastic.co/kibana/kibana-oss", tag: "{{ KIBANA_OSS_TAG }}" },
+#  { name: "{{images_repo}}/coredns", tag: "{{ COREDNS_TAG }}" },
+#  { name: "{{images_repo}}/elasticsearch", tag: "{{ ELASTICSEARCH_TAG }}" }, #???
+#  { name: "{{images_repo}}/etcd-{{ HOST_ARCH }}", tag: "{{ ETCD_TAG }}" },
+#  { name: "{{images_repo}}/fluentd-elasticsearch", tag: "{{ FLUENTD_ES_TAG }}" },
+#  { name: "{{images_repo}}/heapster-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_TAG }}" },
+#  { name: "{{images_repo}}/heapster-grafana-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_GRAFANA_TAG }}" },
+#  { name: "{{images_repo}}/heapster-influxdb-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_INFLUXDB_TAG }}" },
+#  { name: "{{images_repo}}/kube-apiserver-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
+#  { name: "{{images_repo}}/kube-controller-manager-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
+#  { name: "{{images_repo}}/kube-proxy-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
+#  { name: "{{images_repo}}/kube-scheduler-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
+#  { name: "{{images_repo}}/kubernetes-dashboard-{{ HOST_ARCH }}", tag: "{{ DASHBOARD_TAG }}" },
+#  { name: "{{images_repo}}/pause-{{ HOST_ARCH }}", tag: "{{ PAUSE_TAG }}" },
+#  { name: "{{images_repo}}/pause", tag: "{{ PAUSE_TAG }}" },
+#  { name: "{{images_repo}}/nginx", tag: "{{ NGINX_TAG }}" },
+#  { name: "{{images_repo}}/coreos/configmap-reload", tag: "{{ CONFIGMAP_RELOAD_TAG }}" },
+#  { name: "{{images_repo}}/coreos/etcd-operator", tag: "{{ ETCD_OPERATOR_TAG }}" },
+#  { name: "{{images_repo}}/coreos/etcd", tag: "v{{ ETCD_TAG }}" },
+#  { name: "{{images_repo}}/coreos/prometheus-config-reloader", tag: "{{ PROMETHEUS_OPERATOR_TAG }}" },
+#  { name: "{{images_repo}}/coreos/prometheus-operator", tag: "{{ PROMETHEUS_OPERATOR_TAG }}" },
+#  { name: "{{images_repo}}/pires/docker-elasticsearch-kubernetes", tag: "{{ ELASTICSEARCH_KUBERNETES_TAG }}" },
+#  { name: "{{images_repo}}/prometheus/prometheus", tag: "{{ PROMETHEUS_TAG }}" }
+]
+
+################################DONE HA
+
+## When defined, it first forces uninstall any kube* packages (rpm/deb) from hosts
+## When full_kube_reinstall is False or undefined, it will not reinstall # and it won't remove the /etc/kubernetes/ folder before reinstall
+## Should be used only if a downgrade in kube* tools is required, otherwise it will waste a lot of time reinstalling unnecessary.
+full_kube_reinstall: False # undefined is True. #Make it False for faster redeployments. Make true when you need downgrade (ansible does not downgrade rpms autoamtically)
+etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
+#####
+
+#kubeadm_init_args: "--skip-preflight-checks" 
+#kubeadm_join_args: "--skip-preflight-checks" #  For 1.8+ you may want to add: --discovery-token-unsafe-skip-ca-verification"
+#--ignore-preflight-errors=all
+#kubeadm_join_args: "--discovery-token-unsafe-skip-ca-verification"
+turn_swapoff: True #False #True #false # default true # Note: by default kubelet won't start if swap not disabled of or kubelet not instructed to accept swap on.
+
+#####
+## NTP SETUP
+## it is mandatory to have the time from all machines in sync
+ntp_setup: True  # Default True
+## ntp does not work via proxy, so, if ntp cannot reach external servers, define here the internal ntp server:
+#ntp_conf: |
+#  server ntp1.corp.example.com
+#  server pool.ntp.org
+#  server pool.ntp.org
+#####
+
+#####
+## hostname fix: set_hostname_to_inventory_hostname
+## to make sure the hostname in inventory (usually fqdn) is in sync with the hostname as seen inside the host (usually required by vangrant)
+#set_hostname_to_inventory_hostname: True #False # Default False
+#####
+
+kernel_modules_setup: True # default: True
+#It will load the required kernel modules like ip_vs, bridge, nf_conntrack_ipv4, br_netfilter ;  echo 1 >/proc/sys/net/bridge/bridge-nf-call-iptables
+
+#####
+docker_setup: "auto" # when not defined, default is "auto"
+  ## auto will install docker (if not yet installed), set it up (with overlay2 storage driver), (re)start it
+  ## force will do the above even if it's already installed
+  ## ignore will not check docker at all.
+#####
+
+#####
+## Selinux
+## If selinux_state is not defined, it will skip Selinux setup
+## If values are defined, you may want to enable also "allow_restart"
+#selinux_state: permissive #  OR: disabled # When undefined entire step is skipped
+#selinux_policy: targeted  # defaults to targeted
+#####
+
+#####
+## Allow restart (if required, e.g. if ansible's selinux module sets reboot_required to true )
+allow_restart: True ## Default False
+#####
+
+#####
+## Iptables
+iptables_setup: True # Default is True. 
+# This is not ideal or perfect! Review code and decide. It will disable&mask firewalld service (if exists), set default policies ACCEPT, and it will remove REJECT rules from all chains (INPUT,FW,OUT) with a commands like: iptables -D INPUT -j REJECT --reject-with icmp-host-prohibited (for each). 
+# If still issues, debug iptables on both master and nodes with: 
+# watch -n1 iptables -vnL
+# http://www.slsmk.com/how-to-log-iptables-dropped-packets-to-syslog/ and monitor with journalctl -kf
+### # iptables_reset: False # False is default # Rarely used, this will be removed in the future
+#####
+
+#####
+# reset_gracefully: False # False is default # Important if there was a cluster before and you want to shut it down using cordon and drain
+#####
+
+#####
+## This is the configuration that will be used by kubeadm init on master.
+## Structure comes from: https://kubernetes.io/docs/admin/kubeadm/#config-file
+
+#####
+## TAINTS (for master) & uncordon
+## NoExecute evicts on the spot. (while NoSchedule does not allow new pods); other option: PreferNoSchedule
+## FYI, by default, master has this taint: node-role.kubernetes.io/master:NoSchedule
+## If you want to be able to schedule pods on the master, either set master_uncordon:true  (prefered option) or via taints section: uncomment 'node-role.kubernetes.io/master:NoSchedule-'
+## It's useful if it's a single-machine Kubernetes cluster for development (replacing minikube)
+## To see taints, use: kubectl describe nodes
+
+#taints_master:
+#- 'dedicated=master:NoExecute'                 # Force eviction of pods from master
+#- 'dedicated=master:PreferNoSchedule'          # Safety net
+#- 'dedicated:NoExecute-'                       # Puts the previous PreferNoSchedule into action - step1
+#- 'node-role.kubernetes.io/master:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
+#####
+
+#####
+# ADDONS # uncomment/ add the desired ones.
+#k8s_addons_urls:
+  # - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+  # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
+  # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
+#####
+
+###################
+## HELM & CHARTS ##
+###################
+helm:
+  helm_version: v2.11.0 # or "latest" #https://github.com/kubernetes/helm/releases
+  install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
+  repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
+    - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
+#    - { name: rook, url: 'http://charts.rook.io' }
+#    - { name: fabric8, url: 'https://fabric8.io/helm' }
+  packages_list: # when not defined, namespace defaults to "default" namespace
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" --version=0.17.1 ' }
+    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
+
+## DASHBOARD HEAD(latest), compatible with k8s 1.8:
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},image.repository=kubernetesdashboarddev/kubernetes-dashboard-amd64,image.tag=head,image.pullPolicy=Always' } # development version, for k8s 1.8, and with all admin permissions open
+# OR:
+## DASHBOARD 1.8.3, compatible with k8s 1.8+:    
+    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,rbac.clusterAdminRole=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' } # Limited to helmchart 0.5.3 for the non-tls ingress. 
+    ##gcr.io/google_containers/kubernetes-dashboard-amd64 for stable versions tagged per k8s version. For lastest (beta) versions, one may use: from docker.io kubernetesdashboarddev/kubernetes-dashboard-amd64
+    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head,imagePullPolicy=Always' } # development version, and with all admin permissions open
+    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' }
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
+#    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
+#    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}}'
+#    - { name: moodle, repo: stable/moodle, options: '--set moodleUsername=admin,moodlePassword=password,mariadb.mariadbRootPassword=secretpassword,serviceType=ClusterIP' }
+
+## Not tested:
+#    - { name: elasticsearch, repo: incubator/elasticsearch }
+#####
+
+########## VARIOUS GENERIC SETTINGS #####
+## This will be removed in the future versions
+# kubeadm_docker_insecure_registry: registry.example.com:5000
+#####
+
+#####
+# VARIOUS
+# shell for bash-completion for kubectl, kubeadm, helm; currently only bash and zsh is supported.
+shell: 'bash'
+#####
+

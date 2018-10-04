@@ -15,15 +15,16 @@
     state: directory
     mode: 0755
 
-- name: Pull images on node (e.g. kube-proxy)
-  command: /usr/bin/docker pull "{{ item }}:{{ kubeadm_master_config.kubernetesVersion | default ('latest') }}"
-  with_items:
-  - "gcr.io/google_containers/kube-proxy-amd64"
-  tags:
-  - prepull_images
-  register: command_result
-  changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
-  when: pre_pull_k8s_images is defined and pre_pull_k8s_images and kubeadm_master_config.kubernetesVersion is defined
+## Deprecate/Cleanup 1.12
+# - name: Pull images on node (e.g. kube-proxy)
+#   command: /usr/bin/docker pull "{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
+#   with_items:
+#   - "gcr.io/google_containers/kube-proxy-amd64"
+#   tags:
+#   - prepull_images
+#   register: command_result
+#   changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
+#   when: pre_pull_k8s_images is defined and pre_pull_k8s_images and ClusterConfiguration.kubernetesVersion is defined
 
 # Forcing restart of services
 #- meta: flush_handlers

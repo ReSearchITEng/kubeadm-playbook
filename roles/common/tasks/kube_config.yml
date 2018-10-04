@@ -1,8 +1,8 @@
 ---
 ### prepare cloud-config
 - block:
-  - name: prepare cloud-config file for cloudProvider {{kubeadm_master_config.cloudProvider}}
-    set_fact: fact_cloud_provider='--cloud-provider={{ kubeadm_master_config.cloudProvider }} --cloud-config=/etc/kubernetes/cloud-config'
+  - name: prepare cloud-config file for cloudProvider {{ClusterConfiguration.cloudProvider}}
+    set_fact: fact_cloud_provider='--cloud-provider={{ ClusterConfiguration.cloudProvider }} --cloud-config=/etc/kubernetes/cloud-config'
     tags:
     - always
 
@@ -19,18 +19,18 @@
     notify:
     - Restart kubelet
   # BLOCK ENDS with its condition:
-  when: kubeadm_master_config is defined and kubeadm_master_config.cloudProvider is defined
+  when: ClusterConfiguration is defined and ClusterConfiguration.cloudProvider is defined
   tags:
   - kubelet
 
 ### kubeadm settings:
-- name: Replace {{kubeadm_master_config.networking.dnsDomain}} under cluster-domain in kubelet.service.d/10-kubeadm.conf
+- name: Replace {{ClusterConfiguration.networking.dnsDomain}} under cluster-domain in kubelet.service.d/10-kubeadm.conf
   replace:
     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
     regexp: '(--cluster-domain=)[A-Za-z0-9\-\.]+(.*)'
-    replace: '\1{{ kubeadm_master_config.networking.dnsDomain | default("cluster.local") }}\2'
+    replace: '\1{{ ClusterConfiguration.networking.dnsDomain | default("cluster.local") }}\2'
     #backup: yes
-  when: kubeadm_master_config is defined and kubeadm_master_config.networking is defined and kubeadm_master_config.networking.dnsDomain is defined
+  when: ClusterConfiguration is defined and ClusterConfiguration.networking is defined and ClusterConfiguration.networking.dnsDomain is defined
   notify:
   - Reload systemd # already by other handler
   - Restart kubelet
@@ -51,50 +51,53 @@
   - kubeadm
   - kubelet
 
-### kubelet settings:
-- name: Remove existing kubelet args from drop-in unit
-  lineinfile:
-    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-    regexp: '^Environment="KUBELET_EXTRA_ARGS'
-    state: absent
-  notify:
-  - Reload systemd # already by other handler
-  - Restart kubelet
-  tags:
-  - kubelet
+## Deprecation/cleanup starting 1.12
+# ### kubelet settings:
+# - name: Remove existing kubelet args from drop-in unit
+#   lineinfile:
+#     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+#     regexp: '^Environment="KUBELET_EXTRA_ARGS'
+#     state: absent
+#   notify:
+#   - Reload systemd # already by other handler
+#   - Restart kubelet
+#   tags:
+#   - kubelet
 
+## This is still req. for multi master, when we generate the etcd certs; so moved it there.
+# - name: detect docker's cgroup-driver
+#   shell: docker info 2>/dev/null |grep -i cgroup | cut -d":" -f2 | tr -d " "
+#   register: docker_cgroup_driver
+#   changed_when: false
+#   tags:
+#   - etcd
 
-- name: detect docker's cgroup-driver
-  shell: docker info 2>/dev/null |grep -i cgroup | cut -d":" -f2 | tr -d " "
-  register: docker_cgroup_driver
-  changed_when: false
+# - name: INFO message
+#   debug: msg="detect docker's cgroup-driver is {{ docker_cgroup_driver.stdout }}. (Usually RH/CentOS is systemd, Ubuntu cgroupfs"
+#   changed_when: false
 
-- name: INFO message
-  debug: msg="detect docker's cgroup-driver is {{ docker_cgroup_driver.stdout }}. (Usually RH/CentOS is systemd, Ubuntu cgroupfs"
-  changed_when: false
+# - name: determine version of the installed kubelet
+#   shell: kubelet --version | cut -d" " -f2 | cut -d"v" -f2
+#   register: version_installed_kubelet
+#   changed_when: false
 
-- name: determine version of the installed kubelet
-  shell: kubelet --version | cut -d" " -f2 | cut -d"v" -f2
-  register: version_installed_kubelet
-  changed_when: false
+# # when: version_installed_kubelet | version_compare('1.7', '>=')
 
-# when: version_installed_kubelet | version_compare('1.7', '>=')
-
-# newer versions (e.g. 1.7+) already have a new variable:
-# Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd" 
-# but we want to support older versions like 1.6 also.
-# To support 1.8, we also need to add --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice , due to:
-# https://stackoverflow.com/questions/46726216/kubelet-fails-to-get-cgroup-stats-for-docker-and-kubelet-services
-# As pre 1.7 versions do not have KUBELET_CGROUP_ARGS, so we still use KUBELET_EXTRA_ARGS
-- name: Use systemd kubelet cgroup driver
-  lineinfile:
-    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-    insertafter: '^Environment=\"KUBELET_AUTHZ_ARGS'
-    line: Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice {{ fact_cloud_provider | default ('') }} "
-  notify:
-  - Reload systemd # already by other handler
-  - Restart kubelet
-  tags:
-  - kubelet
-  when: docker_cgroup_driver.stdout=="systemd"  # usually on: ansible_os_family == "RedHat"
+# # newer versions (e.g. 1.7+) already have a new variable:
+# # Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd" 
+# # but we want to support older versions like 1.6 also.
+# # To support 1.8, we also need to add --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice , due to:
+# # https://stackoverflow.com/questions/46726216/kubelet-fails-to-get-cgroup-stats-for-docker-and-kubelet-services
+# # As pre 1.7 versions do not have KUBELET_CGROUP_ARGS, so we still use KUBELET_EXTRA_ARGS
+# - name: Use systemd kubelet cgroup driver
+#   lineinfile:
+#     dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+#     insertafter: '^Environment=\"KUBELET_AUTHZ_ARGS'
+#     line: Environment="KUBELET_EXTRA_ARGS=--cgroup-driver=systemd --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice {{ fact_cloud_provider | default ('') }} "
+#   notify:
+#   - Reload systemd # already by other handler
+#   - Restart kubelet
+#   tags:
+#   - kubelet
+#   when: docker_cgroup_driver.stdout=="systemd"  # usually on: ansible_os_family == "RedHat"
 

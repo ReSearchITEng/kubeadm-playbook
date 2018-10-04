@@ -2,6 +2,7 @@
 # Sets up etcd on the masters.
 #
 ---
+
 - name: detect docker's cgroup-driver
   shell: docker info 2>/dev/null |grep -i cgroup | cut -d":" -f2 | tr -d " "
   register: docker_cgroup_driver

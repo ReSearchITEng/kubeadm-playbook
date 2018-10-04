@@ -92,7 +92,7 @@
   - name: helm init when no MasterHA
     environment: '{{env_kc}}'
     #shell: "helm init --host {{ inventory_hostname }}:6443 "
-    shell: "helm init --host {{ groups['master'][0] }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --service-account tiller"
+    shell: "helm init --host {{ groups['master'][0] }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} --service-account tiller"
     #when: helm.install_script_url is defined
     register: command_result
     changed_when: "'Tiller is already installed' not in command_result.stdout"
@@ -106,7 +106,7 @@
   - name: helm init with MasterHA and fqdn
     environment: '{{env_kc}}'
     #shell: "helm init --host {{ inventory_hostname }}:6443 "
-    shell: "env; echo $https_proxy; helm init --host {{ custom.networking.masterha_fqdn }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --service-account tiller"
+    shell: "env; echo $https_proxy; helm init --host {{ custom.networking.masterha_fqdn }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} --service-account tiller"
     #when: helm.install_script_url is defined
     register: command_result
     changed_when: "'Tiller is already installed' not in command_result.stdout"
@@ -121,7 +121,7 @@
   - name: helm init with MasterHA with ip, not fqdn
     environment: '{{env_kc}}'
     #shell: "helm init --host {{ inventory_hostname }}:6443 "
-    shell: "helm init --host {{ custom.networking.masterha_fqdn }}:{{ kubeadm_master_config.api.bindPort | default (6443) }} --service-account tiller"
+    shell: "helm init --host {{ custom.networking.masterha_fqdn }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} --service-account tiller"
     #when: helm.install_script_url is defined
     register: command_result
     changed_when: "'Tiller is already installed' not in command_result.stdout"

@@ -15,10 +15,10 @@
   - setup: # aka gather_facts
     tags: always # required for tags, see ansible issue: #14228
     
-  - name: test min. vars (group_vars/all) are set (kubeadm_master_config and k8s_network_addons_urls)
-    debug: msg='Make sure min. vars are set in group_vars/all (e.g. kubeadm_master_config and k8s_network_addons_urls)'
-    when: kubeadm_master_config is not defined
-    failed_when: kubeadm_master_config is not defined
+  - name: test min. vars (group_vars/all) are set (ClusterConfiguration and k8s_network_addons_urls)
+    debug: msg='Make sure min. vars are set in group_vars/all (e.g. ClusterConfiguration and k8s_network_addons_urls)'
+    when: ClusterConfiguration is not defined
+    failed_when: ClusterConfiguration is not defined
     tags: always # always check if we have vars in place
 
 ## proper reset of any previous cluster (if any)
@@ -96,6 +96,7 @@
   - master
   - install
   - ha
+  - master_install
   roles:
   - { role: keepalived, tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived'], when: "groups['master'] | length > 1" }
   - { role: client-certs, tags: [ 'master', 'install', 'master_install', 'ha', 'client-certs'], when: "groups['master'] | length > 1" }
@@ -105,9 +106,11 @@
   gather_facts: all # smart
   become: yes
   become_method: sudo
+  any_errors_fatal: yes
   tags:
   - master
   - install
+  - master_install
   roles:
   - { role: master, tags: [ 'primary-master', 'master', 'install', 'master_install'] } 
 
@@ -115,10 +118,12 @@
   gather_facts: all # smart
   become: yes
   become_method: sudo
+  any_errors_fatal: yes
   tags:
   - master
   - install
   - ha
+  - master_install
   roles:
   - { role: master, tags: [ 'secondary-masters', 'master', 'install', 'master_install', 'secondary_masters'] } 
 
@@ -127,6 +132,7 @@
   gather_facts: smart
   become: yes
   become_method: sudo
+  any_errors_fatal: yes
   roles:
   - { role: node, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['master']" }
 
