@@ -151,8 +151,8 @@
 ### For fixes like vsphere's bug, we have to reboot after some more fixes...
 #https://github.com/vmware/kubernetes/issues/495
 - hosts: mustrebootlist
-  gather_facts: yes
-  gather_subset: all
+  gather_facts: no
+  #gather_subset: all
   become: yes
   become_method: sudo
   tags:

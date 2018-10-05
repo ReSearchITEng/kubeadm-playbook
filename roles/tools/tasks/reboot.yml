@@ -9,7 +9,7 @@
 #  pause:
 #    seconds: 30
 
-- name: Wait for server come back from restart (if selinux required it)
+- name: Wait for server come back from restart 
   local_action: wait_for
   args:
     host: "{{ inventory_hostname }}"

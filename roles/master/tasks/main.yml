@@ -236,6 +236,7 @@
   changed_when: false
   tags:
   - node 
+  - node_install
   - token
 
 - name: debug token
@@ -247,6 +248,7 @@
   changed_when: false  
   tags:
   - node 
+  - node_install
   - token
 
 #- name: populate the token in the ClusterConfiguration
