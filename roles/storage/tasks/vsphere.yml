@@ -17,8 +17,7 @@
     - vsphere
 
   - name: vsphere_bug_fix github.com/vmware/kubernetes/issues/495
-    copy: src=vsphere_bug_fix.sh dest=/tmp/vsphere_bug_fix.sh
-    mode: '0755'
+    copy: src=vsphere_bug_fix.sh dest=/tmp/vsphere_bug_fix.sh mode='0755'
 
   - name: execute vsphere_bug_fix.sh
     environment: '{{env_kc}}'

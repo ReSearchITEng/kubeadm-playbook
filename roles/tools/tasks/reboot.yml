@@ -23,6 +23,6 @@
 #  wait_for_connection:
 #    timeout: 200
 
-- name: Gather facts for first time after restart
-  setup:
+#- name: Gather facts for first time after restart
+#  setup:
 

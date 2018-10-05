@@ -68,9 +68,9 @@
   - name: Check all nodes were registered
     shell: "/usr/bin/test $(kubectl get nodes | grep -ow Ready | wc -l) -ge {{ groups['all'] | length }}"
     register: command_result
-    retries: 10
+    retries: 30
     delay: 3
-    until: command_result | success
+    until: command_result is success
     changed_when: false
     tags:
     - cluster_info
