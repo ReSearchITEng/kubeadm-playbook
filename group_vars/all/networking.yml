@@ -43,7 +43,9 @@ k8s_network_addons_urls:
 ## Flanned: (for Flanned one has to also ensure above setting ClusterConfiguration.networking.podSubnet is set to 10.244.0.0/16 )
   ##- https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
   #- https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml # For latest, replace v0.9.0 with master
-  - https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+  #- https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
+  # flannel fix for 1.12:
+  - https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
 # OR 
 ## Weave: #https://www.weave.works/docs/net/latest/kubernetes/kube-addon/ 
  #- https://cloud.weave.works/k8s/net?k8s-version={{ClusterConfiguration.kubernetesVersion}}&{{POD_NETWORK_CIDR | default ('env.IPALLOC_RANGE=10.32.0.0/12') }}
