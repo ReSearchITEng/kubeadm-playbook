@@ -232,6 +232,7 @@
   when: 
   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
   - InitConfiguration is not defined or  InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
+  - JoinConfiguration.token is not defined
   changed_when: false
   tags:
   - node 
@@ -242,6 +243,7 @@
   when: 
   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
   - InitConfiguration is not defined or  InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
+  - JoinConfiguration.token is not defined
   changed_when: false  
   tags:
   - node 

@@ -22,7 +22,7 @@
     tags: always # always check if we have vars in place
 
 ## proper reset of any previous cluster (if any)
-- hosts: master
+- hosts: primary-master
   gather_facts: smart
   become: yes
   become_method: sudo

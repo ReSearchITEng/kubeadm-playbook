@@ -37,7 +37,7 @@
 - name: when there is discovery token hash, add to kubeadm_join_args  --discovery-token-ca-cert-hash and the hash
   set_fact: kubeadm_join_args="{{ kubeadm_join_args | default ('') }} --discovery-token-ca-cert-hash {{ kubeadm_token_hash }}"
   when:
-  - kubeadm_token_whash is defined
+  - kubeadm_token_hash is defined
   #- InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
 
 - name: token to be used is
