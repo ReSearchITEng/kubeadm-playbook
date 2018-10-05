@@ -1,6 +1,5 @@
 
 # Use FullyQualifiedDomainNames (FQDN) (e.g. machine1.corp.example.com)
----------
 [primary-master]
 master1.corp.example.com
 
