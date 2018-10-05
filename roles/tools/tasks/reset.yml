@@ -55,10 +55,10 @@
 #    when: full_kube_reinstall is defined and full_kube_reinstall
 
 
-  - name: ensure old /var/lib/etcd is removed
+  - name: ensure old /var/lib/etcd/member is removed
     file: state=absent path={{ item }}
     with_items:
-    - /var/lib/etcd
+    - /var/lib/etcd/member
     when: etcd_clean | default(true)
 
   - name: systemctl stop kube*.*.slice
