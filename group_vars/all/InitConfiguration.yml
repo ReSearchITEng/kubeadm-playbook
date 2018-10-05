@@ -1,9 +1,9 @@
 #https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1alpha3
 InitConfiguration:
   kind: InitConfiguration
-  # apiEndpoint:
+  apiEndpoint:
   #   advertiseAddress: 1.2.3.4
-  #   bindPort: 6443
+    bindPort: 6443
   apiVersion: kubeadm.k8s.io/v1alpha3
   # bootstrapTokens:
   # - groups:

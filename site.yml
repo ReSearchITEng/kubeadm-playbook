@@ -148,6 +148,20 @@
   - { role: storage, task: create_all, tags: [ 'storage', 'rook', 'nfs', 'vsphere' ] }
   - { role: helm, task: all, tags: [ 'helm', 'post_deploy' ] }
 
+### For fixes like vsphere's bug, we have to reboot after some more fixes...
+#https://github.com/vmware/kubernetes/issues/495
+- hosts: mustrebootlist
+  gather_facts: yes
+  gather_subset: all
+  become: yes
+  become_method: sudo
+  tags:
+  - mustrebootlist
+  - vsphere_bug_fix
+  - vsphere
+  roles:
+  - { role: tools, task: reboot, tags: [ 'reboot_minimal' ], when: "ClusterConfiguration.cloudProvider is defined and ClusterConfiguration.cloudProvider == 'vsphere' and allow_restart | default(False)" }
+
 ## Generic Sanity
 - hosts: master
   gather_facts: smart

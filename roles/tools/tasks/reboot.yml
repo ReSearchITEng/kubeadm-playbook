@@ -1,0 +1,28 @@
+- name: Reboot
+  shell: sleep 2 && /sbin/shutdown -r now
+  async: 1
+  poll: 0
+  ignore_errors: yes
+  when: allow_restart | default ( false )
+
+#- name: Pause till machine is up again
+#  pause:
+#    seconds: 30
+
+- name: Wait for server come back from restart (if selinux required it)
+  local_action: wait_for
+  args:
+    host: "{{ inventory_hostname }}"
+    port: 22
+    state: started
+    delay: 15
+    timeout: 180
+
+#Starting Ansible 2.3 one can do:
+#- name: Wait for system to become reachable # Ansible 2.3+
+#  wait_for_connection:
+#    timeout: 200
+
+- name: Gather facts for first time after restart
+  setup:
+

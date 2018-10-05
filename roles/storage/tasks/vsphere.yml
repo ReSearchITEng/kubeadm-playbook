@@ -1,15 +1,39 @@
 ---
+## vsphere/vmware/vcenter
+- block:
   - set_fact:
       env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
     tags:
     - always
 
-## vsphere/vmware/vcenter
   - name: Create vsphere storage class
     command: /usr/bin/kubectl apply -f {{ item }}
     with_items: "{{ vsphere_storageclass_urls | default ([]) }}"
     environment: '{{env_kc}}'
-    when: vsphere_storageclass_urls is defined and ClusterConfiguration.cloudProvider is defined and ClusterConfiguration.cloudProvider == 'vsphere'
+    when:
+    - vsphere_storageclass_urls is defined
     tags:
     - vsphere_storageclass_urls
     - vsphere
+
+  - name: vsphere_bug_fix github.com/vmware/kubernetes/issues/495
+    copy: src=vsphere_bug_fix.sh dest=/tmp/vsphere_bug_fix.sh
+    mode: '0755'
+
+  - name: execute vsphere_bug_fix.sh
+    environment: '{{env_kc}}'
+    shell: /tmp/vsphere_bug_fix.sh
+    register: list
+
+  - name: build machine reboot list due to vsphere_bug
+    add_host: name={{item}} group=mustrebootlist
+    with_items:
+      '{{list.stdout_lines}}'
+
+  when:
+  - ClusterConfiguration.cloudProvider is defined 
+  - ClusterConfiguration.cloudProvider == 'vsphere'
+  tags:
+  - vsphere
+  - vsphere_bug_fix
+
