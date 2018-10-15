@@ -4,6 +4,7 @@
   # Currently it will disable the REJECT rules and change policy to allow all.
   # For making pin-pointed rules, one may look at:
   # https://github.com/kubernetes/contrib/blob/master/ansible/roles/node/tasks/iptables.yml
+  # For weave netw plugin, open also: TCP 6783 and UDP 6783/6784
 
   - name: Disable firewalld (CentOS/RHEL)
     systemd: name=firewalld state=stopped enabled=no

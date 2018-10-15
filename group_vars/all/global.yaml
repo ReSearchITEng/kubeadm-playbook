@@ -9,7 +9,7 @@
 #  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,/var/run/docker.sock,.sock,sock' 
 #####
 
-KUBERNETES_VERSION: "1.12.0"
+KUBERNETES_VERSION: "1.12.1"
 # Software versions (used by installation via package manager)
 
 KEEPALIVED_VERSION: "1.3.5"
@@ -91,7 +91,7 @@ DOCKER_IMAGES: [
 ## When defined, it first forces uninstall any kube* packages (rpm/deb) from hosts
 ## When full_kube_reinstall is False or undefined, it will not reinstall # and it won't remove the /etc/kubernetes/ folder before reinstall
 ## Should be used only if a downgrade in kube* tools is required, otherwise it will waste a lot of time reinstalling unnecessary.
-full_kube_reinstall: False # undefined is True. #Make it False for faster redeployments. Make true when you need downgrade (ansible does not downgrade rpms autoamtically)
+full_kube_reinstall: False # undefined is False. #Make it False for faster redeployments. Make true when you need downgrade (ansible does not downgrade rpms autoamtically)
 etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 #####
 
@@ -137,7 +137,7 @@ docker_setup: "auto" # when not defined, default is "auto"
 #####
 
 #####
-## Allow restart (if required, e.g. if ansible's selinux module sets reboot_required to true )
+## Allow restart (if required, e.g. if ansible's selinux module sets reboot_required to true,or if vsphere fix is required )
 allow_restart: True ## Default False
 #####
 
@@ -172,47 +172,6 @@ iptables_setup: True # Default is True.
 #- 'dedicated=master:PreferNoSchedule'          # Safety net
 #- 'dedicated:NoExecute-'                       # Puts the previous PreferNoSchedule into action - step1
 #- 'node-role.kubernetes.io/master:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
-#####
-
-#####
-# ADDONS # uncomment/ add the desired ones.
-#k8s_addons_urls:
-  # - https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
-  # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
-  # - https://github.com/ReSearchITEng/kubeadm-playbook/raw/master/allow-all-all-rbac.yml # No longer required, as prods like nginx-ingress are now rbac ready!
-#####
-
-###################
-## HELM & CHARTS ##
-###################
-helm:
-  helm_version: v2.11.0 # or "latest" #https://github.com/kubernetes/helm/releases
-  install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
-  repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
-    - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
-#    - { name: rook, url: 'http://charts.rook.io' }
-#    - { name: fabric8, url: 'https://fabric8.io/helm' }
-  packages_list: # when not defined, namespace defaults to "default" namespace
-#    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" --version=0.17.1 ' }
-    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443' }
-    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
-
-## DASHBOARD HEAD(latest), compatible with k8s 1.8:
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},image.repository=kubernetesdashboarddev/kubernetes-dashboard-amd64,image.tag=head,image.pullPolicy=Always' } # development version, for k8s 1.8, and with all admin permissions open
-# OR:
-## DASHBOARD 1.8.3, compatible with k8s 1.8+:    
-    - { name: dashboard, repo: stable/kubernetes-dashboard, namespace: kube-system, options: '--set rbac.create=True,rbac.clusterAdminRole=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' } # Limited to helmchart 0.5.3 for the non-tls ingress. 
-    ##gcr.io/google_containers/kubernetes-dashboard-amd64 for stable versions tagged per k8s version. For lastest (beta) versions, one may use: from docker.io kubernetesdashboarddev/kubernetes-dashboard-amd64
-    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head,imagePullPolicy=Always' } # development version, and with all admin permissions open
-    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' }
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
-#    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
-#    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}}'
-#    - { name: moodle, repo: stable/moodle, options: '--set moodleUsername=admin,moodlePassword=password,mariadb.mariadbRootPassword=secretpassword,serviceType=ClusterIP' }
-
-## Not tested:
-#    - { name: elasticsearch, repo: incubator/elasticsearch }
 #####
 
 ########## VARIOUS GENERIC SETTINGS #####

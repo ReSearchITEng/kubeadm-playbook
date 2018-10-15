@@ -15,6 +15,9 @@ vsphere_storageclass_urls:
   - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/storage-class/vsphere/default.yaml
   #- https://raw.githubusercontent.com/kubernetes/kubernetes/master/examples/volumes/vsphere/vsphere-volume-sc-fast.yaml
 
+#vsphere_bug_fix github.com/vmware/kubernetes/issues/495 # For k8s 11.x 
+vsphere_bug_fix: False
+
 #####
 cloud_config: |
     [Global]
@@ -52,6 +55,7 @@ cloud_config: |
     [Disk]
       #scsicontrollertype = lsilogic-sas
       scsicontrollertype = pvscsi
+
 #####
 
 ##### STORAGE OPTION: Self Created NFS ###

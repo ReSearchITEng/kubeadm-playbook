@@ -1,40 +1,11 @@
 ---
-# - hosts: master
-#   become: yes
-#   become_method: sudo
-#   environment:
-#     KUBECONFIG: /etc/kubernetes/admin.conf
-#   tasks:
-
 - block:
-
-### CODE DUPLICATION:
 ## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via VIP,MasterHA (for MasterHA cases)
-  - name: by default set master name to inventory definition (no MasterHA case)
-    set_fact: master_name={{ groups['master'][0] }}
-    when:
-    - not custom.networking.fqdn.always
-    - not custom.networking.fqdn.master
-    - groups['master'] | length == 1
-  
-  - name: force use fqdn for master name (no MasterHA case)
-    set_fact: master_name={{ hostvars[groups['master'][0]]['ansible_fqdn'] }}
-    when:
-    - custom.networking.fqdn.always or custom.networking.fqdn.master
-    - groups['master'] | length == 1
-  
-  - name: force use fqdn for master name (MasterHA case)
-    set_fact: master_name={{ custom.networking.masterha_fqdn }}
-    when:
-    - custom.networking.fqdn.always or custom.networking.fqdn.master
-    - groups['master'] | length > 1
-  
-  - name: force use vip for master name (MasterHA case)
-    set_fact: master_name={{ custom.networking.masterha_vip }}
-    when:
-    - not custom.networking.fqdn.always
-    - not custom.networking.fqdn.master
-    - groups['master'] | length > 1
+  - name: decide_master_name
+    include_role:
+      name: common
+      tasks_from: decide_master_name
+
   
   - name: "Wait 300 seconds for master at {{ master_name }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
     wait_for:

@@ -11,9 +11,6 @@ master[2:3].corp.example.com
 primary-master
 secondary-masters
 
-[master:children]
-masters
-
 [primary-etcd:children]
 primary-master
 
@@ -30,6 +27,3 @@ node[1:2].corp.example.com
 
 [node:children]
 nodes
-
-[my-cluster:children]
-nodes-extended

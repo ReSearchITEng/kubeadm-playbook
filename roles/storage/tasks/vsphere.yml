@@ -16,23 +16,28 @@
     - vsphere_storageclass_urls
     - vsphere
 
-  - name: vsphere_bug_fix github.com/vmware/kubernetes/issues/495
-    copy: src=vsphere_bug_fix.sh dest=/tmp/vsphere_bug_fix.sh mode='0755'
+  - block:
+    - name: vsphere_bug_fix github.com/vmware/kubernetes/issues/495
+      copy: src=vsphere_bug_fix.sh dest=/tmp/vsphere_bug_fix.sh mode='0755'
 
-  - name: execute vsphere_bug_fix.sh
-    environment: '{{env_kc}}'
-    shell: /tmp/vsphere_bug_fix.sh
-    register: list
+    - name: execute vsphere_bug_fix.sh
+      environment: '{{env_kc}}'
+      shell: /tmp/vsphere_bug_fix.sh
+      register: list
 
-  - name: build machine reboot list due to vsphere_bug
-    add_host: name={{item}} group=mustrebootlist
-    with_items:
-      '{{list.stdout_lines}}'
+    - name: build machine reboot list due to vsphere_bug
+      add_host: name={{item}} group=mustrebootlist
+      with_items:
+        '{{list.stdout_lines}}'
+    when:
+    - vsphere_bug_fix is defined
+    - vsphere_bug_fix
+    tags:
+    - vsphere_bug_fix
 
   when:
   - ClusterConfiguration.cloudProvider is defined 
   - ClusterConfiguration.cloudProvider == 'vsphere'
   tags:
   - vsphere
-  - vsphere_bug_fix
 

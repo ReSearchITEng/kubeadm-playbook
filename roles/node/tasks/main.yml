@@ -1,78 +1,18 @@
 ---
-- name: extract the token from the master role  execution and set kubeadm_token
-  set_fact: kubeadm_token="{{hostvars[groups['master'][0]]['kubeadm_token_whash'].stdout_lines[0]}}"
+- name: decide_master_name
+  include_role:
+    name: common
+    tasks_from: decide_master_name
+
+- name: JoinConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the JoinConfiguration.nodeRegistration.kubeletExtraArgs
+  set_fact:
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'nodeRegistration': {'name': ansible_fqdn } }, recursive=True) }}"
   when:
-  - InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
-  - JoinConfiguration.token is not defined
-
-- name: extract the token hash from the master role  execution and set kubeadm_token_hash
-  set_fact: kubeadm_token_hash="{{hostvars[groups['master'][0]]['kubeadm_token_whash'].stdout_lines[1]}}"
-  when:
-  - InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
-  - JoinConfiguration.token is not defined
-
-- name: set kubeadm_token to the value from InitConfiguration
-  set_fact: kubeadm_token={{ InitConfiguration.bootstrapTokens[0].token }}
-  when:
-  - InitConfiguration.bootstrapTokens is defined
-  - InitConfiguration.bootstrapTokens[0].token is defined
-  - JoinConfiguration.token is not defined
-
-- name: set kubeadm_token to the value from JoinConfiguration.token
-  set_fact: kubeadm_token={{ JoinConfiguration.token }}
-  when:
-  - JoinConfiguration.token is defined
-
-# - name: when there is none defined, set a dummy value for kubeadm_token_hash
-#   set_fact: kubeadm_token_hash="sha256:0000000000000000000000000000000000000000000000000000000000000000"
-#   when:
-#   - InitConfiguration.bootstrapTokens[0].token is defined
-
-- name: when there is no discovery token hash, make sure kubeadm_join_args has --discovery-token-unsafe-skip-ca-verification
-  set_fact: kubeadm_join_args="{{ kubeadm_join_args | default ('') }} --discovery-token-unsafe-skip-ca-verification"
-  when:
-  - JoinConfiguration.token is defined or InitConfiguration.bootstrapTokens is defined
-  - JoinConfiguration.token is defined or InitConfiguration.bootstrapTokens[0].token is defined 
-
-- name: when there is discovery token hash, add to kubeadm_join_args  --discovery-token-ca-cert-hash and the hash
-  set_fact: kubeadm_join_args="{{ kubeadm_join_args | default ('') }} --discovery-token-ca-cert-hash {{ kubeadm_token_hash }}"
-  when:
-  - kubeadm_token_hash is defined
-  #- InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
-
-- name: token to be used is
-  debug: var=kubeadm_token
+  - custom.networking.fqdn.always or custom.networking.fqdn.node
 
 - name: add apiEndpoint section to the InitConfiguration (if does not exist)
   set_fact:
     InitConfiguration: "{{ InitConfiguration | combine ( { 'apiEndpoint': InitConfiguration.apiEndpoint | default ({}) } ) }}"
-
-## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via VIP,MasterHA (for MasterHA cases)
-- name: by default set master name to inventory definition (no MasterHA case)
-  set_fact: master_name={{ groups['master'][0] }}
-  when:
-  - not custom.networking.fqdn.always
-  - not custom.networking.fqdn.master
-  - groups['master'] | length == 1
-
-- name: force use fqdn for master name (no MasterHA case)
-  set_fact: master_name={{ hostvars[groups['master'][0]]['ansible_fqdn'] }}
-  when:
-  - custom.networking.fqdn.always or custom.networking.fqdn.master
-  - groups['master'] | length == 1
-
-- name: force use fqdn for master name (MasterHA case)
-  set_fact: master_name={{ custom.networking.masterha_fqdn }}
-  when:
-  - custom.networking.fqdn.always or custom.networking.fqdn.master
-  - groups['master'] | length > 1
-
-- name: force use vip for master name (MasterHA case)
-  set_fact: master_name={{ custom.networking.masterha_vip }}
-  when:
-  - not custom.networking.fqdn.always
-  - not custom.networking.fqdn.master
-  - groups['master'] | length > 1
 
 - name: "Wait 300 seconds for master at {{ master_name }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
   wait_for:
@@ -80,15 +20,96 @@
     host: "{{ master_name }}"
     delay: 1
     timeout: 300
+  run_once: yes
 
-## Determine how to reffer to the nodes: using fqdn, or let k8s decide (based on how the machine answers on the hostname cmd)
-- name: force use fqdn for node name setting during join; else, k8s will default to (hostname like the one provided by the hostname command on the node)
-  set_fact: node_name_setting="--node-name {{ ansible_fqdn }}"
+### TOKEN:
+- name: set kubeadm_token to the value from InitConfiguration
+  set_fact: kubeadm_token={{ InitConfiguration.bootstrapTokens[0].token }}
   when:
-  - custom.networking.fqdn.always or custom.networking.fqdn.node
+  - InitConfiguration.bootstrapTokens is defined
+  - InitConfiguration.bootstrapTokens[0].token is defined
+  - JoinConfiguration.token is not defined
 
-- name: Join cluster using kubeadm join {{ master_name }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
-  command: /usr/bin/kubeadm join {{ master_name }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} {{ node_name_setting | default (" ") }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
+- name: when defined, use JoinConfiguration.token on priority
+  set_fact: kubeadm_token={{ JoinConfiguration.token }}
+  when:
+  - JoinConfiguration.token is defined
+
+- name: when there is JoinConfiguration.token or InitConfiguration.bootstrapTokens[0].token and no hash, add skip hash
+  set_fact:
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'DiscoveryTokenUnsafeSkipCAVerification': 'True' }, recursive=True) }}"
+  when:
+  - JoinConfiguration.token is defined or InitConfiguration.bootstrapTokens is defined
+  - JoinConfiguration.token is defined or InitConfiguration.bootstrapTokens[0].token is defined 
+  - JoinConfiguration.discoveryTokenCACertHashes is not defined
+
+### Generate a token&hash on master and use them
+- block:
+  - name: generate a join token on primary-master
+    shell: kubeadm token create --description "kubeadm-playbook-node-joining-token" --ttl 15m --print-join-command  | awk '{print $5}{print $7}'
+    # Optionally using "--config /etc/kubernetes/kubeadm-master.conf" to get rid of the message that it tries to connect to internet for version
+    register: kubeadm_token_whash_n
+    delegate_to: "{{groups['primary-master'][0]}}"
+    run_once: yes
+    when: 
+    - InitConfiguration is not defined or InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
+    changed_when: false
+
+  - name: add API server JoinConfiguration.discoveryTokenAPIServers
+    set_fact:
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discoveryTokenAPIServers': [master_name + ':' + InitConfiguration.apiEndpoint.bindPort | default (6443) | string ] }, recursive=True) }}"
+
+  - name: add discovery token hash to JoinConfiguration.discoveryTokenCACertHashes
+    set_fact:
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discoveryTokenCACertHashes': [kubeadm_token_whash_n.stdout_lines[1]] }, recursive=True) }}"
+
+  ### Add token must be the last in the block, otherwise condition (JoinConfiguration.token is not defined) resolves to false...
+  - name: add token to the JoinConfiguration.token
+    set_fact:
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'token': kubeadm_token_whash_n.stdout_lines[0] }, recursive=True) }}"
+
+  when:
+  - JoinConfiguration.token is not defined
+  - InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
+  tags:
+  - token
+
+- name: Add the InitConfiguration.bootstrapTokens[0] to the JoinConfiguration
+  set_fact:
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'token': kubeadm_token }, recursive=True) }}"
+  when:
+  - JoinConfiguration.token is not defined
+  tags:
+  - token
+
+### Cloud Config
+- name: JoinConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the JoinConfiguration.nodeRegistration.kubeletExtraArgs
+  set_fact:
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'nodeRegistration': {'kubeletExtraArgs': {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' }  } }, recursive=True) }}"
+  when:
+  - ClusterConfiguration is defined
+  - ClusterConfiguration.cloudProvider is defined
+  - ( ClusterConfiguration.apiVersion >= "kubeadm.k8s.io/v1alpha3" ) or (ClusterConfiguration.apiVersion == "kubeadm.k8s.io/v1")
+
+### Write configs to disk
+- name: Writing JoinConfiguration KubeProxyConfiguration and KubeletConfiguration to /etc/kubernetes/kubeadm-node.conf
+  copy:
+    dest: /etc/kubernetes/kubeadm-node.conf
+    force: yes
+    content: |
+      {{ JoinConfiguration | to_nice_yaml }}
+      ---
+      {{ KubeProxyConfiguration | to_nice_yaml }}
+      ---
+      {{ KubeletConfiguration | to_nice_yaml }}
+#      ---
+#      {{ ClusterConfiguration | to_nice_yaml }}
+
+### Join nodes to cluster
+- name: Join cluster using kubeadm join --config /etc/kubernetes/kubeadm-node.conf
+  #command: /usr/bin/kubeadm join {{ master_name }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} --config /etc/kubernetes/kubeadm-node.conf
+  command: /usr/bin/kubeadm join --config /etc/kubernetes/kubeadm-node.conf
+  #{{ node_name_setting | default (" ") }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:
   - init
 #  args:
@@ -140,7 +161,7 @@
 #     changed_when: false
 
 #   - name: Check all nodes were registered
-#     shell: "/usr/bin/test $(kubectl get nodes --no-headers | grep -ow Ready | wc -l) >= {{ groups['node'] | length + groups['master'] | length }}"
+#     shell: "/usr/bin/test $(kubectl get nodes --no-headers | grep -ow Ready | wc -l) >= {{ groups['nodes'] | length + groups['masters'] | length }}"
 #     register: command_result
 #     retries: 10
 #     delay: 3

@@ -2,7 +2,7 @@
 ## Preparations
 ## Making sure python exists on all nodes, so Ansible will be able to run:
 - hosts: all
-  gather_facts: False
+  gather_facts: no
   become: yes
   become_method: sudo
   pre_tasks:
@@ -16,14 +16,17 @@
     tags: always # required for tags, see ansible issue: #14228
     
   - name: test min. vars (group_vars/all) are set (ClusterConfiguration and k8s_network_addons_urls)
-    debug: msg='Make sure min. vars are set in group_vars/all (e.g. ClusterConfiguration and k8s_network_addons_urls)'
-    when: ClusterConfiguration is not defined
-    failed_when: ClusterConfiguration is not defined
+    debug: msg='Make sure min. vars are set in group_vars/all/ (e.g. ClusterConfiguration and k8s_network_addons_urls)'
+    when: 
+    - ClusterConfiguration is not defined
+    - JoinConfiguration is not defined
+    failed_when: 
+    - ClusterConfiguration is not defined
+    - JoinConfiguration is not defined
     tags: always # always check if we have vars in place
 
 ## proper reset of any previous cluster (if any)
 - hosts: primary-master
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -37,32 +40,29 @@
   - { role: tools, task: reset_drain, tags: [ 'reset', 'node_reset', 'drain', 'node_drain' ] } #done on master, affecting nodes
 
 ## nodes -> reset and install common part (for all nodes)
-- hosts: node
-  gather_facts: smart
+- hosts: nodes
   become: yes
   become_method: sudo
   tags:
   - node
   roles:
-  - { role: tools, task: reset, tags: [ 'reset', 'node_reset' ], when: "inventory_hostname not in groups['master']" }
-  - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['master']" }
-  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node_install', 'node' ], when: "inventory_hostname not in groups['master']" }
+  - { role: tools, task: reset, tags: [ 'reset', 'node_reset' ], when: "inventory_hostname not in groups['masters']" }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['masters']" }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node_install', 'node' ], when: "inventory_hostname not in groups['masters']" }
 
 ## etcd -> reset and install common part (for all etcds, when not in the same group with master)
 - hosts: etcd
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
   - etcd
   roles:
-  - { role: tools, task: reset, tags: [ 'reset', 'etcd_reset' ], when: "inventory_hostname not in groups['master']" }
-  - { role: tools, task: weave_reset, tags: [ 'reset', 'etcd_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['master']" }
-  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'etcd_install', 'node' ], when: "inventory_hostname not in groups['master']" }
+  - { role: tools, task: reset, tags: [ 'reset', 'etcd_reset' ], when: "inventory_hostname not in groups['masters']" }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'etcd_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['masters']" }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'etcd_install', 'node' ], when: "inventory_hostname not in groups['masters']" }
     
 ## master -> reset and install common part (for all masters - and sometimes etcd when colocated with masters)
-- hosts: master
-  gather_facts: smart
+- hosts: masters
   become: yes
   become_method: sudo
   tags:
@@ -74,7 +74,6 @@
 
 ## etcd -> install etcd (when HA)
 - hosts: etcd
-  gather_facts: all # smart
   become: yes
   become_method: sudo
   any_errors_fatal: yes
@@ -84,11 +83,10 @@
   - etcd_install
   - ha
   roles:
-  - { role: etcd, tags: [ 'install', 'etcd_install', 'ha', 'etcd'], when: "groups['master'] | length > 1" } 
+  - { role: etcd, tags: [ 'install', 'etcd_install', 'ha', 'etcd'], when: "groups['masters'] | length > 1" } 
 
 ## master -> install keepalived and deploy etcd client certs on masters (relevat if HA)
-- hosts: master
-  gather_facts: all # smart
+- hosts: masters
   become: yes
   become_method: sudo
   any_errors_fatal: yes
@@ -98,12 +96,11 @@
   - ha
   - master_install
   roles:
-  - { role: keepalived, tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived'], when: "groups['master'] | length > 1" }
-  - { role: client-certs, tags: [ 'master', 'install', 'master_install', 'ha', 'client-certs'], when: "groups['master'] | length > 1" }
+  - { role: keepalived, tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived'], when: "groups['masters'] | length > 1" }
+  - { role: client-certs, tags: [ 'master', 'install', 'master_install', 'ha', 'client-certs'], when: "groups['masters'] | length > 1" }
 
 - hosts: primary-master 
-  name: (or master in general; applies to both ha and non-ha)
-  gather_facts: all # smart
+  name: primary-master (or master in general) - it applies to both ha and non-ha
   become: yes
   become_method: sudo
   any_errors_fatal: yes
@@ -115,7 +112,6 @@
   - { role: master, tags: [ 'primary-master', 'master', 'install', 'master_install'] } 
 
 - hosts: secondary-masters
-  gather_facts: all # smart
   become: yes
   become_method: sudo
   any_errors_fatal: yes
@@ -128,17 +124,15 @@
   - { role: master, tags: [ 'secondary-masters', 'master', 'install', 'master_install', 'secondary_masters'] } 
 
 ## node -> install nodes (kubeadm join, etc)
-- hosts: node
-  gather_facts: smart
+- hosts: nodes
   become: yes
   become_method: sudo
   any_errors_fatal: yes
   roles:
-  - { role: node, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['master']" }
+  - { role: node, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['masters']" }
 
 ## Post deploy (network, storage, helm installation, helm charts deploy, any other addons)
 - hosts: primary-master
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -152,7 +146,6 @@
 #https://github.com/vmware/kubernetes/issues/495
 - hosts: mustrebootlist
   gather_facts: no
-  #gather_subset: all
   become: yes
   become_method: sudo
   tags:
@@ -160,11 +153,10 @@
   - vsphere_bug_fix
   - vsphere
   roles:
-  - { role: tools, task: reboot, tags: [ 'reboot_minimal' ], when: "ClusterConfiguration.cloudProvider is defined and ClusterConfiguration.cloudProvider == 'vsphere' and allow_restart | default(False)" }
+  - { role: tools, task: reboot, tags: [ 'reboot_minimal' ], when: "ClusterConfiguration.cloudProvider is defined and ClusterConfiguration.cloudProvider == 'vsphere' and allow_restart | default(False) and vsphere_bug_fix is defined and vsphere_bug_fix" }
 
 ## Generic Sanity
-- hosts: master
-  gather_facts: smart
+- hosts: masters
   become: yes
   become_method: sudo
   tags:
@@ -172,6 +164,11 @@
   - node_install
   - node
   - master
+  pre_tasks:
+  - name: remove temporary mustreboot temporary group
+    group:
+      name: mustrebootlist
+      state: absent
   roles:
   - { role: tools, task: cluster_sanity, tags: [ 'cluster_sanity', 'sanity' ] }
   - { role: tools, task: postinstall_messages, tags: [ 'cluster_sanity', 'sanity' ] }

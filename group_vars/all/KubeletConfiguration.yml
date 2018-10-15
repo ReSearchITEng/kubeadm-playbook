@@ -1,5 +1,9 @@
 #https://godoc.org/k8s.io/kubernetes/pkg/kubelet/apis/config#KubeletConfiguration
+#https://godoc.org/k8s.io/kubelet/config/v1beta1#KubeletConfiguration
 KubeletConfiguration:
+  #nodeRegistration:
+  #  kubeletExtraArgs:
+  #    --cloud-provider={{ kubeadm_master_config.cloudProvider }} --cloud-config=/etc/kubernetes/cloud-config
   # address: 0.0.0.0
   apiVersion: kubelet.config.k8s.io/v1beta1
   # authentication:

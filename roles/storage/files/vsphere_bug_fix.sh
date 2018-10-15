@@ -6,6 +6,8 @@ for h in $(kubectl get nodes | tail -n +2 | awk '{print $1}'); do
   eval kubectl patch node $h -p \'{\"spec\":{\"providerID\":\"vsphere://${uuid}\"}}\' | grep 'no change' >/dev/null
   [[ $? -gt 0 ]] && NeedRebootList="$NeedRebootList $h"
 done
-[[ -n $NeedRebootList ]] && echo "$NeedRebootList" | tr ' ' '\n' | tail -n +2
-#echo "You must reboot machines: $NeedRebootList"
+if [[ -n $NeedRebootList ]]; then
+  echo "$NeedRebootList" | tr ' ' '\n' | tail -n +2
+fi
+### NeedRebootList holds the list of machines where there was a change and requrie reboot
 

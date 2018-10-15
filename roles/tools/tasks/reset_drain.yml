@@ -22,19 +22,19 @@
   - name: drain nodes
     command: kubectl drain {{ item }} --delete-local-data --force --ignore-daemonsets --grace-period=5 --timeout=60s
     #with_items: "{{command_results.stdout_lines}}"
-    with_items: groups.node
+    with_items: groups.nodes
     when: reset_gracefully is defined and reset_gracefully
     ignore_errors: yes
 
   - name: delete nodes
     command: kubectl delete node {{ item }}
     #with_items: "{{command_results.stdout_lines}}"
-    with_items: groups.node
+    with_items: groups.nodes
     when: reset_gracefully is defined and reset_gracefully
     ignore_errors: yes
 
     #shell: "kubectl get nodes -o jsonpath='{.items[*].metadata.name}'"
-    #with_items: "{{ groups['node'] }}"
+    #with_items: "{{ groups['nodes'] }}"
 
   - name: kubectl get nodes must be empty by now 
     shell: "kubectl get nodes --no-headers | grep -v 'node-role.kubernetes.io/master' | grep -v -w 'Ready' || true"

@@ -66,13 +66,13 @@
     tags:
     - helm
 
-  - name: helm remove/cleanup
-    environment: '{{env_kc}}'
-    shell: ( helm reset || true ) && ( kubectl delete deployment --namespace=kube-system tiller-deploy || true ) && ( kubectl delete service --namespace=kube-system tiller-deploy  || true ) && (  kubectl delete clusterrolebinding tiller  || true ) && (  kubectl delete --namespace=kube-system sa tiller )
-    tags:
-    - helm_reset
-    - helm
-    ignore_errors: yes
+  # - name: helm remove/cleanup
+  #   environment: '{{env_kc}}'
+  #   shell: ( helm reset || true ) && ( kubectl delete deployment --namespace=kube-system tiller-deploy || true ) && ( kubectl delete service --namespace=kube-system tiller-deploy  || true ) && (  kubectl delete clusterrolebinding tiller  || true ) && (  kubectl delete --namespace=kube-system sa tiller )
+  #   tags:
+  #   - helm_reset
+  #   - helm
+  #   ignore_errors: yes
 
   ## https://github.com/kubernetes/helm/blob/master/docs/rbac.md
   - name: create helm related RBAC (tiller sa)
@@ -92,14 +92,14 @@
   - name: helm init when no MasterHA
     environment: '{{env_kc}}'
     #shell: "helm init --host {{ inventory_hostname }}:6443 "
-    shell: "helm init --host {{ groups['master'][0] }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} --service-account tiller"
+    shell: "helm init --host {{ groups['masters'][0] }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} --service-account tiller"
     #when: helm.install_script_url is defined
     register: command_result
     changed_when: "'Tiller is already installed' not in command_result.stdout"
     args:
       chdir: /root/
     when:
-    - groups['master'] | length == 1
+    - groups['masters'] | length == 1
     tags:
     - helm
 
@@ -114,7 +114,7 @@
       chdir: /root/
     when:
     - custom.networking.fqdn.always is not defined or custom.networking.fqdn.always or custom.networking.fqdn.master
-    - groups['master'] | length > 1
+    - groups['masters'] | length > 1
     tags:
     - helm
 
@@ -130,7 +130,7 @@
     when:
     - not custom.networking.fqdn.always
     - not custom.networking.fqdn.master
-    - groups['master'] | length > 1
+    - groups['masters'] | length > 1
     tags:
     - helm
 
