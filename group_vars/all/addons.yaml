@@ -1,0 +1,45 @@
+#####
+# ADDONS # uncomment/ add the desired ones.
+#k8s_addons_urls:
+  # - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/node-problem-detector/npd.yaml # rbac ready
+#####
+
+###################
+## HELM & CHARTS ##
+###################
+helm:
+  helm_version: v2.11.0 # or "latest" #https://github.com/kubernetes/helm/releases
+  install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
+  repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
+    - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
+#    - { name: rook, url: 'http://charts.rook.io' }
+#    - { name: fabric8, url: 'https://fabric8.io/helm' }
+  packages_list: # when not defined, namespace defaults to "default" namespace
+#    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" --version=0.17.1 ' }
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --version=0.19.0 ' }
+    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
+
+## DASHBOARD HEAD(latest), compatible with k8s 1.8:
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},image.repository=kubernetesdashboarddev/kubernetes-dashboard-amd64,image.tag=head,image.pullPolicy=Always' } # development version, for k8s 1.8, and with all admin permissions open
+# OR:
+## DASHBOARD 1.8.3, compatible with k8s 1.8+:    
+    - { name: dashboard, repo: stable/kubernetes-dashboard, namespace: kube-system, options: '--set rbac.create=True,rbac.clusterAdminRole=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }},image.tag=v1.8.3 --version=0.5.3' } # Limited to helmchart 0.5.3 for the non-tls ingress. 
+    ##gcr.io/google_containers/kubernetes-dashboard-amd64 for stable versions tagged per k8s version. For lastest (beta) versions, one may use: from docker.io kubernetesdashboarddev/kubernetes-dashboard-amd64
+    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head,imagePullPolicy=Always' } # development version, and with all admin permissions open
+    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' }
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
+#    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
+#    - { name: prometheus, repo: stable/prometheus, namespace:kube-system, options: '--set alertmanager.ingress.enabled=True,alertmanager.ingress.hosts[0]=alertmanager.{{custom.networking.dnsDomain}},server.ingress.enabled=True,server.ingress.hosts[0]=prometheus.{{custom.networking.dnsDomain}}'
+#    - { name: moodle, repo: stable/moodle, options: '--set moodleUsername=admin,moodlePassword=password,mariadb.mariadbRootPassword=secretpassword,serviceType=ClusterIP' }
+
+
+## kured -> restart k8s's cluster machines in a reasonable and controlled manner : cordon, drain, reboot, uncordon
+   ## https://github.com/weaveworks/kured   
+   ## Monitors restart requests in various ways: /var/run/reboot-required , prometheus, etc.
+    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s"' }
+
+
+## Not tested:
+#    - { name: elasticsearch, repo: incubator/elasticsearch }
+#####
