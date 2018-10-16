@@ -82,7 +82,6 @@
     port: "2379"
     host: "{{ ansible_default_ipv4.address }}"
   when: "'primary-etcd' in group_names"
-  timeout: 300
 
 - name: Determine etcd image ID being used by the etcd cluster
   shell: "docker ps | grep k8s_etcd | grep _kube-system_ | grep -v pause | awk '{print $2}' "
