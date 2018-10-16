@@ -20,10 +20,6 @@
     - nfs_reset
     ignore_errors: yes
 
-  - name: Reset cluster (when there was no need for --force)
-    command: /usr/bin/kubeadm reset
-    ignore_errors: yes
-
   - name: Reset cluster (kubeadm reset --force)
     command: /usr/bin/kubeadm reset --force
     ignore_errors: yes
