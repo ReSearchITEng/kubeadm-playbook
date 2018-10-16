@@ -68,7 +68,7 @@
            - k top node / pod # More tips: https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/
            
            - browse your master (using fqdn) to see the dashboard:
-             http://{{groups["master"][0]}}
+             http://{{groups["masters"][0]}}
                or, ideally (depending what was defined in config)
              http://dashboard.{{custom.networking.dnsDomain}} (when var custom.networking.dnsDomain properly defined and set in your dns )
     debug: var=msg
