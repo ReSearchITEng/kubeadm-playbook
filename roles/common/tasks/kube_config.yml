@@ -1,14 +1,12 @@
 ---
+- name: Make sure folder /etc/kubernetes/ exists
+  file: path=/etc/kubernetes state=directory mode=0755
+
 ### prepare cloud-config
 - block:
   - name: prepare cloud-config file for cloudProvider {{ClusterConfiguration.cloudProvider}}
     set_fact: fact_cloud_provider='--cloud-provider={{ ClusterConfiguration.cloudProvider }} --cloud-config=/etc/kubernetes/cloud-config'
-    tags:
-    - always
 
-  - name: Make sure folder /etc/kubernetes/ exists
-    file: path=/etc/kubernetes state=directory mode=0755
-    
   - name: prepare cloud-config file
     template:
       src: cloud-config.j2

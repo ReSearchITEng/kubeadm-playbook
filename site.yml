@@ -108,6 +108,7 @@
   - master
   - install
   - master_install
+  - ha
   roles:
   - { role: master, tags: [ 'primary-master', 'master', 'install', 'master_install'] } 
 
@@ -128,6 +129,10 @@
   become: yes
   become_method: sudo
   any_errors_fatal: yes
+  tags:
+  - node
+  - install
+  - node_install
   roles:
   - { role: node, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['masters']" }
 
@@ -160,9 +165,6 @@
   become: yes
   become_method: sudo
   tags:
-  - sanity
-  - node_install
-  - node
   - master
   pre_tasks:
   - name: remove temporary mustreboot temporary group
