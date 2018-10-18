@@ -10,7 +10,7 @@
 #####
 
 KUBERNETES_VERSION: "1.12.1"
-# Software versions (used by installation via package manager)
+# Software versions (used by installation, package manager, image pull, etc. )
 
 KEEPALIVED_VERSION: "1.3.5"
   # Use "1.3.*" if you want the latest 1.3 provided by your already defined package repositories
@@ -32,7 +32,7 @@ kubectl_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
 #####
 ##### NOTE ->> For the actual k8s version, please set the below: ClusterConfiguration.kubernetesVersion
 
-# Certificate settings (does not really matter for self-signed certificates in a private network)
+# etcd Certificate info for creation (does not really matter for self-signed certificates in a private network) - required for HA
 CERT_COMMON_NAME: "etcd"
 CERT_COUNTRY: "AA"
 CERT_LOCALITY: "LOCALITY"
