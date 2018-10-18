@@ -45,8 +45,13 @@
 
 ### Generate a token&hash on master and use them
 - block:
+  - set_fact:
+      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+
   - name: generate a join token on primary-master
     shell: kubeadm token create --description "kubeadm-playbook-node-joining-token" --ttl 15m --print-join-command  | awk '{print $5}{print $7}'
+    environment: '{{env_kc}}'
+    # environment -> is required due to a k8s bug which makes kubeadm need internet to generate a token. setting version is not allowed
     # Optionally using "--config /etc/kubernetes/kubeadm-master.conf" to get rid of the message that it tries to connect to internet for version
     register: kubeadm_token_whash_n
     delegate_to: "{{groups['primary-master'][0]}}"
