@@ -76,10 +76,18 @@ cd kubeadm-playbook/
 cp hosts.example hosts
 vi hosts <add hosts>
 # Setul vars in group_vars
-cp group_vars/all.example group_vars/all
-vi group_vars/all <modify vars as needed>
+vi group_vars/all/* <modify vars as needed>
 ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
 ```
+If there are any issues, you may want to run only some of the steps, by choosing the appropriate tags to run.
+Read the site.yml. Here are also some explanations of important steps:
+- reset any previous cluster, delete etcd, cleanup network, etc.  (role/tag: reset)
+- common section which prepares all machines (e.g. docker if required, kernel modules, etc) (role: common)
+- install etcd  (role/tag: etcd) (requried only when you have HA only)
+- install master (role/tag: master)
+- install nodes  (role/tag: node)
+- install network, helm, ingresses, (role/tag: post_deploy)
+
 ## Add manage (add/reinstall) only one node (or set of nodes):
 - modify inventory (**hosts** file), and leave the master intact, but for nodes, keep *ONLY* the nodes to be managed (added/reset)
 - ``` ansible-playbook -i hosts site.yml --tags node ```
