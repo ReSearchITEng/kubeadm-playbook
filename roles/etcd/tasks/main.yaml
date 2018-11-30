@@ -84,7 +84,7 @@
   when: "'primary-etcd' in group_names"
 
 - name: Determine etcd image ID being used by the etcd cluster
-  shell: "docker ps | grep k8s_etcd | grep _kube-system_ | grep -v pause | awk '{print $2}' "
+  shell: "docker images | grep $(docker ps | grep k8s_etcd | grep _kube-system_ | awk '!/pause/ {print $2}') | awk '{print $1\":\"$2}'"
   register: etcd_image_id
   when: "'primary-etcd' in group_names"
 
