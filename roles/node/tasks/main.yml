@@ -28,20 +28,20 @@
   when:
   - InitConfiguration.bootstrapTokens is defined
   - InitConfiguration.bootstrapTokens[0].token is defined
-  - JoinConfiguration.token is not defined
+  - JoinConfiguration.discovery is not defined or JoinConfiguration.discovery.bootstrapToken is not defined or JoinConfiguration.discovery.bootstrapToken.token
 
-- name: when defined, use JoinConfiguration.token on priority
-  set_fact: kubeadm_token={{ JoinConfiguration.token }}
+- name: when defined, use JoinConfiguration.discovery.bootstrapToken.token on priority
+  set_fact: kubeadm_token={{ JoinConfiguration.discovery.bootstrapToken.token }}
   when:
-  - JoinConfiguration.token is defined
+  - JoinConfiguration.discovery.bootstrapToken.token is defined
 
-- name: when there is JoinConfiguration.token or InitConfiguration.bootstrapTokens[0].token and no hash, add skip hash
+- name: when there is JoinConfiguration.discovery.bootstrapToken.token or InitConfiguration.bootstrapTokens[0].token and no hash, add skip hash
   set_fact:
-    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'DiscoveryTokenUnsafeSkipCAVerification': 'True' }, recursive=True) }}"
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'unsafeSkipCAVerification': 'True' } } }, recursive=True) }}"
   when:
-  - JoinConfiguration.token is defined or InitConfiguration.bootstrapTokens is defined
-  - JoinConfiguration.token is defined or InitConfiguration.bootstrapTokens[0].token is defined 
-  - JoinConfiguration.discoveryTokenCACertHashes is not defined
+  - JoinConfiguration.discovery.bootstrapToken.token is defined or InitConfiguration.bootstrapTokens is defined
+  - JoinConfiguration.discovery.bootstrapToken.token is defined or InitConfiguration.bootstrapTokens[0].token is defined 
+  - JoinConfiguration.discovery.bootstrapToken.CACertHashes is not defined
 
 ### Generate a token&hash on master and use them
 - block:
@@ -60,30 +60,30 @@
     - InitConfiguration is not defined or InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
     changed_when: false
 
-  - name: add API server JoinConfiguration.discoveryTokenAPIServers
+  - name: add API server JoinConfiguration.discovery.bootstrapToken.apiServerEndpoint
     set_fact:
-      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discoveryTokenAPIServers': [master_name + ':' + InitConfiguration.localAPIEndpoint.bindPort | default (6443) | string ] }, recursive=True) }}"
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'apiServerEndpoint': [master_name + ':' + InitConfiguration.localAPIEndpoint.bindPort | default (6443) | string ] } } }, recursive=True) }}"
 
-  - name: add discovery token hash to JoinConfiguration.discoveryTokenCACertHashes
+  - name: add discovery token hash to JoinConfiguration.discovery.bootstrapToken.CACertHashes
     set_fact:
-      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discoveryTokenCACertHashes': [kubeadm_token_whash_n.stdout_lines[1]] }, recursive=True) }}"
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'CACertHashes': [kubeadm_token_whash_n.stdout_lines[1]] } } }, recursive=True) }}"
 
-  ### Add token must be the last in the block, otherwise condition (JoinConfiguration.token is not defined) resolves to false...
-  - name: add token to the JoinConfiguration.token
+  ### Add token must be the last in the block, otherwise condition (JoinConfiguration.discovery.bootstrapToken.token is not defined) resolves to false...
+  - name: add token to the JoinConfiguration.discovery.bootstrapToken.token
     set_fact:
-      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'token': kubeadm_token_whash_n.stdout_lines[0] }, recursive=True) }}"
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'token': kubeadm_token_whash_n.stdout_lines[0] } } }, recursive=True) }}"
 
   when:
-  - JoinConfiguration.token is not defined
+  - JoinConfiguration.discovery is not defined or JoinConfiguration.discovery.bootstrapToken is not defined or JoinConfiguration.discovery.bootstrapToken.token is not defined
   - InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
   tags:
   - token
 
 - name: Add the InitConfiguration.bootstrapTokens[0] to the JoinConfiguration
   set_fact:
-    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'token': kubeadm_token }, recursive=True) }}"
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'token': kubeadm_token } } }, recursive=True) }}"
   when:
-  - JoinConfiguration.token is not defined
+  - JoinConfiguration.discovery is not defined or JoinConfiguration.discovery.bootstrapToken is not defined or JoinConfiguration.discovery.bootstrapToken.token is not defined
   tags:
   - token
 
