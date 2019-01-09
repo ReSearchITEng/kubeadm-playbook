@@ -10,13 +10,13 @@
   when:
   - custom.networking.fqdn.always or custom.networking.fqdn.node
 
-- name: add apiEndpoint section to the InitConfiguration (if does not exist)
+- name: add localAPIEndpoint section to the InitConfiguration (if does not exist)
   set_fact:
-    InitConfiguration: "{{ InitConfiguration | combine ( { 'apiEndpoint': InitConfiguration.apiEndpoint | default ({}) } ) }}"
+    InitConfiguration: "{{ InitConfiguration | combine ( { 'localAPIEndpoint': InitConfiguration.localAPIEndpoint | default ({}) } ) }}"
 
-- name: "Wait 300 seconds for master at {{ master_name }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
+- name: "Wait 300 seconds for master at {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
   wait_for:
-    port: "{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }}"
+    port: "{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}"
     host: "{{ master_name }}"
     delay: 1
     timeout: 300
@@ -62,7 +62,7 @@
 
   - name: add API server JoinConfiguration.discoveryTokenAPIServers
     set_fact:
-      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discoveryTokenAPIServers': [master_name + ':' + InitConfiguration.apiEndpoint.bindPort | default (6443) | string ] }, recursive=True) }}"
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discoveryTokenAPIServers': [master_name + ':' + InitConfiguration.localAPIEndpoint.bindPort | default (6443) | string ] }, recursive=True) }}"
 
   - name: add discovery token hash to JoinConfiguration.discoveryTokenCACertHashes
     set_fact:
@@ -112,7 +112,7 @@
 
 ### Join nodes to cluster
 - name: Join cluster using kubeadm join --config /etc/kubernetes/kubeadm-node.conf
-  #command: /usr/bin/kubeadm join {{ master_name }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} --config /etc/kubernetes/kubeadm-node.conf
+  #command: /usr/bin/kubeadm join {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} --config /etc/kubernetes/kubeadm-node.conf
   command: /usr/bin/kubeadm join --config /etc/kubernetes/kubeadm-node.conf
   #{{ node_name_setting | default (" ") }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:

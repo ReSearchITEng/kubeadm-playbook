@@ -7,9 +7,9 @@
       tasks_from: decide_master_name
 
   
-  - name: "Wait 300 seconds for master at {{ master_name }}:{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
+  - name: "Wait 300 seconds for master at {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
     wait_for:
-      port: "{{ InitConfiguration.apiEndpoint.bindPort | default (6443) }}"
+      port: "{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}"
       host: "{{ master_name }}"
       delay: 1
       timeout: 300

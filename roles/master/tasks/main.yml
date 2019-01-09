@@ -136,7 +136,7 @@
 
 - name: MasterHA merging {{ custom.networking.masterha_vip }} to the InitConfiguration.advertiseAddress
   set_fact:
-    InitConfiguration: "{{  InitConfiguration | combine ( { 'apiEndpoint': {'advertiseAddress': custom.networking.masterha_vip  } }, recursive=True) }}"
+    InitConfiguration: "{{  InitConfiguration | combine ( { 'localAPIEndpoint': {'advertiseAddress': custom.networking.masterha_vip  } }, recursive=True) }}"
   when: groups['masters'] | length > 1
   # tags:
   # - always
