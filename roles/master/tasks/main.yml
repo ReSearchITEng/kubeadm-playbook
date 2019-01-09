@@ -55,16 +55,26 @@
 - name: Remove /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf if present from HA etcd setup time (in MasterHA)
   file: "path=/etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf state=absent"
 
-## SANs
-- name: adding {{ inventory_hostname,inventory_hostname_short }} to the ClusterConfiguration.apiServerCertSANs
+- name: making sure there is an apiServer section under ClusterConfiguration
   set_fact:
-    extended_cert_list: "{{ [ansible_default_ipv4.address,inventory_hostname,inventory_hostname_short,custom.networking.masterha_fqdn,'127.0.0.1',custom.networking.masterha_vip | default(ansible_fqdn)] | union (ClusterConfiguration.apiServerCertSANs | default([]) ) }}"
-    #extended_cert_list: "{{ [inventory_hostname,inventory_hostname_short] | union (ClusterConfiguration.apiServerCertSANs | default([kubernetes]) ) }}"
+    ClusterConfiguration: "{{ ClusterConfiguration | combine ({ 'apiServer' : {} }, recursive=True) }}"
+  when: ClusterConfiguration is defined
+
+- name: making sure there is a controllerManager section under ClusterConfiguration
+  set_fact:
+    ClusterConfiguration: "{{ ClusterConfiguration | combine ({ 'controllerManager' : {} }, recursive=True) }}"
+  when: ClusterConfiguration is defined
+
+## SANs
+- name: adding {{ inventory_hostname,inventory_hostname_short }} to the ClusterConfiguration.apiServer.certSANs
+  set_fact:
+    extended_cert_list: "{{ [ansible_default_ipv4.address,inventory_hostname,inventory_hostname_short,custom.networking.masterha_fqdn,'127.0.0.1',custom.networking.masterha_vip | default(ansible_fqdn)] | union (ClusterConfiguration.apiServer.certSANs | default([]) ) }}"
+    #extended_cert_list: "{{ [inventory_hostname,inventory_hostname_short] | union (ClusterConfiguration.apiServer.certSANs | default([kubernetes]) ) }}"
   when: ClusterConfiguration is defined 
 
-- name: merging {{ inventory_hostname,inventory_hostname_short }} to the ClusterConfiguration.apiServerCertSANs
+- name: merging {{ inventory_hostname,inventory_hostname_short }} to the ClusterConfiguration.apiServer.certSANs
   set_fact:
-    ClusterConfiguration: "{{ ClusterConfiguration | combine ({ 'apiServerCertSANs' : extended_cert_list }, recursive=True) }}"
+    ClusterConfiguration: "{{ ClusterConfiguration | combine ({ 'apiServer' : {'certSANs' : extended_cert_list } }, recursive=True) }}"
   when: extended_cert_list is defined and ClusterConfiguration is defined
 
 ## Cloud-Config - pre cluster init steps
@@ -72,21 +82,21 @@
   ## as the ClusterConfiguration.cloudProvider has been deprecated. We use ClusterConfiguration.cloudProvider as conditional for triggering below
   ## as well as triggering updates to the /etc/systemd/system/kubelet.service.d/10-kubeadm.conf (in some other step)
 - block:
-  - name: add cloud-config to apiServerExtraVolumes
+  - name: add cloud-config to apiServer.extraVolumes
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'apiServerExtraVolumes': ClusterConfiguration.apiServerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'apiServer' : {'extraVolumes': ClusterConfiguration.apiServer.extraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } } ) }}"
 
-  - name: add cloud-config to apiServerExtraArgs
+  - name: add cloud-config to apiServer.extraArgs
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'apiServerExtraArgs': ClusterConfiguration.apiServerExtraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'apiServer' : {'extraArgs': ClusterConfiguration.apiServerExtraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } } ) }}"
 
-  - name: add cloud-config to controllerManagerExtraVolumes
+  - name: add cloud-config to controllerManager.extraVolumes
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManagerExtraVolumes': ClusterConfiguration.controllerManagerExtraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManager' : {'extraVolumes': ClusterConfiguration.controllerManager.extraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } } ) }}"
 
-  - name: add cloud-config to controllerManagerExtraArgs
+  - name: add cloud-config to controllerManager.extraArgs
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManagerExtraArgs': ClusterConfiguration.controllerManagerExtraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManager' : {'extraArgs': ClusterConfiguration.controllerManager.extraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
 
   - name: InitConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the InitConfiguration.nodeRegistration.kubeletExtraArgs
     set_fact:
