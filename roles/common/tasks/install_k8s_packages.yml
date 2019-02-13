@@ -1,5 +1,5 @@
 ---
-# Debian based (includes Ubuntu)
+# Debian based (includes Ubuntu) prerequisites for using apt-get from ansible:
 - name: Install apt-transport-https
   package: name={{ item }} state={{ package_state | default ('latest') }}
   environment: '{{ proxy_env | default ({}) }}'
@@ -7,37 +7,42 @@
   - apt-transport-https
   when: ansible_os_family == "Debian"
 
-- apt_key:
-    url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-    state: present
-  environment: '{{ proxy_env | default ({}) }}'
-  when: ansible_os_family == "Debian"
+  # Create deb/yum repos for kubernetes packages (kube*, cni, etc.)
+- block:
+  # Debian based (includes Ubuntu)
+  - apt_key:
+      url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+      state: present
+    environment: '{{ proxy_env | default ({}) }}'
+    when: ansible_os_family == "Debian"
 
-- apt_repository:
-    repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
-    state: present
-    #filename: 'kubernetes.list'
-    update_cache: yes
-  environment: '{{ proxy_env | default ({}) }}'
-  when: ansible_os_family == "Debian"
+  - apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+      #filename: 'kubernetes.list'
+      update_cache: yes
+    environment: '{{ proxy_env | default ({}) }}'
+    when: ansible_os_family == "Debian"
 
-# RedHat based (includes CentOS, RHEL, Fedora, Oracle, etc.)
-- name: Create kubernetes yum repository
-  yum_repository:
-    name: kubernetes
-    description: Kubernetes
-    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
-    gpgcheck: 0
-  when: ansible_os_family == "RedHat"
+  # RedHat based (includes CentOS, RHEL, Fedora, Oracle, etc.)
+  - name: Create kubernetes yum repository
+    yum_repository:
+      name: kubernetes
+      description: Kubernetes
+      baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+      gpgcheck: 0
+    when: ansible_os_family == "RedHat"
 
-- name: add proxy for the repo
-  ini_file:
-    dest: /etc/yum.repos.d/kubernetes.repo
-    section: "{{item}}"
-    option: proxy
-    value: "{{proxy_env.https_proxy | default ([]) }}"
-  with_items: [ 'kubernetes' ]
-  when: proxy_env is defined and ansible_os_family == "RedHat"
+  - name: add proxy for the repo
+    ini_file:
+      dest: /etc/yum.repos.d/kubernetes.repo
+      section: "{{item}}"
+      option: proxy
+      value: "{{proxy_env.https_proxy | default ([]) }}"
+    with_items: [ 'kubernetes' ]
+    when: proxy_env is defined and ansible_os_family == "RedHat"
+  when: kubernetes_repo_create | default('true')
+
 
 - name: Clean yum metadata
   command: yum clean all
