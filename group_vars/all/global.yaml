@@ -18,6 +18,9 @@ KEEPALIVED_VERSION: "1.3.5"
 
 #####
 ## PACKAGES (rpm/deb)
+# kubernetes_repo_create: true # (default true) - triggers creation of /etc/repos.d/kubernetes.repo and similar for debian apt sources. 
+##                        When disabled, the code expects repo will be available already on the system, before starting the plabook.
+
 ## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 ## package_state: latest # Other valid options for this context: installed
 package_state: installed #latest #installed
