@@ -1,6 +1,6 @@
 ! Configuration File for keepalived
 global_defs {
-	router_id LVS_DEVEL
+	router_id {{ CLUSTER_NAME }}
 }
 vrrp_script check_apiserver {
   script "/etc/keepalived/check_apiserver.sh"
@@ -10,14 +10,14 @@ vrrp_script check_apiserver {
   rise 2
 }
 
-vrrp_instance VI_1 {
+vrrp_instance VI_{{ CLUSTER_NAME }}_1 {
 {% if 'primary-master' in group_names %}
     state MASTER
 {% else %}
     state BACKUP
 {% endif %}
     interface {{ ansible_default_ipv4.interface }}
-    virtual_router_id 51
+    virtual_router_id 97
 {% if 'primary-master' in group_names %}
     priority 101
 {% else %}
@@ -25,7 +25,7 @@ vrrp_instance VI_1 {
 {% endif %}
     authentication {
         auth_type PASS
-        auth_pass 4be37dc3b4c90194d1600c483e10ad1d
+        auth_pass e1{{ CLUSTER_NAME }}483e10ad1d
     }
     virtual_ipaddress {
         {{ custom.networking.masterha_vip }}
