@@ -5,8 +5,8 @@ errorExit() {
     exit 1
 }
 
-curl --silent --max-time 2 --insecure https://localhost:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}/ -o /dev/null || errorExit "Error GET https://localhost:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}/"
+curl --silent --max-time 2 --insecure https://localhost:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}/healthz -o /dev/null || errorExit "Error GET https://localhost:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}/healthz"
 if ip addr | grep -q {{ custom.networking.masterha_vip }}; then
-    curl --silent --max-time 2 --insecure https://{{ custom.networking.masterha_vip }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}/ -o /dev/null || errorExit "Error GET https://{{ custom.networking.masterha_vip }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}/"
+    curl --silent --max-time 2 --insecure https://{{ custom.networking.masterha_vip }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}/healthz -o /dev/null || errorExit "Error GET https://{{ custom.networking.masterha_vip }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}/healthz"
 fi
 
