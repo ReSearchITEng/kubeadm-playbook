@@ -12,7 +12,7 @@
 
 - name: add localAPIEndpoint section to the InitConfiguration (if does not exist)
   set_fact:
-    InitConfiguration: "{{ InitConfiguration | combine ( { 'localAPIEndpoint': InitConfiguration.localAPIEndpoint | default ({}) } ) }}"
+    InitConfiguration: "{{ InitConfiguration | combine ( { 'localAPIEndpoint': InitConfiguration.localAPIEndpoint | default ({}) }, recursive=True ) }}"
 
 - name: "Wait 300 seconds for master at {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
   wait_for:
