@@ -84,19 +84,19 @@
 - block:
   - name: add cloud-config to apiServer.extraVolumes
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'apiServer' : {'extraVolumes': ClusterConfiguration.apiServer.extraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'apiServer' : {'extraVolumes': ClusterConfiguration.apiServer.extraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } }, recursive=True ) }}"
 
   - name: add cloud-config to apiServer.extraArgs
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'apiServer' : {'extraArgs': ClusterConfiguration.apiServerExtraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'apiServer' : {'extraArgs': ClusterConfiguration.apiServerExtraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' }, recursive=True ) } }, recursive=True ) }}"
 
   - name: add cloud-config to controllerManager.extraVolumes
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManager' : {'extraVolumes': ClusterConfiguration.controllerManager.extraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManager' : {'extraVolumes': ClusterConfiguration.controllerManager.extraVolumes | default ([]) | union ([{'name': 'cloud', 'hostPath': '/etc/kubernetes/cloud-config',  'mountPath': '/etc/kubernetes/cloud-config' }] ) } }, recursive=True ) }}"
 
   - name: add cloud-config to controllerManager.extraArgs
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManager' : {'extraArgs': ClusterConfiguration.controllerManager.extraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManager' : {'extraArgs': ClusterConfiguration.controllerManager.extraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ), recursive=True } }, recursive=True ) }}"
 
   - name: InitConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the InitConfiguration.nodeRegistration.kubeletExtraArgs
     set_fact:
