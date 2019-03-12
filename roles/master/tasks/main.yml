@@ -96,7 +96,7 @@
 
   - name: add cloud-config to controllerManager.extraArgs
     set_fact:
-      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManager' : {'extraArgs': ClusterConfiguration.controllerManager.extraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } ) }}"
+      ClusterConfiguration: "{{  ClusterConfiguration | combine ( { 'controllerManager' : {'extraArgs': ClusterConfiguration.controllerManager.extraArgs | default ({}) | combine ( {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' } ) } } ) }}"
 
   - name: InitConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the InitConfiguration.nodeRegistration.kubeletExtraArgs
     set_fact:
