@@ -60,7 +60,7 @@ Note: dashboard will by default use the master machine, but also deploy under th
 * it will define a set of handy aliases 
 
 NOTE: It does support **http_proxy** configuration cases. Simply update the your proxy in the group_vars/all.    
-This has been tested with **RHEL&CentOS 7.3-7.5 and Ubuntu 16.04** and **Kubernetes v1.6.1 - v1.11.3**     
+This has been tested with **RHEL&CentOS 7.3-7.6 and Ubuntu 16.04** and **Kubernetes v1.6.1 - v1.13.4**     
 In general, keep the kube* tools at the same minor version with the desired k8s cluster. (e.g. For installing k8s v1.7 one must also use kubeadm 1.7 (kubeadm limitation).)    
 FYI, higher kube* are usually supported with 1 minor version older cluster (e.g. kube[adm/ctl/let] 1.8.* accepts kubernetes cluster 1.7.*).
 
