@@ -2,7 +2,7 @@
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
-Tested on for all Centos/RHEL 7.2+ (ideally 7.4/7.5) and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
+Tested on for all Centos/RHEL 7.2+ (ideally 7.6) and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
 Optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist.     
 
 ## Targets/pros&cons
@@ -29,7 +29,7 @@ The project is for those who want to create&recreate k8s cluster using the offic
 - during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how (also see gluster project for hints).
 
 ## Prerequisites:
-- ansible min. 2.3 (but higher is recommeneded. Tested on current 2.5)
+- ansible min. 2.3 (but higher is recommeneded. Tested on 2.5+)
 - For a perfect experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists).    
 Note: dashboard will by default use the master machine, but also deploy under the provided domain (in parallel, only additional ingress rule)
 - if docker_setup is True, it will also attempt to define your docker and set it up with overlay2 storage driver (one needs CentOS 7.4+)
