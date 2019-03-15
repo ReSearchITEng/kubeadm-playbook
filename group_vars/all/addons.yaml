@@ -8,7 +8,7 @@
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v2.11.0 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v2.13.0 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
     - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
