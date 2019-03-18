@@ -9,10 +9,10 @@ HOSTS="{% for host in groups['etcd'] %}{{ hostvars[host]['ansible_default_ipv4']
 
 for host in ${HOSTS}; do
 	echo "Creating certificates for $host..."
-	kubeadm alpha phase certs etcd-server --config=/tmp/certs/${host}/kubeadmcfg.yaml || errorExit "Error in 'certs etcd-server'."
-	kubeadm alpha phase certs etcd-peer --config=/tmp/certs/${host}/kubeadmcfg.yaml || errorExit "Error in 'certs etcd-peer'."
-	kubeadm alpha phase certs etcd-healthcheck-client --config=/tmp/certs/${host}/kubeadmcfg.yaml || errorExit "Error in 'certs etcd-healthcheck-client'."
-	kubeadm alpha phase certs apiserver-etcd-client --config=/tmp/certs/${host}/kubeadmcfg.yaml || errorExit "Error in 'certs etcd-client'."
+	kubeadm init phase certs etcd-server --config=/tmp/certs/${host}/kubeadmcfg.yaml || errorExit "Error in 'certs etcd-server'."
+	kubeadm init phase certs etcd-peer --config=/tmp/certs/${host}/kubeadmcfg.yaml || errorExit "Error in 'certs etcd-peer'."
+	kubeadm init phase certs etcd-healthcheck-client --config=/tmp/certs/${host}/kubeadmcfg.yaml || errorExit "Error in 'certs etcd-healthcheck-client'."
+	kubeadm init phase certs apiserver-etcd-client --config=/tmp/certs/${host}/kubeadmcfg.yaml || errorExit "Error in 'certs etcd-client'."
 	cp -Rv /etc/kubernetes/pki /tmp/certs/${host}/ || errorExit "Error copying certs for host '${host}'."
 	# cleanup non-reusable certificates
 	find /etc/kubernetes/pki -not -name ca.crt -not -name ca.key -type f -delete
