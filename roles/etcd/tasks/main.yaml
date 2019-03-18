@@ -32,7 +32,7 @@
   when: "'primary-etcd' in group_names"
 
 - name: Create etcd CA
-  command: "kubeadm alpha phase certs etcd-ca --config=/root/versioncfg.yaml"
+  command: "kubeadm init phase certs etcd-ca --config=/root/versioncfg.yaml"
   when: "'primary-etcd' in group_names"
 
 - name: Create temporary cert directories on primary etcd node
@@ -74,7 +74,7 @@
   copy: "src=/tmp/certs/{{ ansible_default_ipv4.address }}/kubeadmcfg.yaml dest=/root/"
 
 - name: Create etcd manifests on all etcd nodes
-  command: "kubeadm alpha phase etcd local --config=/root/kubeadmcfg.yaml"
+  command: "kubeadm init phase etcd local --config=/root/kubeadmcfg.yaml"
 
 
 - name: "Wait 300 seconds for etcd image download on primatry-etcd and start listening on: {{  ansible_default_ipv4.address }}:2379"
