@@ -98,6 +98,12 @@
     ignore_errors: yes
     tags:
     - uninstall
+    
+  - name: ipvsadm clear
+    shell: 'ipvsadm --clear'
+    ignore_errors: yes
+    tags:
+    - uninstall    
 
   - name: Reset iptables rules # THIS TASK SHOULD BE REMOVED, is not maintained
     shell: iptables-save | awk '/^[*]/ { print $1 } /^:[A-Z]+ [^-]/ { print $1 " ACCEPT" ; } /COMMIT/ { print $0; }' | iptables-restore
