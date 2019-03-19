@@ -24,11 +24,12 @@ The project is for those who want to create&recreate k8s cluster using the offic
 This project targets to get a fully working environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.    
 
 ### PROS:
-- quick (3-7 min) full cluster installation
+- quick (~10 min) full cluster installation
 - all in one shop for a cluster which you can start working right away, without mastering the details
 - applies fixes for quite few issues currently k8s installers have
 - deploys plugins to all creation of dynamical persistent volumes via: vsphere, rook or self deployed NFS
 - kubeadm is the only official tool specialized to install k8s
+- 
 
 ### CONS:
 - during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how (also see gluster project for hints).
