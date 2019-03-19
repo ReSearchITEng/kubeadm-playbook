@@ -11,6 +11,8 @@ Major difference from other projects: it uses kubeadm for all activities, and ku
 The project is for those who want to create&recreate k8s cluster using the official method (kubeadm), with all production features:
 - creates Highly Available (HA cluster - multi master) (using VIPs) - using kubeadm
 - KISS: it's build for kubeadm only (no other complexities arount it)
+- plays nicely for corporate env: allows use of internal registry for images (insted of using internet connection)
+- plays nicely for corporate env: works via proxy
 - prepares your machines (e.g. kernel params like: net.bridge.bridge-nf-call-iptables, etc.)
 - it tries to use modern methods of deploying the "addons". E.g. heapster, ingress, prometheus, etc -> all via helm. Pure and clean:
 - Ingresses (via helm chart)
@@ -29,10 +31,11 @@ This project targets to get a fully working environment in matter of minutes on 
 - applies fixes for quite few issues currently k8s installers have
 - deploys plugins to all creation of dynamical persistent volumes via: vsphere, rook or self deployed NFS
 - kubeadm is the only official tool specialized to install k8s
-- 
+- proxy or even no internet access required (when there is internal registry)
 
-### CONS:
-- during deployment requires internet access. Changes can be done to support situations when there is no internet. Should anyone be interested, I can give suggestions how (also see gluster project for hints).
+### CONS/future versions:
+- for HA Master, Only VIP is supported -> LB support for HA Master is in TODO list.
+- While for installing the cluster there is no need for internet access, the addons which come as helm charts by default look for their images on the internet. One may need to update the group_vars/all/addons.yaml to point to local registry version of the image.
 
 ## Prerequisites:
 - ansible min. 2.3 (but higher is recommeneded. Tested on 2.5+)
