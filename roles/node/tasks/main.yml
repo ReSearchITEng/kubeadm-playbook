@@ -23,6 +23,10 @@
   run_once: yes
 
 ### TOKEN:
+- name: making sure there is a JoinConfiguration.discovery.bootstrapToken placeholder
+  set_fact:
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': {} } }, recursive=True) }}"
+
 - name: set kubeadm_token to the value from InitConfiguration
   set_fact: kubeadm_token={{ InitConfiguration.bootstrapTokens[0].token }}
   when:
@@ -41,7 +45,7 @@
   when:
   - JoinConfiguration.discovery.bootstrapToken.token is defined or InitConfiguration.bootstrapTokens is defined
   - JoinConfiguration.discovery.bootstrapToken.token is defined or InitConfiguration.bootstrapTokens[0].token is defined 
-  - JoinConfiguration.discovery.bootstrapToken.CACertHashes is not defined
+  - JoinConfiguration.discovery.bootstrapToken.caCertHashes is not defined
 
 ### Generate a token&hash on master and use them
 - block:
@@ -64,9 +68,9 @@
     set_fact:
       JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'apiServerEndpoint': [master_name + ':' + InitConfiguration.localAPIEndpoint.bindPort | default (6443) | string ] } } }, recursive=True) }}"
 
-  - name: add discovery token hash to JoinConfiguration.discovery.bootstrapToken.CACertHashes
+  - name: add discovery token hash to JoinConfiguration.discovery.bootstrapToken.caCertHashes
     set_fact:
-      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'CACertHashes': [kubeadm_token_whash_n.stdout_lines[1]] } } }, recursive=True) }}"
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'caCertHashes': [kubeadm_token_whash_n.stdout_lines[1]] } } }, recursive=True) }}"
 
   ### Add token must be the last in the block, otherwise condition (JoinConfiguration.discovery.bootstrapToken.token is not defined) resolves to false...
   - name: add token to the JoinConfiguration.discovery.bootstrapToken.token
