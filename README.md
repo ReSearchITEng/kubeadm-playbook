@@ -6,17 +6,22 @@ Tested on for all Centos/RHEL 7.2+ (ideally 7.6) and Ubuntu 16.04 (both with ove
 Optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist.     
 
 ## Targets/pros&cons
-Kubeadm simplifies drastically the installation, so for BYO (vms,desktops,baremetal), complex projects like kubespray/kops are not required any longer. 
-This project targets to get a fully working environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.    
+Kubeadm simplifies drastically the installation, so for BYO (vms,desktops,baremetal), complex projects like kubespray/kops are not required any longer.
 Major difference from other projects: it uses kubeadm for all activities, and kubernetes is running in containers.    
 The project is for those who want to create&recreate k8s cluster using the official method (kubeadm), with all production features:
+- creates Highly Available (HA cluster - multi master) (using VIPs) - using kubeadm
+- KISS: it's build for kubeadm only (no other complexities arount it)
+- prepares your machines (e.g. kernel params like: net.bridge.bridge-nf-call-iptables, etc.)
+- it tries to use modern methods of deploying the "addons". E.g. heapster, ingress, prometheus, etc -> all via helm. Pure and clean:
 - Ingresses (via helm chart)
 - Persistent storage (ceph or vsphere)
 - dashboard (via helm chart)
 - heapster (via helm chart)
 - support proxy
 - modular, clean code, supporting multiple activies by using ansible tags (e.g. add/reset a subgroup of nodes).
-- suppoer multi master
+- optionally help configuring container engine (e.g. docker)
+
+This project targets to get a fully working environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.    
 
 ### PROS:
 - quick (3-7 min) full cluster installation
