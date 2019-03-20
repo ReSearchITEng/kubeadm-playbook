@@ -4,6 +4,7 @@
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
 Tested on for all Centos/RHEL 7.2+ (ideally 7.6) and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
 Optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist.     
+Actively used on a daily basis and tested with k8s starting 1.7 till 1.13.    
 
 ## Targets/pros&cons
 Kubeadm simplifies drastically the installation, so for BYO (vms,desktops,baremetal), complex projects like kubespray/kops are not required any longer.
