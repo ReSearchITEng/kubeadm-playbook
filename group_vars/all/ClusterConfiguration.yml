@@ -2,7 +2,7 @@
 ClusterConfiguration:
   apiVersion: kubeadm.k8s.io/v1beta1
   apiServer:
-    timeoutForControlPlane: 4m0s
+    timeoutForControlPlane: 8m0s
     extraArgs: # https://kubernetes.io/docs/admin/kube-apiserver/
       endpoint-reconciler-type: "lease"  # needs k8s 1.9+ More info: https://kubernetes.io/docs/admin/high-availability/building/#endpoint-reconciler
       service-node-port-range: '79-32767' #Default 32000-32767 ; Ensure the local ports on all nodes are set accordingly
