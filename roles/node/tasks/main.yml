@@ -14,12 +14,12 @@
   set_fact:
     InitConfiguration: "{{ InitConfiguration | combine ( { 'localAPIEndpoint': InitConfiguration.localAPIEndpoint | default ({}) }, recursive=True ) }}"
 
-- name: "Wait 300 seconds for master at {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
+- name: "Wait 500 seconds for master at {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
   wait_for:
     port: "{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}"
     host: "{{ master_name }}"
     delay: 1
-    timeout: 300
+    timeout: 500
   run_once: yes
 
 ### TOKEN:
