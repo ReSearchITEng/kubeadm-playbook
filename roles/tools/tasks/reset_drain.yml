@@ -23,14 +23,12 @@
     command: kubectl drain {{ item }} --delete-local-data --force --ignore-daemonsets --grace-period=5 --timeout=60s
     #with_items: "{{command_results.stdout_lines}}"
     with_items: groups.nodes
-    when: reset_gracefully is defined and reset_gracefully
     ignore_errors: yes
 
   - name: delete nodes
     command: kubectl delete node {{ item }}
     #with_items: "{{command_results.stdout_lines}}"
     with_items: groups.nodes
-    when: reset_gracefully is defined and reset_gracefully
     ignore_errors: yes
 
     #shell: "kubectl get nodes -o jsonpath='{.items[*].metadata.name}'"
@@ -47,6 +45,7 @@
 
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
+  when: reset_gracefully is defined and reset_gracefully
   tags:
   - reset
   - drain
