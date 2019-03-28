@@ -16,7 +16,7 @@ helm:
 #    - { name: fabric8, url: 'https://fabric8.io/helm' }
   packages_list: # when not defined, namespace defaults to "default" namespace
 #    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" --version=0.17.1 ' }
-    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --version=0.29.1 ' }
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443  --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --version=1.4.0 ' }
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
 
 ## DASHBOARD HEAD(latest), compatible with k8s 1.8:
