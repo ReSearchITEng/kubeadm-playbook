@@ -54,6 +54,13 @@
     - {name:  "net.ipv4.ip_forward", value: "1" }
     - {name:  "net.ipv4.ip_nonlocal_bind", value: "1" }
 
+- name: setup kernel parameters for eventual elasticsearch - reboot might be required, but we will not trigger
+  #here RH asks for reboot: https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/load_balancer_administration/s1-initial-setup-forwarding-vsa
+  sysctl: name={{item.name}} value={{item.value}} state=present
+  with_items:
+    - {name:  "vm.max_map_count", value: "262144" }
+    
+
 
 
 
