@@ -27,7 +27,7 @@
     changed_when: false
 
   - name: check docker hello world
-    shell: docker run -i hello-world | awk '/Hello/ {print $1}'
+    shell: docker run --rm -i hello-world | awk '/Hello/ {print $1}'
     register: command_result
     failed_when: command_result.stdout != "Hello"
     tags:
