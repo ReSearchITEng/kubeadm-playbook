@@ -1,6 +1,6 @@
 ---
 - name: check docker hello world - test 1/2 # It will not work if there is no internet connection; change img as desired
-  shell: docker run -i hello-world # | awk '/Hello/ {print $1}'
+  shell: docker run --rm -i hello-world # | awk '/Hello/ {print $1}'
   register: docker_result
   #failed_when: docker_result.stdout != "Hello"
   tags:
@@ -195,7 +195,7 @@
   changed_when: false
 
 - name: check docker hello world - test 2/2 # It will not work if there is no internet connection
-  shell: docker run -i hello-world | awk '/Hello/ {print $1}'
+  shell: docker run --rm -i hello-world | awk '/Hello/ {print $1}'
   register: command_result
   failed_when: command_result.stdout != "Hello"
   tags:
