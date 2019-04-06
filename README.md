@@ -79,6 +79,10 @@ If for any reason anyone needs to relax RBAC, they can do:
 
 # How To Use:
 
+## Use the right release/branch
+Use the release/branch that fits your k8s version needs.
+While  master may have additinal features, it's as tested as the releases.
+
 ## Full cluster installation
 ```shell
 git clone https://github.com/ReSearchITEng/kubeadm-playbook.git
