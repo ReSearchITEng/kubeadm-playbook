@@ -2,7 +2,7 @@
 ## Preparations
 ## Making sure python exists on all nodes, so Ansible will be able to run:
 - hosts: all
-  gather_facts: False
+  gather_facts: no
   become: yes
   become_method: sudo
   pre_tasks:
@@ -23,7 +23,6 @@
 
 ## proper reset of any previous cluster (if any)
 - hosts: master
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -38,7 +37,6 @@
 
 ## nodes -> reset and install common part (for all machines)
 - hosts: node
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -78,7 +76,6 @@
 
 ## master -> reset and install common part (for all machines)
 - hosts: master
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -90,7 +87,6 @@
 
 ## master -> install master (kubeadm init, etc)
 - hosts: master
-  gather_facts: all # smart
   become: yes
   become_method: sudo
   tags:
@@ -101,7 +97,6 @@
 
 ## node -> install nodes (kubeadm join, etc)
 - hosts: node
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -116,7 +111,6 @@
 
 ## Post deploy (network, storage, helm installation, helm charts deploy, any other addons)
 - hosts: master
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
@@ -128,7 +122,6 @@
 
 ## Generic Sanity
 - hosts: master
-  gather_facts: smart
   become: yes
   become_method: sudo
   tags:
