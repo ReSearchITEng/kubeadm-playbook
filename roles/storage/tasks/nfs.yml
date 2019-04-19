@@ -1,5 +1,13 @@
 ---
 ## NFS
+  - name: install nfs-utils package
+    package:
+      name: "nfs-utils"
+      state: present
+    when: nfs_k8s is defined and nfs_k8s.enabled
+    tags:
+      - nfs_storage
+
   - name: prepare nfs provisioner
     template:
       src: nfs.j2
