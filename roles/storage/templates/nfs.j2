@@ -1,7 +1,10 @@
-#https://github.com/kubernetes/kubernetes/blob/master/examples/volumes/nfs/provisioner/nfs-server-gce-pv.yaml
-#https://github.com/kubernetes-incubator/nfs-provisioner
+#https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/rbac.yaml
+#https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/deployment.yaml
+#https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/class.yaml
+#https://github.com/kubernetes-incubator/external-storage/tree/master/nfs
+
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: nfs-provisioner-runner
 rules:
@@ -31,16 +34,40 @@ metadata:
   name: nfs-provisioner
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1alpha1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: run-nfs-provisioner
 subjects:
   - kind: ServiceAccount
     name: nfs-provisioner
-    namespace: default
+    # replace with namespace where provisioner is deployed
+    namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: nfs-provisioner-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-provisioner
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: leader-locking-nfs-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: nfs-provisioner
+    # replace with namespace where provisioner is deployed
+    namespace: kube-system
+roleRef:
+  kind: Role
+  name: leader-locking-nfs-provisioner
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: Service
@@ -64,10 +91,13 @@ spec:
     app: nfs-provisioner
 ---
 kind: Deployment
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: nfs-provisioner
 spec:
+  selector:
+    matchLabels:
+      app: nfs-provisioner
   replicas: 1
   strategy:
     type: Recreate 
@@ -76,15 +106,15 @@ spec:
       labels:
         app: nfs-provisioner
     spec:
+      serviceAccount: nfs-provisioner
       nodeSelector:
-        #kubernetes.io/hostname: machine01
         node-role.kubernetes.io/master: ""
       tolerations:
         - key: "node-role.kubernetes.io/master"
           effect: NoSchedule
       containers:
         - name: nfs-provisioner
-          image: quay.io/kubernetes_incubator/nfs-provisioner:v1.0.8
+          image: quay.io/kubernetes_incubator/nfs-provisioner:v2.2.1-k8s1.12
           ports:
             - name: nfs
               containerPort: 2049
@@ -123,7 +153,7 @@ spec:
             path: {{ nfs_k8s.host_path }}
 ---
 kind: StorageClass
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1
 metadata:
   name: "{{nfs_k8s.provisioner }}"
   annotations:
@@ -131,5 +161,5 @@ metadata:
   labels:
     kubernetes.io/cluster-service: "true"
 provisioner: "{{nfs_k8s.provisioner }}"
-#parameters:
-
+mountOptions:
+  - vers=4.1
