@@ -1,10 +1,22 @@
 ---
 ## NFS
-  - name: install nfs-utils package
+  - name: install nfs-utils package - RedHat/CentOS
     package:
       name: "nfs-utils"
       state: present
-    when: nfs_k8s is defined and nfs_k8s.enabled
+    when:
+      - nfs_k8s is defined and nfs_k8s.enabled
+      - ansible_os_family == "RedHat"
+    tags:
+      - nfs_storage
+
+  - name: install nfs-common package - Debian
+    package:
+      name: "nfs-common"
+      state: present
+    when:
+      - nfs_k8s is defined and nfs_k8s.enabled
+      - ansible_os_family == "Debian"
     tags:
       - nfs_storage
 
