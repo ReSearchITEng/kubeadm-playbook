@@ -2,7 +2,7 @@
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
-Tested on for all Centos/RHEL 7.2+ (ideally 7.6) and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
+Tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
 Optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist.     
 Actively used on a daily basis and tested with k8s starting 1.7 till 1.14.    
 
@@ -35,7 +35,7 @@ This project targets to get a fully working environment in matter of minutes on 
 - proxy or even no internet access required (when there is internal registry)
 
 ### CONS/future versions:
-- for HA Master, Only VIP is supported -> LB support for HA Master is in TODO list.
+- for HA Master, Only VIP is supported -> LB support for HA Master was not tested (try to use v1.14 and above).
 - While for installing the cluster there is no need for internet access, the addons which come as helm charts by default look for their images on the internet. One may need to update the group_vars/all/addons.yaml to point to local registry version of the image.
 
 ## Prerequisites:
@@ -180,7 +180,7 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 - https://github.com/apprenda/kismatic -> very big project by apprenda, it supports cluster upgrades
 - https://github.com/kubernetes-incubator/kargo -> plans to use kubeadm in the future, for the activities kubeadm can do.
 - https://github.com/gluster/gluster-kubernetes/blob/master/vagrant/ -> it's much more simple, no ingress, helm, addons, proxy support, and persistent volumes only using glusterfs. Entire project is only focused on CentOS.
-- https://github.com/kubernetes-incubator/kubespray & https://github.com/kubernetes/kops (amazon) -> Neither of them use the official installtion tool: kubeadm, and that makes them heavy/big and require knowledge of "internals". 
+- https://github.com/kubernetes-incubator/kubespray & https://github.com/kubernetes/kops (amazon) -> Neither of them used the official installtion tool: kubeadm; Updates: as of 2019 kubespray accepts kubeadm (to be checked if kubespray was fully redesigned around kubeadm or adopted as an option). As of May 2019: our projects accepts also master-HA using only kubeadm 1.14, with no other "magic" around.
 
 PRs are accepted and welcome.
 
