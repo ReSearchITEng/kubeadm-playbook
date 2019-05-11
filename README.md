@@ -188,4 +188,6 @@ PS: work inspired from: @sjenning - and the master ha part from @mbert. PRs & su
 [URL page of kubeadm-playboook ansible project](https://researchiteng.github.io/kubeadm-playbook/)
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
+Our story: https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
+
 License: Public Domain 
