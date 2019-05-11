@@ -43,6 +43,7 @@ CERT_ORGANISATION: "Example"
 CERT_STATE: "State"
 CERT_ORG_UNIT: "ORG"
 
+wait_charts_deploy_sanity: false #When defined, it will wait till all helm charts are fully working or fail before showing cluster-info
 
 ########## Image pre-pull on MASTERS (only)
 # Usually pre-pull not required, but there is this option here.

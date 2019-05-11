@@ -14,10 +14,14 @@
       force: yes
     tags:
     - init
-    notify:
-    - Restart kubelet
+    # notify:
+    # - Restart kubelet
+
   # BLOCK ENDS with its condition:
-  when: ClusterConfiguration is defined and ClusterConfiguration.cloudProvider is defined
+  when: 
+  - ClusterConfiguration is defined
+  - ClusterConfiguration.cloudProvider is defined
+  - inventory_hostname in groups['masters']
   tags:
   - kubelet
 

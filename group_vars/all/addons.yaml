@@ -8,7 +8,7 @@
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v2.13.0 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v2.13.1 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
     - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
@@ -16,7 +16,13 @@ helm:
 #    - { name: fabric8, url: 'https://fabric8.io/helm' }
   packages_list: # when not defined, namespace defaults to "default" namespace
 #    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" --version=0.17.1 ' }
-    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443  --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --version=1.4.0 ' }
+
+## Monitoring: prometheus, using coreos's prometheus-operator, which includes: grafana, alertmanager, prometheus.
+   ## https://github.com/helm/charts/blob/master/stable/prometheus-operator/README.md
+   ## https://github.com/coreos/prometheus-operator
+    - { name: prometheus, repo: stable/prometheus-operator, namespace: monitoring, options: '--set prometheus.ingress.enabled=True --set prometheus.ingress.hosts[0]=prometheus.{{ custom.networking.dnsDomain }} --set grafana.ingress.enabled=True --set grafana.ingress.hosts[0]=grafana.{{ custom.networking.dnsDomain }} --set alertmanager.ingress.enabled=True --set alertmanager.ingress.hosts[0]=alertmanager.{{ custom.networking.dnsDomain }}
+' }
+
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
 
 ## DASHBOARD HEAD(latest), compatible with k8s 1.8:
@@ -34,11 +40,8 @@ helm:
 
     - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s"' }
 
-## Monitoring: prometheus, using coreos's prometheus-operator, which includes: grafana, alertmanager, prometheus.
-   ## https://github.com/helm/charts/blob/master/stable/prometheus-operator/README.md
-   ## https://github.com/coreos/prometheus-operator
-    - { name: prometheus, repo: stable/prometheus-operator, namespace: monitoring, options: '--set prometheus.ingress.enabled=True --set prometheus.ingress.hosts[0]=prometheus.{{ custom.networking.dnsDomain }} --set grafana.ingress.enabled=True --set grafana.ingress.hosts[0]=grafana.{{ custom.networking.dnsDomain }} --set alertmanager.ingress.enabled=True --set alertmanager.ingress.hosts[0]=alertmanager.{{ custom.networking.dnsDomain }}
-' }
+## INGRESS ###
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443  --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --version=1.6.0 ' }
 
 ## Not tested:
 #    - { name: elasticsearch, repo: incubator/elasticsearch }

@@ -29,6 +29,21 @@
       add_host: name={{item}} group=mustrebootlist
       with_items:
         '{{list.stdout_lines}}'
+
+  # NOW it's done via .sh, but in future maybe do:
+  # - name: "vpshere bug (No VM found) => so we need to delete master(s) (and restart kubelet)"
+  #   environment: '{{env_kc}}'
+  #   command: kubectl delete node {{ inventory_hostname_short }}
+  #   ignore_errors: true
+  #   notify: # kubelet restart is needed for 1.14+, for cloud=vsphere, otherwise we get: "Unable to find VM by UUID. VM UUID:" or Error "No VM found" node info for node
+  #   - Restart kubelet
+
+  # # - meta: flush_handlers is not enough, as sometimes delete was not with success, so forcing trigger like this:
+  # - name: "vpshere bug (No VM found) =>trigger kubelet restart (after master node deleted)"
+  #   debug: msg="vpshere bug =>trigger kubelet restart (after master node deleted)"
+  #   notify: 
+  #   - Restart kubelet
+  #   changed_when: true
     when:
     - vsphere_bug_fix is defined
     - vsphere_bug_fix

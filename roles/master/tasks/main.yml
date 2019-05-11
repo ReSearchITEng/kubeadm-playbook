@@ -107,36 +107,7 @@
   - ( ClusterConfiguration.apiVersion >= "kubeadm.k8s.io/v1alpha3" ) or (ClusterConfiguration.apiVersion == "kubeadm.k8s.io/v1")
 
 ### MasterHA: ETCD Setup on master
-- name: MasterHA - build etcd endpoints list using fqdn
-  set_fact:
-    extended_etcd_endpoints_list: "{{ groups['etcd'] | map('extract', hostvars, ['ansible_fqdn']) | map('regex_replace', '^(.*)$','https://\\1:2379') | list  }}"
-  when: 
-  - groups['masters'] | length > 1
-  - custom.networking.fqdn.always or custom.networking.fqdn.etcd
-
-- name: MasterHA - build etcd endpoints list using ipv4
-  set_fact:
-    extended_etcd_endpoints_list: "{{ groups['etcd'] | map('extract', hostvars, ['ansible_default_ipv4','address']) | map('regex_replace', '^(.*)$','https://\\1:2379') | list  }}"
-  when: 
-  - groups['masters'] | length > 1
-  - custom.networking.fqdn.always == false 
-  - custom.networking.fqdn.etcd == false
-
-- name: MasterHA - set etcd endpoints
-  set_fact:
-    ClusterConfiguration: "{{ ClusterConfiguration | combine ({ 'etcd' : { 'external': { 'endpoints': extended_etcd_endpoints_list} } }, recursive=True) }}"
-      #union (ClusterConfiguration.etcd.endpoints | default([]) ) }}"
-  when: groups['masters'] | length > 1
-
-### MasterHA: point master to the ETCD certs 
-- name: MasterHA - set etcd cert file paths
-  set_fact:
-    ClusterConfiguration: "{{ ClusterConfiguration | combine ({ 'etcd' : { 'external':  item } }, recursive=True) }}"
-  when: groups['masters'] | length > 1
-  with_items:
-  - { 'caFile': '/etc/kubernetes/pki/etcd/ca.crt' }
-  - { 'certFile': '/etc/kubernetes/pki/apiserver-etcd-client.crt' }
-  - { 'keyFile': '/etc/kubernetes/pki/apiserver-etcd-client.key' }
+# section removed starting v1.14
 
 ### MasterHA : point api.controlPlaneEndpoint and api.advertiseAddress to {{ custom.networking.masterha_vip }}
 - name: MasterHA merging {{ custom.networking.masterha_vip }} to the ClusterConfiguration.controlPlaneEndpoint
@@ -184,45 +155,114 @@
   - groups['masters'] | length > 1
   - inventory_hostname not in groups['primary-master']
 
-- name: Unarchive master-certs.tar.gz to /etc/kubernetes/pki/ (when on secondary-masters)
-  unarchive: copy=yes src=/tmp/master-certs.tar.gz dest=/etc/kubernetes/pki/
-  when:
-  - groups['masters'] | length > 1
-  - inventory_hostname not in groups['primary-master']
+# Removed starting v1.14
+# - name: Unarchive master-certs.tar.gz to /etc/kubernetes/pki/ (when on secondary-masters)
+#   unarchive: copy=yes src=/tmp/master-certs.tar.gz dest=/etc/kubernetes/pki/
+#   when:
+#   - groups['masters'] | length > 1
+#   - inventory_hostname not in groups['primary-master']
 
-- name: kubeadm_init_args when MasterHA and this master node is also an etcd node (need to ignore two preflight errors here)
-  set_fact:
-    kubeadm_init_args: "{{ ' '.join((kubeadm_init_args | default(' '), '--ignore-preflight-errors=FileAvailable--etc-kubernetes-manifests-etcd.yaml', '--ignore-preflight-errors=Port-10250' )) }}"
-    #, '--ignore-preflight-errors=DirAvailable--var-lib-etcd', '--ignore-preflight-errors=Port-2379'
-  when: 
-  - "'etcd' in group_names"
-  - groups['etcd'] | length > 1
+# Removed starting v1.14
+# - name: kubeadm_init_args when MasterHA and this master node is also an etcd node (need to ignore two preflight errors here)
+#   set_fact:
+#     kubeadm_init_args: "{{ ' '.join((kubeadm_init_args | default(' '), '--ignore-preflight-errors=FileAvailable--etc-kubernetes-manifests-etcd.yaml', '--ignore-preflight-errors=Port-10250' )) }}"
+#     #, '--ignore-preflight-errors=DirAvailable--var-lib-etcd', '--ignore-preflight-errors=Port-2379'
+#   when: 
+#   - "'etcd' in group_names"
+#   - groups['etcd'] | length > 1
 
-- name: "Initialize cluster with {{kubeadm_init_args}} --config /etc/kubernetes/kubeadm-master.conf"
+- name: "Initialize cluster on primary master with kubeadm init {{kubeadm_init_args}} --config /etc/kubernetes/kubeadm-master.conf --experimental-upload-certs"
   # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
 #  environment: '{{env_kc}}'
-  command: /usr/bin/kubeadm init {{ kubeadm_init_args | default(" ") }} --config /etc/kubernetes/kubeadm-master.conf
-  register: kubeadm_init
+  command: /usr/bin/kubeadm init {{ kubeadm_init_args | default(" ") }} --config /etc/kubernetes/kubeadm-master.conf --experimental-upload-certs
+  register: kubeadm_init_primary
   tags:
   - init
-
-- name: kubeadm_init output
-  debug: msg:"{{kubeadm_init.stdout_lines}}"
-
-- name: kubeadm_init output var
-  debug: var=kubeadm_init verbosity=4
-
-- name: Archive /etc/kubernetes/pki/[cs]a.* (when on primary-master)
-  archive: path=/etc/kubernetes/pki/[cs]a.*,/etc/kubernetes/pki/front-proxy-ca.crt,/etc/kubernetes/pki/front-proxy-ca.key dest=/tmp/master-certs.tar.gz
   when:
-  - groups['masters'] | length > 1
+  # - groups['masters'] | length > 1 # Allow this for both HA primary and non-HA (exclude ha secondary masters)
   - inventory_hostname in groups['primary-master']
 
-- name: Fetch /tmp/master-certs.tar.gz from primary-master to control machine (when on primary-master)
-  fetch: src=/tmp/master-certs.tar.gz dest=/tmp/ flat=yes
+- name: kubeadm_init_primary output
+  debug: msg:"{{kubeadm_init_primary.stdout_lines}}"
   when:
-  - groups['masters'] | length > 1
   - inventory_hostname in groups['primary-master']
+
+- name: kubeadm_init_primary output var
+  debug: var=kubeadm_init_primary verbosity=4
+  when:
+  - inventory_hostname in groups['primary-master']
+
+- name: "Wait 500 seconds for master at {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} to become open"
+  wait_for:
+    port: "{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}"
+    host: "{{ master_name }}"
+    delay: 1
+    timeout: 500
+  run_once: yes
+  tags:
+  - init
+  when:
+#  - groups['masters'] | length > 1
+  - inventory_hostname in groups['primary-master']
+
+### Make sure certs are ready for secondary master and then join cluster
+- block:
+  - set_fact:
+      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+
+  - name: "Make sure certs are ready for secondary master to join cluster: kubeadm init phase upload-certs --experimental-upload-certs"
+    # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
+    environment: '{{env_kc}}'
+    shell: "/usr/bin/kubeadm init phase upload-certs --experimental-upload-certs -- 2>/dev/null | tail -1 "
+    register: kubeadm_upload_certificate_key
+    delegate_to: "{{groups['primary-master'][0]}}"
+    run_once: yes
+
+### TODO: remake it in 1.15 !!!
+  - name: generate a join token on primary-master # TEMPORARY 1.14 till this is fixed: https://github.com/kubernetes/kubeadm/issues/1485
+    shell: 'kubeadm token create --description "kubeadm-playbook-node-joining-token" --ttl 15m --print-join-command '
+    # | awk '{print $5}{print $7}'
+    environment: '{{env_kc}}'
+    # environment -> is required due to a k8s bug which makes kubeadm need internet to generate a token. setting version is not allowed
+    # Optionally using "--config /etc/kubernetes/kubeadm-master.conf" to get rid of the message that it tries to connect to internet for version
+    register: kubeadm_token_whash_secondarymasters
+    delegate_to: "{{groups['primary-master'][0]}}"
+    run_once: yes
+
+### TODO: remake it in 1.15 !!!
+#### WARNING: 1.14 TEMPORARY REMOVE FROM SECONDARY due to kubeamd issue 1485: --config /etc/kubernetes/kubeadm-master.conf 
+  - #name: "Join cluster with {{kubeadm_init_args}}  --experimental-control-plane --certificate-key {{ kubeadm_upload_certificate_key.stdout_lines[0] }}"
+    name: '{{ kubeadm_token_whash_secondarymasters.stdout }} {{ kubeadm_init_args | default(" ") }} --experimental-control-plane --certificate-key {{ kubeadm_upload_certificate_key.stdout_lines[0] }}'
+    command: '{{kubeadm_token_whash_secondarymasters.stdout}} {{ kubeadm_init_args | default(" ") }} --experimental-control-plane --certificate-key {{ kubeadm_upload_certificate_key.stdout_lines[0] }}'
+    #/usr/bin/kubeadm join
+    register: kubeadm_join_secondary
+
+  - name: kubeadm_join_secondary output
+    debug: msg:"{{kubeadm_join_secondary.stdout_lines}}"
+
+  - name: kubeadm_join_secondary output var
+    debug: var=kubeadm_join_secondary verbosity=4
+
+  when:
+  - groups['masters'] | length > 1 
+  - inventory_hostname not in groups['primary-master']
+  tags:
+  - init
+  - init_secondary_masters
+
+# Removed starting v1.14
+# - name: Archive /etc/kubernetes/pki/[cs]a.* (when on primary-master)
+#   archive: path=/etc/kubernetes/pki/[cs]a.*,/etc/kubernetes/pki/front-proxy-ca.crt,/etc/kubernetes/pki/front-proxy-ca.key dest=/tmp/master-certs.tar.gz
+#   when:
+#   - groups['masters'] | length > 1
+#   - inventory_hostname in groups['primary-master']
+
+# Removed starting v1.14
+# - name: Fetch /tmp/master-certs.tar.gz from primary-master to control machine (when on primary-master)
+#   fetch: src=/tmp/master-certs.tar.gz dest=/tmp/ flat=yes
+#   when:
+#   - groups['masters'] | length > 1
+#   - inventory_hostname in groups['primary-master']
 
 # - name: find the token of the newly created cluster
 #   command: bash -c '/usr/bin/kubeadm token list | grep -v "<invalid>" | grep "system:bootstrappers" | grep "authentication" | tail -n 1 | cut -f 1 -d" "'
@@ -234,7 +274,6 @@
 #   changed_when: false
 #   tags:
 #   - node  # it is required for the node to register
-
 
 #- name: populate the token in the ClusterConfiguration
 #  set_fact:
@@ -263,7 +302,47 @@
   notify:
   - Restart kubelet
 
+# master node delete and kubelet restart is needed for 1.14+, for cloud=vsphere, otherwise we get: "Unable to find VM by UUID. VM UUID:" or Error "No VM found" node info for node
+- block:
 
+  - name: vsphere prepare cloud-config-vsphere-secret.yaml
+    template:
+      src: cloud-config-vsphere-secret.j2
+      dest: /etc/kubernetes/cloud-config-vsphere-secret.yaml
+      force: yes
+    when:
+    - inventory_hostname in groups['primary-master']
+
+  - name: "vpshere apply cloud-config-vsphere-secret.yaml "
+    environment: '{{env_kc}}'
+    command: kubectl apply -f /etc/kubernetes/cloud-config-vsphere-secret.yaml
+    when:
+    - inventory_hostname in groups['primary-master']
+
+  - name: "vpshere remove cloud-config-vsphere-secret.yaml "
+    file:
+      path: /etc/kubernetes/cloud-config-vsphere-secret.yaml
+      state: absent
+    when:
+    - inventory_hostname in groups['primary-master']
+
+  ### TODO: remove it in 1.15 !!!
+  - name: temporary hack for 1.14 (which does not allow 2nd master to join by using config file, so no .NodeRegistration.KubeletExtraArgs... )
+    copy:
+      dest: /etc/sysconfig/kubelet
+      content: |
+        KUBELET_EXTRA_ARGS=--cloud-config=/etc/kubernetes/cloud-config --cloud-provider=vsphere
+    when:
+    - inventory_hostname not in groups['primary-master'] # on primary all is ok...
+    notify:
+    - Restart kubelet
+  
+  tags:
+  - init
+  - vpshere_recreate_master_nodes
+  when:
+  - ClusterConfiguration.cloudProvider is defined 
+  - ClusterConfiguration.cloudProvider == "vsphere"
 
 - name: export KUBECONFIG in master's ~/.bash_profile
   lineinfile: 

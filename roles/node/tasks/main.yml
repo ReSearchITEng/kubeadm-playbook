@@ -94,7 +94,7 @@
 ### Cloud Config
 - name: JoinConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the JoinConfiguration.nodeRegistration.kubeletExtraArgs
   set_fact:
-    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'nodeRegistration': {'kubeletExtraArgs': {'cloud-provider': ClusterConfiguration.cloudProvider, 'cloud-config': '/etc/kubernetes/cloud-config' }  } }, recursive=True) }}"
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'nodeRegistration': {'kubeletExtraArgs': {'cloud-provider': ClusterConfiguration.cloudProvider }  } }, recursive=True) }}"
   when:
   - ClusterConfiguration is defined
   - ClusterConfiguration.cloudProvider is defined

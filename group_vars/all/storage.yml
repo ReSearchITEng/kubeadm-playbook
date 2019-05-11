@@ -19,6 +19,13 @@ vsphere_storageclass_urls:
 vsphere_bug_fix: False
 
 #####
+cloud_config_vsphere_specific:
+  server: "vcenter.corp.example.com"
+  secret_name: "vsphere-credentials" #Any name would do
+  secret_namespace: "kube-system"    #kube-system is the usual namespace for such details
+  username: "user@corp.example.com" # move these to your vault
+  password: "PASSWORD"           # move these to your vault
+
 cloud_config: |
     [Global]
     ## Vsphere:
@@ -36,16 +43,21 @@ cloud_config: |
     ## Network > Assign network
     ## Resource > Assign virtual machine to resource pool
     ## Profile-driven storage -> Profile-driven storage view
-    [Global]
-      user = user@corp.example.com
-      password = PASSWORD
-      server = vcenter.corp.example.com:443
       insecure-flag = 1
-      datacenter = DC01
-      datastore = DS01
-      ##./govc vm.info -vm.dns=machine01 | grep Path #and remove the machine name (last string)
+      secret-name = "{{ cloud_config_vsphere_specific.secret_name }}"
+      secret-namespace = "{{ cloud_config_vsphere_specific.secret_namespace }}"
+      
+      [VirtualCenter "{{ cloud_config_vsphere_specific.server }}"]
+      port = 443
+      datacenters = DC01
+
+      [Workspace]
+      server = "{{ cloud_config_vsphere_specific.server }}"
+      datacenter = ILRNA-DTO-TRN
+      default-datastore = DS01
+      folder = kubernetes # for VRA usually folder name is: VRM
       ## Working dir is necessary when your machines are under a directory (and all have to be under the same one)
-      # working-dir = kubernetes
+      ##./govc vm.info -vm.dns=machine01 | grep Path #and remove the machine name (last string)
 
       ## Setup of per machine vm-uuid is usually not required, and it's determined automatically.
       #cat /sys/class/dmi/id/product_serial   and format like: "4237558d-2231-78b9-e07e-e9028e7cf4a5"

@@ -21,7 +21,7 @@
   #   - cluster_status
 
   - name: Get pods
-    command: kubectl get pods -o wide --all-namespaces --show-all=true --show-labels=true --show-kind=true
+    command: "kubectl get pods -o wide --all-namespaces --show-labels=true --show-kind=true"
     register: command_result
     changed_when: false
     tags:
@@ -33,6 +33,15 @@
     changed_when: false
     tags:
     - cluster_status
+
+  - name: Get pods not yet in Running status
+    shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
+    register: command_result
+    changed_when: false
+
+  - name: Print pods not yet in Running status
+    debug:
+      var: command_result.stdout_lines
 
   - name: Get nodes
     command: kubectl get nodes
@@ -51,8 +60,8 @@
 
   - name: cluster-info
     debug:
-      msg: "{{ command_result.stdout_lines }}"
-      #var: command_result.stdout_lines    
+      #msg: "{{ command_result.stdout_lines | from_yaml }}"
+      var: command_result.stdout_lines    
     changed_when: false
 
   - name: Print cluster information and other useful commands.
@@ -66,6 +75,7 @@
              - kg po  # kg='kubectl get --all-namespaces -o wide' <po|ing|etc...>
              - ks     # ks='kubectl -n kube-system ' get po
            - k top node / pod # More tips: https://kubernetes.io/docs/user-guide/kubectl-cheatsheet/
+           - to check pods which are not yet in Running status, run: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' "
            
            - browse your master (using fqdn) to see the dashboard:
              http://{{groups["masters"][0]}}

@@ -34,6 +34,7 @@
     - helm_purge
 
   - name: helm reset - wait till all helm apps are deleted/purged
+    environment: '{{env_kc}}'
     shell: helm list | tail -n +2
     register: command_result
     until: command_result.stdout == ""
@@ -58,7 +59,7 @@
 
   - name: helm reset - delete all k8s resources with tiller-deploy in their name
     environment: '{{env_kc}}'
-    command: kubectl --namespace=kube-system delete --cascade=true --now=true --include-uninitialized=true --wait=true --ignore-not-found=true {{ item }}
+    command: kubectl --namespace=kube-system delete --cascade=true --now=true --wait=true --ignore-not-found=true {{ item }}
     with_items: "{{ command_results.stdout_lines }}"
     ignore_errors: yes
     tags:

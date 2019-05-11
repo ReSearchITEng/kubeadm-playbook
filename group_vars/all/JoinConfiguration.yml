@@ -1,4 +1,5 @@
 #https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1#JoinConfiguration
+## NOTE: only in 1.14, due to a bug in kubeadm, this file is not used.
 JoinConfiguration:
 #  controlPlane:
 #    localAPIEndpoint:

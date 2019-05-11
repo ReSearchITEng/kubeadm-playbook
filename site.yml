@@ -51,15 +51,16 @@
   - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node_install', 'node' ], when: "inventory_hostname not in groups['masters']" }
 
 ## etcd -> reset and install common part (for all etcds, when not in the same group with master)
-- hosts: etcd
-  become: yes
-  become_method: sudo
-  tags:
-  - etcd
-  roles:
-  - { role: tools, task: reset, tags: [ 'reset', 'etcd_reset' ], when: "inventory_hostname not in groups['masters']" }
-  - { role: tools, task: weave_reset, tags: [ 'reset', 'etcd_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['masters']" }
-  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'etcd_install', 'node' ], when: "inventory_hostname not in groups['masters']" }
+# starting 1.14 no longer supported
+# - hosts: etcd
+#   become: yes
+#   become_method: sudo
+#   tags:
+#   - etcd
+#   roles:
+#   - { role: tools, task: reset, tags: [ 'reset', 'etcd_reset' ], when: "inventory_hostname not in groups['masters']" }
+#   - { role: tools, task: weave_reset, tags: [ 'reset', 'etcd_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['masters']" }
+#   - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'etcd_install', 'node' ], when: "inventory_hostname not in groups['masters']" }
     
 ## master -> reset and install common part (for all masters - and sometimes etcd when colocated with masters)
 - hosts: masters
@@ -73,17 +74,18 @@
   - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'master_install'] }
 
 ## etcd -> install etcd (when HA)
-- hosts: etcd
-  become: yes
-  become_method: sudo
-  any_errors_fatal: yes
-  tags:
-  - etcd
-  - install
-  - etcd_install
-  - ha
-  roles:
-  - { role: etcd, tags: [ 'install', 'etcd_install', 'ha', 'etcd'], when: "groups['masters'] | length > 1" } 
+# starting 1.14 no longer supported
+# - hosts: etcd
+#   become: yes
+#   become_method: sudo
+#   any_errors_fatal: yes
+#   tags:
+#   - etcd
+#   - install
+#   - etcd_install
+#   - ha
+#   roles:
+#   - { role: etcd, tags: [ 'install', 'etcd_install', 'ha', 'etcd'], when: "groups['masters'] | length > 1" } 
 
 ## master -> install keepalived and deploy etcd client certs on masters (relevat if HA)
 - hosts: masters
@@ -97,7 +99,7 @@
   - master_install
   roles:
   - { role: keepalived, tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived'], when: "groups['masters'] | length > 1" }
-  - { role: client-certs, tags: [ 'master', 'install', 'master_install', 'ha', 'client-certs'], when: "groups['masters'] | length > 1" }
+  #1.14 removed: - { role: client-certs, tags: [ 'master', 'install', 'master_install', 'ha', 'client-certs'], when: "groups['masters'] | length > 1" }
 
 - hosts: primary-master 
   name: primary-master (or master in general) - it applies to both ha and non-ha

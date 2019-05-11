@@ -23,7 +23,7 @@
     command: 'docker info'
     tags:
     - check_docker
-    when: docker_setup is defined and docker_setup | bool == false
+    when: docker_setup is defined and docker_setup=false
     changed_when: false
 
   - name: check docker hello world
@@ -32,7 +32,7 @@
     failed_when: command_result.stdout != "Hello"
     tags:
     - check_docker
-    when: docker_setup is defined and docker_setup | bool == false
+    when: docker_setup is defined and docker_setup=false
     changed_when: false
 
 # Ideally, to ensure there is no x509 certificate error like:

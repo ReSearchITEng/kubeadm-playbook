@@ -234,10 +234,12 @@
     - sanity
     - helm
     - charts_deploy
+    - charts_deploy_sanity
     until: command_result.stdout == ""
     retries: 60
     delay: 3
     changed_when: false
+    when: wait_charts_deploy_sanity | default('false') | bool # it's not mandatory to wait/make sure absolutelly all deployments are fine.
   tags:
   - helm
 
