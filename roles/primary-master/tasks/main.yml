@@ -188,10 +188,10 @@
 #   - "'etcd' in group_names"
 #   - groups['etcd'] | length > 1
 
-- name: "Initialize cluster on primary master with kubeadm init {{kubeadm_init_args}} --config /etc/kubernetes/kubeadm-master.conf --experimental-upload-certs"
+- name: "Initialize cluster on primary master with kubeadm init {{kubeadm_init_args}} --config /etc/kubernetes/kubeadm-master.conf --upload-certs"
   # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
 #  environment: '{{env_kc}}'
-  command: /usr/bin/kubeadm init {{ kubeadm_init_args | default(" ") }} --config /etc/kubernetes/kubeadm-master.conf --experimental-upload-certs
+  command: /usr/bin/kubeadm init {{ kubeadm_init_args | default(" ") }} --config /etc/kubernetes/kubeadm-master.conf --upload-certs
   register: kubeadm_init_primary
   tags:
   - init
@@ -228,10 +228,10 @@
 #   - set_fact:
 #       env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
 
-#   - name: "Make sure certs are ready for secondary master to join cluster: kubeadm init phase upload-certs --experimental-upload-certs"
+#   - name: "Make sure certs are ready for secondary master to join cluster: kubeadm init phase upload-certs --upload-certs"
 #     # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
 #     environment: '{{env_kc}}'
-#     shell: "/usr/bin/kubeadm init phase upload-certs --experimental-upload-certs -- 2>/dev/null | tail -1 "
+#     shell: "/usr/bin/kubeadm init phase upload-certs --upload-certs -- 2>/dev/null | tail -1 "
 #     register: kubeadm_upload_certificate_key
 #     delegate_to: "{{groups['primary-master'][0]}}"
 #     run_once: yes
