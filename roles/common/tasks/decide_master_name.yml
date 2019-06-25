@@ -1,4 +1,4 @@
-## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via VIP,MasterHA (for MasterHA cases)
+## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via masterha_ip,MasterHA (for MasterHA cases)
 - block:
   - name: by default set master name to inventory definition (no MasterHA case)
     set_fact: master_name={{ groups['primary-master'][0] }}
@@ -19,8 +19,8 @@
     - custom.networking.fqdn.always or custom.networking.fqdn.master
     - groups['masters'] | length > 1
 
-  - name: force use vip for master name (MasterHA case)
-    set_fact: master_name={{ custom.networking.masterha_vip }}
+  - name: force use ip for master name (MasterHA case)
+    set_fact: master_name={{ custom.networking.masterha_ip }}
     when:
     - not custom.networking.fqdn.always
     - not custom.networking.fqdn.master

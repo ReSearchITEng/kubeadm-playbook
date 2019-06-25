@@ -70,16 +70,27 @@
     - kubelet
     - uninstall
 
-  - name: stop kubelet for cleanup activities
+  - name: stop kubelet and etcd for cleanup activities
     systemd: name={{ item }} state=stopped
     with_items:
     - kubelet
-    - keepalived
     - etcd
     tags:
     - kubelet
     - uninstall
     ignore_errors: yes
+
+  - name: stop keepalived for cleanup activities
+    systemd: name={{ item }} state=stopped
+    with_items:
+    - keepalived
+    tags:
+    - kubelet
+    - uninstall
+    ignore_errors: yes
+    when: 
+    - groups['masters'] | length > 1 
+    - ( custom.networking.masterha_type | default('vip') ) == 'vip'
 
   - name: remove plugins mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     #shell: 'umount $(mount | grep " on /var/lib/kubelet/plugins/kubernetes.io/" | cut -f1 -d" ")'
@@ -126,6 +137,16 @@
   #  - kubelet
   #  - uninstall
   #  ignore_errors: yes
+
+  - name: Remove /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf if present from HA etcd setup time (in MasterHA)
+    file: 
+      path: /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf
+      state: absent
+
+  - name: Remove /etc/sysconfig/kubelet if present
+    file: 
+      path: /etc/sysconfig/kubelet
+      state: absent
 
   tags:
   - reset

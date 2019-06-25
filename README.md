@@ -154,10 +154,8 @@ Using vagrant keeping NAT as 1st interface (usually with only one machine) was n
 There was no focus on this option as it's more complicated to use afterwards: one must export the ports manually to access ingresses like dashboard from the browser, and usually does not support more than one machine.
 
 # kubeadm-ha
-While Kubeadm does not make multimaster (aka HA) setup easy (yet), thanks the comunity there we have it!
-Starting our playbook for v1.11, we support master HA !
- Kubeadm will support ha OOB later -> as per https://github.com/kubernetes/kubeadm/issues/546; For now we do it using some work-arounds.
-Our HA work is based on projects like: https://github.com/mbert/kubeadm2ha ( and https://github.com/sv01a/ansible-kubeadm-ha-cluster and/or github.com/cookeem/kubeadm-ha ).
+Starting 1.14/1.15, kubeadm supports multimaster (aka HA) setup easy (out of the box)
+(Our playbook supports master HA also for older v1.11-v1.13, thanks to projects like: https://github.com/mbert/kubeadm2ha ( and https://github.com/sv01a/ansible-kubeadm-ha-cluster and/or github.com/cookeem/kubeadm-ha ).
 
 # How does it compare to other projects:
 

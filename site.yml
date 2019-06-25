@@ -98,7 +98,12 @@
   - ha
   - master_install
   roles:
-  - { role: keepalived, tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived'], when: "groups['masters'] | length > 1" }
+  #- { role: keepalived, tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived'], when: ( groups['masters'] | length > 1 ) and ( custom.networking.masterha_type |default('vip') != 'lb' ) }
+  - role: keepalived
+    tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived']
+    when: 
+    - ( groups['masters'] | length ) > 1 
+    - ( custom.networking.masterha_type | default('vip') ) == 'vip'
   #1.14 removed: - { role: client-certs, tags: [ 'master', 'install', 'master_install', 'ha', 'client-certs'], when: "groups['masters'] | length > 1" }
 
 - hosts: primary-master 
@@ -112,7 +117,7 @@
   - master_install
   - ha
   roles:
-  - { role: master, tags: [ 'primary-master', 'master', 'install', 'master_install'] } 
+  - { role: primary-master, task: primary, tags: [ 'primary-master', 'master', 'install', 'master_install'] } 
 
 - hosts: secondary-masters
   become: yes
@@ -124,7 +129,7 @@
   - ha
   - master_install
   roles:
-  - { role: master, tags: [ 'secondary-masters', 'master', 'install', 'master_install', 'secondary_masters'] } 
+  - { role: non-primary-master, tags: [ 'secondary-masters', 'master', 'install', 'master_install', 'secondary_masters'] } 
 
 ## node -> install nodes (kubeadm join, etc)
 - hosts: nodes
@@ -136,7 +141,7 @@
   - install
   - node_install
   roles:
-  - { role: node, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['masters']" }
+  - { role: non-primary-master, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['masters']" }
 
 ## Post deploy (network, storage, helm installation, helm charts deploy, any other addons)
 - hosts: primary-master

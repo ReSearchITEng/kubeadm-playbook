@@ -1,6 +1,6 @@
 #https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1
 ClusterConfiguration:
-  apiVersion: kubeadm.k8s.io/v1beta1
+  apiVersion: kubeadm.k8s.io/v1beta2
   apiServer:
     timeoutForControlPlane: 8m0s
     extraArgs: # https://kubernetes.io/docs/admin/kube-apiserver/

@@ -1,6 +1,6 @@
 ---
 - block:
-## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via VIP,MasterHA (for MasterHA cases)
+## Decide how to approach the master: inventory or force fqdn (for non MasterHA cases); via masterha_ip,MasterHA (for MasterHA cases)
   - name: decide_master_name
     include_role:
       name: common

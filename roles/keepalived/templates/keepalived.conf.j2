@@ -28,7 +28,7 @@ vrrp_instance VI_{{ CLUSTER_NAME }}_1 {
         auth_pass e1{{ CLUSTER_NAME }}483e10ad1d
     }
     virtual_ipaddress {
-        {{ custom.networking.masterha_vip }}
+        {{ custom.networking.masterha_ip }}
     }
     track_script {
         check_apiserver

@@ -1,11 +1,10 @@
 #https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1#JoinConfiguration
-## NOTE: only in 1.14, due to a bug in kubeadm, this file is not used.
 JoinConfiguration:
-#  controlPlane:
+#  controlPlane: # define controlPlane section only in secondary-masters; not required in minions.
 #    localAPIEndpoint:
 #      advertiseAddress: <your_address>
 #      bindPort: 6443
-  apiVersion: kubeadm.k8s.io/v1beta1
+  apiVersion: kubeadm.k8s.io/v1beta2
   # caCertPath: /etc/kubernetes/pki/ca.crt
   # discovery:
   #   bootstrapToken:

@@ -9,7 +9,7 @@
 #  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,/var/run/docker.sock,.sock,sock' 
 #####
 
-KUBERNETES_VERSION: "1.13.4"
+KUBERNETES_VERSION: "1.15.0"
 # Software versions (used by installation, package manager, image pull, etc. )
 
 KEEPALIVED_VERSION: "1.3.5"
@@ -24,6 +24,7 @@ KEEPALIVED_VERSION: "1.3.5"
 ## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 ## package_state: latest # Other valid options for this context: installed
 package_state: installed #latest #installed
+## when package_state: installed and kube*_version params below are undefined, the playbook will not touch your kube* files, and you are in full control.
 ## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
 kubeadm_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
 kubelet_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #1.7.* #8 # 1.6.11 # 1.8.1
@@ -62,31 +63,7 @@ pre_pull_k8s_images: True
 # Images for prefetching when pre_pull_k8s_images is true and images_repo is defined
 HOST_ARCH: amd64
 DOCKER_IMAGES: [
-#  { name: "bobrik/curator", tag: "{{ CURATOR_TAG }}" },
 #  { name: "{{images_repo}}/busybox", tag: "{{ BUSYBOX_TAG }}" },
-#  #{ name: "dockerregistry.mylan.local:5000/fluentd-elasticsearch", tag: "{{ FLUENTD_ES_TAG }}" },
-#  { name: "docker.elastic.co/kibana/kibana-oss", tag: "{{ KIBANA_OSS_TAG }}" },
-#  { name: "{{images_repo}}/coredns", tag: "{{ COREDNS_TAG }}" },
-#  { name: "{{images_repo}}/elasticsearch", tag: "{{ ELASTICSEARCH_TAG }}" }, #???
-#  { name: "{{images_repo}}/etcd-{{ HOST_ARCH }}", tag: "{{ ETCD_TAG }}" },
-#  { name: "{{images_repo}}/fluentd-elasticsearch", tag: "{{ FLUENTD_ES_TAG }}" },
-#  { name: "{{images_repo}}/heapster-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_TAG }}" },
-#  { name: "{{images_repo}}/heapster-grafana-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_GRAFANA_TAG }}" },
-#  { name: "{{images_repo}}/heapster-influxdb-{{ HOST_ARCH }}", tag: "{{ HEAPSTER_INFLUXDB_TAG }}" },
-#  { name: "{{images_repo}}/kube-apiserver-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
-#  { name: "{{images_repo}}/kube-controller-manager-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
-#  { name: "{{images_repo}}/kube-proxy-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
-#  { name: "{{images_repo}}/kube-scheduler-{{ HOST_ARCH }}", tag: "v{{ KUBERNETES_VERSION }}" },
-#  { name: "{{images_repo}}/kubernetes-dashboard-{{ HOST_ARCH }}", tag: "{{ DASHBOARD_TAG }}" },
-#  { name: "{{images_repo}}/pause-{{ HOST_ARCH }}", tag: "{{ PAUSE_TAG }}" },
-#  { name: "{{images_repo}}/pause", tag: "{{ PAUSE_TAG }}" },
-#  { name: "{{images_repo}}/nginx", tag: "{{ NGINX_TAG }}" },
-#  { name: "{{images_repo}}/coreos/configmap-reload", tag: "{{ CONFIGMAP_RELOAD_TAG }}" },
-#  { name: "{{images_repo}}/coreos/etcd-operator", tag: "{{ ETCD_OPERATOR_TAG }}" },
-#  { name: "{{images_repo}}/coreos/etcd", tag: "v{{ ETCD_TAG }}" },
-#  { name: "{{images_repo}}/coreos/prometheus-config-reloader", tag: "{{ PROMETHEUS_OPERATOR_TAG }}" },
-#  { name: "{{images_repo}}/coreos/prometheus-operator", tag: "{{ PROMETHEUS_OPERATOR_TAG }}" },
-#  { name: "{{images_repo}}/pires/docker-elasticsearch-kubernetes", tag: "{{ ELASTICSEARCH_KUBERNETES_TAG }}" },
 #  { name: "{{images_repo}}/prometheus/prometheus", tag: "{{ PROMETHEUS_TAG }}" }
 ]
 

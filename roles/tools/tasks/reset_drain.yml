@@ -34,7 +34,7 @@
     #shell: "kubectl get nodes -o jsonpath='{.items[*].metadata.name}'"
     #with_items: "{{ groups['nodes'] }}"
 
-  - name: kubectl get nodes must be empty by now 
+  - name: kubectl get nodes must be empty by now (if target was full cluster and not partial update)
     shell: "kubectl get nodes --no-headers | grep -v 'node-role.kubernetes.io/master' | grep -v -w 'Ready' || true"
     register: command_result
     until: command_result.stdout == ""

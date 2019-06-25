@@ -10,13 +10,9 @@
   when:
   - custom.networking.fqdn.always or custom.networking.fqdn.node
 
-- name: add localAPIEndpoint section to the InitConfiguration (if does not exist)
-  set_fact:
-    InitConfiguration: "{{ InitConfiguration | combine ( { 'localAPIEndpoint': InitConfiguration.localAPIEndpoint | default ({}) }, recursive=True ) }}"
-
-- name: "Wait 500 seconds for master at {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} to become open (MasterHA)"
+- name: "Wait 500 seconds for master at {{ master_name }}:{{ custom.networking.masterha_bindPort | default (6443) }} to become open (MasterHA)"
   wait_for:
-    port: "{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}"
+    port: "{{ custom.networking.masterha_bindPort | default (6443) }}"
     host: "{{ master_name }}"
     delay: 1
     timeout: 500
@@ -66,7 +62,7 @@
 
   - name: add API server JoinConfiguration.discovery.bootstrapToken.apiServerEndpoint
     set_fact:
-      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'apiServerEndpoint': master_name + ':' + InitConfiguration.localAPIEndpoint.bindPort | default (6443) | string } } }, recursive=True) }}"
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'discovery': { 'bootstrapToken': { 'apiServerEndpoint': master_name + ':' + custom.networking.masterha_bindPort | default (6443) | string } } }, recursive=True) }}"
 
   - name: add discovery token hash to JoinConfiguration.discovery.bootstrapToken.caCertHashes
     set_fact:
@@ -91,6 +87,43 @@
   tags:
   - token
 
+  ### WHEN this node is control plane (secondary-master), we will add this info:
+- name: control plane (secondary-master) -> add controlPlane.
+  block:  
+
+  ## PULL IMAGES
+  - name: Pull images on master (from internet when images_repo is not defined)
+    command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository images_repo |default ('k8s.gcr.io') "
+    tags:
+    - prepull_images
+    register: command_result
+    changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
+    when: 
+    - pre_pull_k8s_images is defined 
+    - pre_pull_k8s_images 
+    #- DOCKER_IMAGES is not defined ## or images_repo is not defined
+    - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
+
+  - name: "Make sure certs are ready for secondary master to join cluster: kubeadm init phase upload-certs --experimental-upload-certs"
+    # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
+    environment: '{{env_kc}}'
+    shell: "/usr/bin/kubeadm init phase upload-certs --experimental-upload-certs -- 2>/dev/null | tail -1 "
+    register: kubeadm_upload_certificate_key
+    delegate_to: "{{groups['primary-master'][0]}}"
+    run_once: yes
+  
+  ## TODO: try to remove this, and keep the autodetermined addr:
+  - name: control plane (secondary-master) -> add controlPlane.localAPIEndpoint.advertiseAddress (ipv4; dns not allowed)
+    set_fact:
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'controlPlane': { 'localAPIEndpoint': { 'advertiseAddress': ansible_default_ipv4.address } } }, recursive=True) }}"
+
+  - name: control plane (secondary-master) -> add controlPlane.certificateKey
+    set_fact:
+      JoinConfiguration: "{{ JoinConfiguration | combine ( { 'controlPlane': { 'certificateKey': kubeadm_upload_certificate_key.stdout_lines[0] } }, recursive=True) }}"
+
+  when:
+  - inventory_hostname in groups['secondary-masters']
+
 ### Cloud Config
 - name: JoinConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the JoinConfiguration.nodeRegistration.kubeletExtraArgs
   set_fact:
@@ -111,12 +144,10 @@
       {{ KubeProxyConfiguration | to_nice_yaml }}
       ---
       {{ KubeletConfiguration | to_nice_yaml }}
-#      ---
-#      {{ ClusterConfiguration | to_nice_yaml }}
 
 ### Join nodes to cluster
 - name: Join cluster using kubeadm join --config /etc/kubernetes/kubeadm-node.conf
-  #command: /usr/bin/kubeadm join {{ master_name }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} --config /etc/kubernetes/kubeadm-node.conf
+  #command: /usr/bin/kubeadm join {{ master_name }}:{{ custom.networking.masterha_bindPort | default (6443) }} --config /etc/kubernetes/kubeadm-node.conf
   command: /usr/bin/kubeadm join --config /etc/kubernetes/kubeadm-node.conf
   #{{ node_name_setting | default (" ") }} --token {{ kubeadm_token }} {{ kubeadm_join_args | default(" ") }}
   tags:
@@ -191,4 +222,17 @@
     state: present
     create: yes
     regexp: '^export KUBECONFIG=.*'
-  when: shell is undefined or shell == 'bash'
+  when: 
+  - shell is undefined or shell == 'bash'
+  - inventory_hostname in groups['nodes']
+
+- name: export KUBECONFIG in secondary-masters' ~/.bash_profile
+  lineinfile: 
+    dest: ~/.bash_profile
+    line: "export KUBECONFIG=/etc/kubernetes/admin.conf"
+    state: present
+    create: yes
+    regexp: '^export KUBECONFIG=.*'
+  when: 
+  - shell is undefined or shell == 'bash'
+  - inventory_hostname in groups['secondary-masters']

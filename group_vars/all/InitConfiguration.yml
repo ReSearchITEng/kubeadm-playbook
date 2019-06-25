@@ -2,9 +2,9 @@
 InitConfiguration:
   kind: InitConfiguration
   localAPIEndpoint:
-  #   advertiseAddress: 1.2.3.4
-    bindPort: 6443
-  apiVersion: kubeadm.k8s.io/v1beta1
+  #  advertiseAddress: 1.2.3.4
+  #  bindPort: 6443
+  apiVersion: kubeadm.k8s.io/v1beta2
   # bootstrapTokens:
   # - groups:
   #   - system:bootstrappers:kubeadm:default-node-token
@@ -19,3 +19,5 @@ InitConfiguration:
     taints:
     - effect: NoSchedule
       key: node-role.kubernetes.io/master
+    # kubeletExtraArgs:
+    #   cgroupDriver: "cgroupfs"

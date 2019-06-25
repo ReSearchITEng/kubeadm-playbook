@@ -11,16 +11,6 @@ master[2:3].corp.example.com
 primary-master
 secondary-masters
 
-[primary-etcd:children]
-primary-master
-
-[secondary-etcds:children]
-secondary-masters
-
-[etcd:children]
-primary-etcd
-secondary-etcds
-
 [nodes]
 # If there is only one machine both master and node, make this section empty
 node[1:2].corp.example.com

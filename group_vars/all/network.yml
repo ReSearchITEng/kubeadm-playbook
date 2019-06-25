@@ -5,14 +5,30 @@ CLUSTER_NAME: demok8s  # used only for defining the clusterConfiguration and joi
 custom:
   networking:
     dnsDomain: "{{ CLUSTER_NAME }}.myk8s.corp.example.com"  # For MasterHA, if you have dns, put the desired cluster domain here. If no DNS change possible on your side, and you want MasterHA, fix the below 2 values accordinly
+
+    ######
+    ## masterha_* params are requried when you have MasterHA (meaning when your inventory has "secondary-masters" section not-empty)
+    ## Your setup can either use a LoadBalancer (usually a hw one), 
+    ## or use a VIP address which keepalived will manage (move the address from one master to another as needed)
+
+    ## Decide on one of 2 the masterha_types possible:
+    # "vip" #Choose VIP and you'll have keepalived instaleld and cofigured for the masterha_ip below.
+    # "lb" #Choose lb when you have a MasterHA LB which load-balances across all your masters, on api port (default 6443) 
+    #      # Make sure your LB is setup to forward requests to a specific master ONLY when api port /healthz on that host returns status 200 
+    masterha_type: "lb" # "vip" # or "lb"
+    masterha_ip: "10.1.2.3" #| default('') }}"  # Important when you have MasterHA;  # IP of either your LB or the VIP to be used.
+    ## masterha_fqdn is usually the dns name of masterha_ip above. (We cannot get it automatically in ansible...)
+    ## This value is important in order to set apiServerCertSANs in the certs correctly
     masterha_fqdn: "master-{{ CLUSTER_NAME }}.corp.example.com"  # Important when you have MasterHA, in order to set apiServerCertSANs correctly
-    masterha_vip: "10.1.2.3" #| default('') }}"  # Important when you have MasterHA
-    #masterha_fqdn: "{{ lookup('dig', masterha_vip, 'qtype=PTR') }}" # but requires some pip modules on host...
+    #masterha_fqdn: "{{ lookup('dig', masterha_ip, 'qtype=PTR') }}" # but requires some pip modules on host...
+
+    #masterha_bindPort: 6443 #default is 6443; We recommend to keep it 6443.
+    ### end of masterha topic
+
     fqdn: # decide where to force use fqdn for non masterha and nodes. When set to false, it will use the name as defined in the inventory file
       always: false # makes all the below true
       master: true  # when true, actions like wait/join will be done against dns name instead of IP
       node: false   # when true, the join command will have --node-name set to fqdn. When false, k8s will set based on how node machine answers to the hostname command
-      etcd: false   # Relevant for MasterHA case(more than 1 node in the master group), ignored otherwise; When true, the etcd endpoints will be with fqdn, IP address otherwise
 
 # Select pod Network. One may add mode simply by adding the deployment url and pod netwrod cidr it needs
 podNetwork: 'flannel'
