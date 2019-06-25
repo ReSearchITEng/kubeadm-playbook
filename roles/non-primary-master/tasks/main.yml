@@ -104,10 +104,10 @@
     #- DOCKER_IMAGES is not defined ## or images_repo is not defined
     - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
 
-  - name: "Make sure certs are ready for secondary master to join cluster: kubeadm init phase upload-certs --experimental-upload-certs"
+  - name: "Make sure certs are ready for secondary master to join cluster: kubeadm init phase upload-certs --upload-certs"
     # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
     environment: '{{env_kc}}'
-    shell: "/usr/bin/kubeadm init phase upload-certs --experimental-upload-certs -- 2>/dev/null | tail -1 "
+    shell: "/usr/bin/kubeadm init phase upload-certs --upload-certs -- 2>/dev/null | tail -1 "
     register: kubeadm_upload_certificate_key
     delegate_to: "{{groups['primary-master'][0]}}"
     run_once: yes
