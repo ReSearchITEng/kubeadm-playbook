@@ -143,16 +143,30 @@
   roles:
   - { role: non-primary-master, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['masters']" }
 
-## Post deploy (network, storage, helm installation, helm charts deploy, any other addons)
+## node -> label nodes (even when master is also a node)
+- hosts: nodes
+  become: yes
+  become_method: sudo
+  any_errors_fatal: yes
+  tags:
+  - node
+  - install
+  - node_install
+  - label
+  roles:
+  - { role: tools, task: labels, tags: [ 'label'] }
+
+## Post deploy (network, storage, taints, helm installation, helm charts deploy, any other addons)
 - hosts: primary-master
   become: yes
   become_method: sudo
   tags:
   - post_deploy
   roles:
-  - { role: post_deploy, task: all, tags: [ 'post_deploy' ] }
+  - { role: post_deploy, task: all, tags: [ 'post_deploy_no_helm' ] }
   - { role: storage, task: create_all, tags: [ 'storage', 'rook', 'nfs', 'vsphere' ] }
-  - { role: helm, task: all, tags: [ 'helm', 'post_deploy' ] }
+  - { role: helm, task: all, tags: [ 'helm', 'helm_tiller' ] }
+  - { role: helm, task: charts_deploy, tags: [ 'helm', 'charts_deploy' ] }
 
 ### For fixes like vsphere's bug, we have to reboot after some more fixes...
 #https://github.com/vmware/kubernetes/issues/495

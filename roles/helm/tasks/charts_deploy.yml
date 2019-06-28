@@ -1,0 +1,43 @@
+---
+#- hosts: master
+#  become: yes
+#  become_method: sudo
+#  tags:
+#  - helm
+#  tasks:
+
+- set_fact:
+    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+  tags:
+  - always
+
+- block:
+  - name: helm charts/packages deployment
+    environment: '{{env_kc}}'
+    command: 'helm install {{ item.repo }} --namespace {{ item.namespace | default("default") }} --name {{ item.name }} {{ item.options | default ("") }}'
+    with_items: 
+    - "{{ helm.packages_list }}"
+    when: helm is defined and helm.packages_list is defined
+
+  - name: Wait few seconds for deployments to start
+    pause: seconds=3
+    changed_when: false
+
+  - name: helm full sanity - wait for all installed charts to become running
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
+    register: command_result
+    tags:
+    - sanity_helm
+    - sanity
+    - charts_deploy_sanity
+    until: command_result.stdout == ""
+    retries: 60
+    delay: 3
+    changed_when: false
+    when: wait_charts_deploy_sanity | default('false') | bool # it's not mandatory to wait/make sure absolutelly all deployments are fine.
+  tags:
+  - helm
+  - charts_deploy
+

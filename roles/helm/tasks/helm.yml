@@ -142,7 +142,6 @@
     tags:
     - helm_sanity
     - sanity
-    - helm
     until: command_result.stdout == ""
     retries: 50
     delay: 3
@@ -154,15 +153,12 @@
     changed_when: '"not patched" not in command_result.stdout'
     ignore_errors: yes
     tags:
-    - helm
     - rbac
 
   - name: Update helm Tiller
     environment: '{{env_kc}}'
     command: helm init --upgrade
     when: helm is defined
-    tags:
-    - helm
 
   - name: helm repo add 
     environment: '{{env_kc}}'
@@ -170,20 +166,14 @@
     with_items: 
     - '{{ helm.repos | default("") }}'
     when: helm is defined and helm.repos is defined
-    tags:
-    - helm
 
   - name: helm repo update #Sometimes initial repo add corrupts the repo and update fixes it.
     environment: '{{env_kc}}'
     command: helm repo update
     when: helm is defined
-    tags:
-    - helm
 
   - name: Wait few seconds for tiller deployment to start
     pause: seconds=3
-    tags:
-    - helm
     changed_when: false
 
   - name: helm sanity - wait for tiller pod to be running
@@ -195,7 +185,6 @@
     tags:
     - helm_sanity
     - sanity
-    - helm
     until: command_result.stdout == ""
     retries: 30
     delay: 3
@@ -203,43 +192,8 @@
 
   - name: Wait few seconds to be 100% tiller deployment is up (the above is not enough)
     pause: seconds=10
-    tags:
-    - helm
     changed_when: false
 
-  - name: helm charts/packages deployment
-    environment: '{{env_kc}}'
-    command: 'helm install {{ item.repo }} --namespace {{ item.namespace | default("default") }} --name {{ item.name }} {{ item.options | default ("") }}'
-    with_items: 
-    - "{{ helm.packages_list }}"
-    when: helm is defined and helm.packages_list is defined
-    tags:
-    - helm
-    - charts_deploy
-
-  - name: Wait few seconds for deployments to start
-    pause: seconds=3
-    tags:
-    - helm
-    - charts_deploy
-    changed_when: false
-
-  - name: helm full sanity - wait for all installed charts to become running
-    environment:
-      KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' || true "
-    register: command_result
-    tags:
-    - sanity_helm
-    - sanity
-    - helm
-    - charts_deploy
-    - charts_deploy_sanity
-    until: command_result.stdout == ""
-    retries: 60
-    delay: 3
-    changed_when: false
-    when: wait_charts_deploy_sanity | default('false') | bool # it's not mandatory to wait/make sure absolutelly all deployments are fine.
   tags:
   - helm
 

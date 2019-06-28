@@ -1,0 +1,12 @@
+---
+#- hosts: nodes
+#  tasks:
+  - name: labeling
+    delegate_to: "{{groups['primary-master'][0]}}"
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl label nodes {{ inventory_hostname_short }} {{label | default ("node-role.kubernetes.io/compute=") }} --overwrite
+    register: command_result
+    changed_when: '"not labeled" not in command_result.stdout'
+
+

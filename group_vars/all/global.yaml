@@ -36,14 +36,6 @@ kubectl_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not
 #####
 ##### NOTE ->> For the actual k8s version, please set the below: ClusterConfiguration.kubernetesVersion
 
-# etcd Certificate info for creation (does not really matter for self-signed certificates in a private network) - required for HA
-CERT_COMMON_NAME: "etcd"
-CERT_COUNTRY: "AA"
-CERT_LOCALITY: "LOCALITY"
-CERT_ORGANISATION: "Example"
-CERT_STATE: "State"
-CERT_ORG_UNIT: "ORG"
-
 wait_charts_deploy_sanity: false #When defined, it will wait till all helm charts are fully working or fail before showing cluster-info
 
 ########## Image pre-pull on MASTERS (only)
@@ -64,7 +56,6 @@ pre_pull_k8s_images: True
 HOST_ARCH: amd64
 DOCKER_IMAGES: [
 #  { name: "{{images_repo}}/busybox", tag: "{{ BUSYBOX_TAG }}" },
-#  { name: "{{images_repo}}/prometheus/prometheus", tag: "{{ PROMETHEUS_TAG }}" }
 ]
 
 ################################DONE HA
@@ -154,6 +145,13 @@ iptables_setup: True # Default is True.
 #- 'dedicated:NoExecute-'                       # Puts the previous PreferNoSchedule into action - step1
 #- 'node-role.kubernetes.io/master:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
 #####
+
+taint_for_label:
+- label: 'node-role.kubernetes.io/master='
+  taint: 'NoSchedule'
+- label: 'node-role.kubernetes.io/infra='
+  taint: 'PreferNoSchedule'
+
 
 ########## VARIOUS GENERIC SETTINGS #####
 ## This will be removed in the future versions

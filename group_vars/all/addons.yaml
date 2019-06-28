@@ -8,41 +8,58 @@
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v2.13.1 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v2.14.1 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
     - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
-#    - { name: rook, url: 'http://charts.rook.io' }
-#    - { name: fabric8, url: 'https://fabric8.io/helm' }
+
   packages_list: # when not defined, namespace defaults to "default" namespace
-#    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true --set controller.stats.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.service.externalTrafficPolicy=Local --set controller.extraArgs.enable-ssl-passthrough="" --version=0.17.1 ' }
+  ### List helm charts you wish pre-installed every time cluster is deployed:
 
+########################
 ## Monitoring: prometheus, using coreos's prometheus-operator, which includes: grafana, alertmanager, prometheus.
-   ## https://github.com/helm/charts/blob/master/stable/prometheus-operator/README.md
-   ## https://github.com/coreos/prometheus-operator
-    - { name: prometheus, repo: stable/prometheus-operator, namespace: monitoring, options: '--set prometheus.ingress.enabled=True --set prometheus.ingress.hosts[0]=prometheus.{{ custom.networking.dnsDomain }} --set grafana.ingress.enabled=True --set grafana.ingress.hosts[0]=grafana.{{ custom.networking.dnsDomain }} --set alertmanager.ingress.enabled=True --set alertmanager.ingress.hosts[0]=alertmanager.{{ custom.networking.dnsDomain }}
-' }
+## PROMETHEUS Operator #
+########################
+# k delete crd alertmanagers.monitoring.coreos.com prometheusrules.monitoring.coreos.com servicemonitors.monitoring.coreos.com prometheuses.monitoring.coreos.com podmonitors.monitoring.coreos.com
+# helm install --name prometheus stable/prometheus-operator --namespace monitoring 
+    - { name: prometheus, repo: stable/prometheus-operator, namespace: monitoring, options: '--set prometheusOperator.nodeSelector."node\-role\.kubernetes\.io/infra=" --set prometheusOperator.tolerations[0].effect=NoSchedule,prometheusOperator.tolerations[0].key="node-role.kubernetes.io/infra" --set prometheusOperator.tolerations[1].effect=PreferNoSchedule,prometheusOperator.tolerations[1].key="node-role.kubernetes.io/infra" --set prometheus.prometheusSpec.nodeSelector."node\-role\.kubernetes\.io/infra=" --set prometheus.prometheusSpec.tolerations[0].effect=NoSchedule,prometheus.prometheusSpec.tolerations[0].key="node-role.kubernetes.io/infra" --set prometheus.prometheusSpec.tolerations[1].effect=PreferNoSchedule,prometheus.prometheusSpec.tolerations[1].key="node-role.kubernetes.io/infra" --set alertmanager.alertmanagerSpec.nodeSelector."node\-role\.kubernetes\.io/infra=" --set alertmanager.alertmanagerSpec.tolerations[0].effect=NoSchedule,alertmanager.alertmanagerSpec.tolerations[0].key="node-role.kubernetes.io/infra" --set alertmanager.alertmanagerSpec.tolerations[1].effect=PreferNoSchedule,alertmanager.alertmanagerSpec.tolerations[1].key="node-role.kubernetes.io/infra" --set grafana.nodeSelector."node\-role\.kubernetes\.io/infra=" --set grafana.tolerations[0].effect=NoSchedule,grafana.tolerations[0].key="node-role.kubernetes.io/infra" --set grafana.tolerations[1].effect=PreferNoSchedule,grafana.tolerations[1].key="node-role.kubernetes.io/infra" --set prometheus.ingress.enabled=True --set prometheus.ingress.hosts[0]=prometheus.{{ custom.networking.dnsDomain }} --set grafana.ingress.enabled=True --set grafana.ingress.hosts[0]=grafana.{{ custom.networking.dnsDomain }} --set alertmanager.ingress.enabled=True --set alertmanager.ingress.hosts[0]=alertmanager.{{ custom.networking.dnsDomain }} --set prometheusOperator.image.repository={{ images_repo | default ("quay.io") }}/coreos/prometheus-operator --set prometheusOperator.configmapReloadImage.repository={{ images_repo | default ("quay.io") }}/coreos/configmap-reload --set prometheusOperator.prometheusConfigReloaderImage.repository={{ images_repo | default ("quay.io") }}/coreos/prometheus-config-reloader --set prometheus.prometheusSpec.image.repository={{ images_repo | default ("quay.io") }}/prometheus/prometheus --set alertmanager.alertmanagerSpec.image.repository={{ images_repo | default ("quay.io") }}/prometheus/alertmanager --set prometheusOperator.hyperkubeImage.repository={{ images_repo | default ("k8s.gcr.io") }}/hyperkube --set grafana.image.repository={{ images_repo | default ("docker.io") }}/grafana/grafana --set kube-state-metrics.image.repository={{ images_repo | default ("quay.io") }}/coreos/kube-state-metrics --set kube-state-metrics.tolerations[0].effect=NoSchedule,kube-state-metrics.tolerations[0].key="node-role.kubernetes.io/infra" --set kube-state-metrics.tolerations[1].effect=PreferNoSchedule,kube-state-metrics.tolerations[1].key="node-role.kubernetes.io/infra" --set kube-state-metrics.nodeSelector."node\-role\.kubernetes\.io/infra=" --set prometheus-node-exporter.image.repository={{ images_repo | default ("quay.io") }}/prometheus/node-exporter ' }
 
-    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
+    #- { name: prometheus, repo: stable/prometheus-operator, namespace: monitoring, options: '--set prometheus.ingress.enabled=True --set prometheus.ingress.hosts[0]=prometheus.{{ custom.networking.dnsDomain }} --set grafana.ingress.enabled=True --set grafana.ingress.hosts[0]=grafana.{{ custom.networking.dnsDomain }} --set alertmanager.ingress.enabled=True --set alertmanager.ingress.hosts[0]=alertmanager.{{ custom.networking.dnsDomain }} ' }
 
-## DASHBOARD HEAD(latest), compatible with k8s 1.8:
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},image.repository=kubernetesdashboarddev/kubernetes-dashboard-amd64,image.tag=head,image.pullPolicy=Always' } # development version, for k8s 1.8, and with all admin permissions open
-# OR:
-## DASHBOARD 1.8.3, compatible with k8s 1.8+:    
-    - { name: dashboard, repo: stable/kubernetes-dashboard, namespace: kube-system, options: '--set rbac.create=True,rbac.clusterAdminRole=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }},image.tag=v1.8.3 --version=0.5.3' } # Limited to helmchart 0.5.3 for the non-tls ingress. 
-    ##gcr.io/google_containers/kubernetes-dashboard-amd64 for stable versions tagged per k8s version. For lastest (beta) versions, one may use: from docker.io kubernetesdashboarddev/kubernetes-dashboard-amd64
-    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image=kubernetesdashboarddev/kubernetes-dashboard-amd64,imageTag=head,imagePullPolicy=Always' } # development version, and with all admin permissions open
-    #- { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' }
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
-#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},imageTag=v1.7.1' } # other vers: v1.6.3. All secure & stable prod version
-#    - { name: influxdb, repo: stable/influx, namespace:kube-system, options: '--set --set persistence.enabled=True' }
-#    - { name: moodle, repo: stable/moodle, options: '--set moodleUsername=admin,moodlePassword=password,mariadb.mariadbRootPassword=secretpassword,serviceType=ClusterIP' }
+################
+#### Heapster ##
+################
+    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/heapster --set resizer.image.repository={{ images_repo | default ("k8s.gcr.io") }}/addon-resizer --set resizer.enabled=False ' }
+# --set resizer.enabled=False ->> this is not working with taints due to some bug, thefore disabling it for now.
+#    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
 
-    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s"' }
+################
+## DASHBOARD ###
+################
+    - { name: dashboard, repo: stable/kubernetes-dashboard, namespace: kube-system, options: '--set image.repository={{ images_repo | default ("k8s.gcr.io") }}/kubernetes-dashboard-amd64 --set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set rbac.create=True,rbac.clusterAdminRole=True --set enableInsecureLogin=True --set enableSkipLogin=True ' }
+# For a learning/development --set rbac.clusterAdminRole=True with skip login and insecure might be acceptable, but not for real case scenarios!!!
+# For in between, one can keep: rbac.clusterReadOnlyRole=True (if bug https://github.com/helm/charts/issues/15118 was solved)
+# For a production, remove --set enableInsecureLogin=True --set enableSkipLogin=True --set rbac.clusterAdminRole=True
 
-## INGRESS ###
-    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443  --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --version=1.6.0 ' }
+################
+## Kured #######
+## For restaring nodes when needed, in sequencial and proper manner
+################
+    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s" --set image.repository={{ images_repo | default ("docker.io") }}/weaveworks/kured ' }
+#    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s"' }
 
-## Not tested:
-#    - { name: elasticsearch, repo: incubator/elasticsearch }
+####################
+## NGINX INGRESS ###
+####################
+    ### Option 1 - Daemonset & NodePort :
+    - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --set controller.tolerations[0].effect=NoSchedule,controller.tolerations[0].key="node-role.kubernetes.io/infra" --set controller.tolerations[1].effect=PreferNoSchedule,controller.tolerations[1].key="node-role.kubernetes.io/infra" --set controller.nodeSelector."node\-role\.kubernetes\.io/infra=" --set controller.kind=DaemonSet --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.image.repository={{ images_repo | default ("quay.io") }}/kubernetes-ingress-controller/nginx-ingress-controller --set defaultBackend.image.repository={{ images_repo | default ("k8s.gcr.io") }}/defaultbackend-amd64 ' }
+    # --set controller.service.externalTrafficPolicy="Local" # for better performance, when you have a LB for the ingress controllers (across all nodes with role label infra), add this as well, or use the useHostPort option below.
+
+    ### Option 2 - DaemonSet & hostPort
+    # - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --set controller.tolerations[0].effect=NoSchedule,controller.tolerations[0].key="node-role.kubernetes.io/infra" --set controller.tolerations[1].effect=PreferNoSchedule,controller.tolerations[1].key="node-role.kubernetes.io/infra" --set controller.nodeSelector."node\-role\.kubernetes\.io/infra=" --set controller.service.type=ClusterIP --set controller.kind=DaemonSet --set controller.daemonset.useHostPort=true --set controller.image.repository={{ images_repo | default ("quay.io") }}/kubernetes-ingress-controller/nginx-ingress-controller --set defaultBackend.image.repository={{ images_repo | default ("k8s.gcr.io") }}/defaultbackend-amd64 ' }
+
+    ### Option 3 - Deployment & NodePort
+    # - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443  --set controller.tolerations[0].effect=NoSchedule,controller.tolerations[0].key="node-role.kubernetes.io/infra" --set controller.tolerations[1].effect=PreferNoSchedule,controller.tolerations[1].key="node-role.kubernetes.io/infra" --set controller.nodeSelector."node\-role\.kubernetes\.io/infra=" --set controller.image.repository={{ images_repo | default ("quay.io") }}/kubernetes-ingress-controller/nginx-ingress-controller --set defaultBackend.image.repository={{ images_repo | default ("k8s.gcr.io") }}/defaultbackend-amd64 --set controller.kind=Deployment ' }
+# --set controller.service.externalTrafficPolicy="Local" # See notes above
+
 #####
