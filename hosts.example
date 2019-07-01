@@ -13,7 +13,12 @@ secondary-masters
 
 [nodes]
 # If there is only one machine both master and node, make this section empty
-node[1:2].corp.example.com
+# Best practice is to have few machines allocated for Prometheus/Ingresses/eventual ELK. 
+#      These are usually labeled "infra", and tainted with NoSchedule or at least PreferNoSchedule
+#      See "taint_for_label" in group_vars/all/global.yaml
+node[1:2].corp.example.com label=node-role.kubernetes.io/infra=
+# All other nodes are automatically labeled "compute" and without any taint.
+node[3:7].corp.example.com # label=node-role.kubernetes.io/compute=
 
 [node:children]
 nodes
