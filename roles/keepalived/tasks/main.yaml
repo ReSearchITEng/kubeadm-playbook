@@ -2,9 +2,14 @@
 # Configure keepalived for the masters.
 #
 ---
-
-- name: Install keepalived via package manager
-  package: name=keepalived-{{ KEEPALIVED_VERSION }} state=present
+- name: "keepalived from package"
+  block:
+  - name: Install keepalived via package manager
+    package: name=keepalived-{{ KEEPALIVED_VERSION }} state=present
+  
+  - name: Enable and start keepalived service
+    service: name=keepalived enabled=yes state=restarted
+  when: custom.networking.masterha_vip_keepalived_deploy_type == 'package'
 
 - name: Copy check script
   template: src=check_apiserver.sh.j2 dest=/etc/keepalived/check_apiserver.sh owner=root group=root mode=0755
@@ -12,5 +17,14 @@
 - name: Generate configuraton file
   template: src=keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf
 
-- name: Enable and start keepalived
-  service: name=keepalived enabled=yes state=restarted
+- name: keepalived with docker image
+  block:
+  - name: cleanup previous keepalived
+    shell: docker rm -f keepalived
+
+  - name: Use keepalived from docker image
+    shell: docker run --name keepalived --env KEEPALIVED_INTERFACE=$(ip route | grep default | head -1 | cut -d' ' -f5) --env KEEPALIVED_PASSWORD='d0cker' --cap-add=NET_ADMIN --net=host --volume /etc/keepalived/keepalived.conf:/container/service/keepalived/assets/keepalived.conf --volume /etc/keepalived/check_apiserver.sh:/etc/keepalived/check_apiserver.sh --detach {{ masterha_vip_keepalived_docker_image | default ("osixia/keepalived:2.0.17") }} --copy-service # --loglevel debug
+    register: docker_result
+
+  when: custom.networking.masterha_vip_keepalived_deploy_type == 'docker'
+

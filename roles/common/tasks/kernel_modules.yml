@@ -1,4 +1,5 @@
 ---
+  ## ip_vs is optional for k8s (but ideal), and it's mandatory for keepalived especially when in docker
 - name: kernel_modules - load ip_vs group
   modprobe: name={{ item }} state=present
   with_items:

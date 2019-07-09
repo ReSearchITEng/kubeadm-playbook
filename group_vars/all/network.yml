@@ -25,6 +25,14 @@ custom:
     #masterha_bindPort: 6443 #default is 6443; We recommend to keep it 6443.
     ### end of masterha topic
 
+    ## When masterha_type is set to "vip", keepalived is deployed automatically. Options to deploy it via linux package (rpm/deb) or using a docker image.
+    ## if you move from one type to another, please make sure you manually remove the previous setup 
+    ## E.g. moving from package to docker, manually do: systemctl stop keepliaved; systemctl disable keepalived
+    ## E.g. moving from docker to package, manually do: docker rm -f keepalived
+    ## Can be either 'docker' or 'package' or 'provided' (when already installed outside of this playbook; this playbook will generate the configuration and check script)
+    masterha_vip_keepalived_deploy_type: docker
+    masterha_vip_keepalived_docker_image: osixia/keepalived:2.0.17 # 2.0.17+; below there is no curl;
+
     fqdn: # decide where to force use fqdn for non masterha and nodes. When set to false, it will use the name as defined in the inventory file
       always: false # makes all the below true
       master: true  # when true, actions like wait/join will be done against dns name instead of IP
