@@ -1,10 +1,13 @@
 # Update Status of the project: Stable
 [kubeadm-playboook ansible project's code is on Github](https://github.com/ReSearchITEng/kubeadm-playbook)
 
+# Quick explanation
+https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
+
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
 Tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
 Optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist.     
-Actively used on a daily basis and tested with k8s starting 1.7 till 1.14.    
+Actively used on a daily basis and tested with k8s starting 1.7 till 1.15.    
 
 ## Targets/pros&cons
 Kubeadm simplifies drastically the installation, so for BYO (vms,desktops,baremetal), complex projects like kubespray/kops are not required any longer.
