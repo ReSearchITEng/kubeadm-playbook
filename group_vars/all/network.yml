@@ -38,6 +38,9 @@ custom:
       master: true  # when true, actions like wait/join will be done against dns name instead of IP
       node: false   # when true, the join command will have --node-name set to fqdn. When false, k8s will set based on how node machine answers to the hostname command
 
+#Define network for K8S services 
+SERVICE_NETWORK_CIDR: 10.96.0.0/12
+
 # Select pod Network. One may add mode simply by adding the deployment url and pod netwrod cidr it needs
 podNetwork: 'flannel'
 #'weavenet'

@@ -29,7 +29,7 @@ ClusterConfiguration:
   #   type: CoreDNS
   networking:
   #   dnsDomain: cluster.local
-  #   serviceSubnet: 10.96.0.0/12
+    serviceSubnet: "{{ SERVICE_NETWORK_CIDR }}"
   #   podSubnet: ""
     podSubnet: "{{ POD_NETWORK_CIDR }}"
     #podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
