@@ -8,7 +8,7 @@
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v2.14.1 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v2.14.3 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
     - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
@@ -47,6 +47,13 @@ helm:
 ################
     - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s" --set image.repository={{ images_repo | default ("docker.io") }}/weaveworks/kured ' }
 #    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s"' }
+
+
+################
+## metallb #####
+################
+#    - { name: metallb, repo: stable/metallb, namespace: infra, options: '--set controller.nodeSelector."node\-role\.kubernetes\.io/infra=" --set controller.image.repository={{ images_repo | default ("docker.io") }}/metallb/controller --set speaker.nodeSelector."node\-role\.kubernetes\.io/infra=" --set speaker.image.repository={{ images_repo | default ("docker.io") }}/metallb/speaker --set prometheus.serviceMonitor.enabled=True --set prometheus.prometheusRule.enabled=True' }
+
 
 ####################
 ## NGINX INGRESS ###

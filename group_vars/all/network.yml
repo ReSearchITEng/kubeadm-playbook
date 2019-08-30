@@ -31,7 +31,7 @@ custom:
     ## E.g. moving from docker to package, manually do: docker rm -f keepalived
     ## Can be either 'docker' or 'package' or 'provided' (when already installed outside of this playbook; this playbook will generate the configuration and check script)
     masterha_vip_keepalived_deploy_type: docker
-    masterha_vip_keepalived_docker_image: osixia/keepalived:2.0.17 # 2.0.17+; below there is no curl;
+    masterha_vip_keepalived_docker_image: osixia/keepalived:2.0.17 # 2.0.17+; older version do not have curl
 
     fqdn: # decide where to force use fqdn for non masterha and nodes. When set to false, it will use the name as defined in the inventory file
       always: false # makes all the below true
@@ -101,5 +101,8 @@ k8s_network_addons_urls:
 ## Weave: #https://www.weave.works/docs/net/latest/kubernetes/kube-addon/ 
  #- https://cloud.weave.works/k8s/net?k8s-version={{ClusterConfiguration.kubernetesVersion}}&{{POD_NETWORK_CIDR | default ('env.IPALLOC_RANGE=10.32.0.0/12') }}
  #- "https://cloud.weave.works/k8s/net?k8s-version={{ClusterConfiguration.kubernetesVersion}}&env.IPALLOC_RANGE={{POD_NETWORK_CIDR | default ('10.32.0.0/12') }}"
+# OR
+## kube-router
+ #- https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kube-router-all-service-daemonset.yaml
 #####
 

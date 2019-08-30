@@ -9,12 +9,13 @@
 #  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,/var/run/docker.sock,.sock,sock' 
 #####
 
-KUBERNETES_VERSION: "1.15.2"
+KUBERNETES_VERSION: "1.15.3"
 # Software versions (used by installation, package manager, image pull, etc. )
 
 KEEPALIVED_VERSION: "1.3.5"
   # Use "1.3.*" if you want the latest 1.3 provided by your already defined package repositories
   # it's required only for HA
+  # This value is not required when keepalived is run in docker (see networking.yaml)
 
 #####
 ## PACKAGES (rpm/deb)
