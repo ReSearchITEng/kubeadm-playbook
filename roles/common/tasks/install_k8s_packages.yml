@@ -64,6 +64,7 @@
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - socat
+  - ipset
 
 ### kubelet
 - name: Install kubelet
