@@ -392,8 +392,8 @@
   - groups['all'] | length == 1
   with_items: #'{{ taints_master }}'
   - 'node-role.kubernetes.io/master:NoSchedule-'
-  - 'node-role.kubernetes.io/master:PreferNoSchedule'
-  - 'node-role.kubernetes.io/infra:PreferNoSchedule'
+  - 'node-role.kubernetes.io/master=:PreferNoSchedule'
+  - 'node-role.kubernetes.io/infra=:PreferNoSchedule'
   tags:
   - taints
 
