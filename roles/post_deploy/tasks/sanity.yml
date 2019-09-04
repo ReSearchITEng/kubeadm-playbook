@@ -3,10 +3,10 @@
     pause: seconds=3
     changed_when: false
 
-  - name: sanity - wait for alls pod to be running (besides kube-dns for now, as it might be forced to a node if master did not allow it due to tains)
+  - name: sanity - wait for alls pod to be running (besides kube-dns,coredns, tiller-deploy for now, as it might be forced to a node if master did not allow it due to tains)
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
-    shell: "kubectl get --namespace kube-system pods --no-headers | grep -v -w 'Running' | grep -v 'kube-dns' || true "
+    shell: "kubectl get --namespace kube-system pods --no-headers | grep -v -w 'Running' | grep -v 'kube-dns' | grep -v 'coredns' | grep -v 'tiller-deploy' || true "
     register: command_result
     tags:
     - k8s_network_addons
