@@ -29,7 +29,7 @@ helm:
 ################
 #### Heapster ##
 ################
-    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/heapster --set resizer.image.repository={{ images_repo | default ("k8s.gcr.io") }}/addon-resizer --set resizer.enabled=False ' }
+    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/heapster-amd64 --set resizer.image.repository={{ images_repo | default ("k8s.gcr.io") }}/addon-resizer --set resizer.enabled=False ' }
 # --set resizer.enabled=False ->> this is not working with taints due to some bug, thefore disabling it for now.
 #    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
 
