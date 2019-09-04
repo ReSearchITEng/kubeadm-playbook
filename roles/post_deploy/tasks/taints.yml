@@ -4,6 +4,8 @@
       KUBECONFIG: /etc/kubernetes/admin.conf
     shell: 'kubectl taint nodes --selector {{ item.label }} {{ item.label }}:{{ item.taint }} --overwrite'
     with_items: "{{ taint_for_label }}"
+    when:
+    - groups['all'] | length == 1
     tags:
     - taint
 
