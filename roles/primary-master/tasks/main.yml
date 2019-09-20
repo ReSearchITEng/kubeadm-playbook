@@ -17,7 +17,7 @@
 #  - ceph-common
 
 ## PULL IMAGES
-- name: Pull master images on master
+- name: Pull master images on master - when DOCKER_IMAGES is defined
   #TODO: to be removed/replaced in 1.11 with the kubeadm pull command (kubeadm config images pull --kubernetes-version v11.0.3 ), but better remove, as kubeadm pre-flight does the pull now anyway...
   #command: /usr/bin/docker pull "{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
   #command: /usr/bin/docker pull "{{ images_repo |default ('k8s.gcr.io') }}/{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
@@ -39,8 +39,8 @@
   #- ClusterConfiguration.apiVersion == "kubeadm.k8s.io/v1alpha1"
   #when: full_kube_reinstall is defined and full_kube_reinstall and ClusterConfiguration.kubernetesVersion is defined
 
-- name: Pull images on master (from internet when images_repo is not defined)
-  command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository images_repo |default ('k8s.gcr.io') "
+- name: Pull images on master (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io )
+  command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
   tags:
   - prepull_images
   register: command_result
