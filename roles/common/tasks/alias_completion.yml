@@ -33,4 +33,4 @@
   - "source <(kubectl completion {{ shell | default ('bash') }} 2>/dev/null || true)"
   - "source <(kubeadm completion {{ shell | default ('bash') }} 2>/dev/null || true)"
   - "source <(helm    completion {{ shell | default ('bash') }} 2>/dev/null || true)"
-  
+  - "complete -F __start_kubectl k"
