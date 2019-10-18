@@ -5,9 +5,9 @@
 https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
 
 # kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
-Tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04 (both with overlay2 and automatic docker_setup).    
+Tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04,18.04,19.10 (both with overlay2 and automatic docker_setup).    
 Optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist.     
-Actively used on a daily basis and tested with k8s starting 1.7 till 1.15.    
+Actively used on a daily basis and tested with k8s starting 1.7 till 1.16.    
 
 ## Targets/pros&cons
 Kubeadm simplifies drastically the installation, so for BYO (vms,desktops,baremetal), complex projects like kubespray/kops are not required any longer.
@@ -29,17 +29,20 @@ The project is for those who want to create&recreate k8s cluster using the offic
 
 This project targets to get a fully working environment in matter of minutes on any hw: baremetal, vms (vsphere, virtualbox), etc.    
 
+### What it does not do:
+- k8s version upgrades: while many of its roles can be used for an upgrade, upgrade should be done using kubeadm tool. Kubeadm upgrade is pretty clear and simple, there is no need for much automation around it. If you think otherwise, let us know.   
+
 ### PROS:
 - quick (~10 min) full cluster installation
 - all in one shop for a cluster which you can start working right away, without mastering the details
 - applies fixes for quite few issues currently k8s installers have
 - deploys plugins to all creation of dynamical persistent volumes via: vsphere, rook or self deployed NFS
 - kubeadm is the only official tool specialized to install k8s
-- proxy or even no internet access required (when there is internal registry)
+- proxy is supported; It can work even no internet access required (when there is internal registry)
 
 ### CONS/future versions:
-- for HA Master, Only VIP is supported -> LB support for HA Master was not tested (try to use v1.14 and above).
-- While for installing the cluster there is no need for internet access, the addons which come as helm charts by default look for their images on the internet. One may need to update the group_vars/all/addons.yaml to point to local registry version of the image.
+- old k8s versions (13 and older): for HA Master, Only VIP is supported -> LB support for HA Master was not tested (try to use v1.14 and above).
+- While for installing the cluster there is no need for internet access, the addons which come as helm charts by default look for their images on the internet (but charts have to be either cached or come from an internal helm repo). To take images from on-prem, please update the group_vars/all/addons.yaml to point to local registry version of the image.
 
 ## Prerequisites:
 - ansible min. 2.3 (but higher is recommeneded. Tested on 2.5+)
@@ -157,12 +160,12 @@ Using vagrant keeping NAT as 1st interface (usually with only one machine) was n
 There was no focus on this option as it's more complicated to use afterwards: one must export the ports manually to access ingresses like dashboard from the browser, and usually does not support more than one machine.
 
 # kubeadm-ha
-Starting 1.14/1.15, kubeadm supports multimaster (aka HA) setup easy (out of the box)
+Starting 1.14/1.15, kubeadm supports multimaster (aka HA) setup easy (out of the box), so no special setup.
 (Our playbook supports master HA also for older v1.11-v1.13, thanks to projects like: https://github.com/mbert/kubeadm2ha ( and https://github.com/sv01a/ansible-kubeadm-ha-cluster and/or github.com/cookeem/kubeadm-ha ).
 
 # How does it compare to other projects:
 
-## Kubeadm -> the official k8s installer (yet to be GA).
+## Kubeadm -> the official k8s installer
 
 With kubeadm-playbook we are focus only kubeadm. 
 **Pros:**
@@ -171,8 +174,8 @@ With kubeadm-playbook we are focus only kubeadm.
 - self hosted deployment, making upgrades very smooth ; Here is a KubeCon talk presenting even more reasons to go with self-hosted k8s: https://www.youtube.com/watch?v=jIZ8NaR7msI
 
 **Cons:**
-- currenlty in beta (to be GA expected soon)
-- no HA yet (expected in next release v1.10)
+- k8s cluster ugprades are not (yet) in plan, (as kubeadm upgrade is too simple (and sensitive) to need automation)
+- when you run the playbook against an existing cluster, by default it will rebuild the entire cluster. Alternativelly, one has to use the ansible "--tags" to specify what exactly is desired (E.g. `ansible-playbook -i hosts -v site.yml --tags post_deploy` )
 
 ## Other k8s installers
 Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may want to check, but all below are without kubeadm (as opposed to this project)
