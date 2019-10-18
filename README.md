@@ -4,9 +4,17 @@
 # Quick explanation
 https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
 
-# kubeadm based all in one kubernetes cluster installation (and addons) using Ansible
-Tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04,18.04,19.10 (both with overlay2 and automatic docker_setup).    
-Optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist.     
+# What it makes it different:
+- pure kubeadm based (all needless complexity removed)
+- all in one kubernetes cluster installation: not only k8s, but also the importand addons
+- all addons come from their official helm charts
+- this project does not hold any "custom" addon, everything that is installed is fetched directly their official repos (mostly helm repos)
+- optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist. 
+- focused on "on-prem" deployments
+(more detailed comparison with other solutions towards the end of this readme) 
+
+# Since when
+Started years back. Battle tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04,18.04,19.10 (both with overlay2 and automatic docker_setup).    
 Actively used on a daily basis and tested with k8s starting 1.7 till 1.16.    
 
 ## Targets/pros&cons
