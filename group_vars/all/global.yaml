@@ -9,7 +9,7 @@
 #  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,/var/run/docker.sock,.sock,sock' 
 #####
 
-KUBERNETES_VERSION: "1.15.3"
+KUBERNETES_VERSION: "1.16.2"
 # Software versions (used by installation, package manager, image pull, etc. )
 
 KEEPALIVED_VERSION: "1.3.5"
