@@ -11,6 +11,9 @@ Besides "master" role, it's suggested to use also "infra" role (by specifying `l
 Machines marked as infra usually hold Prometheus, nginx ingress controllers, grafana, EFK, etc...  
 Usually there should be min. 3 master nodes and min 3 infra nodes ( compute (aka worker) nodes -> as many as required by the actual workload of the cluster).
 
+# Secure Dashboard
+- from addons.yaml, remove "--set enableInsecureLogin=True --set enableSkipLogin=True"
+- also you may want to review the dashboard service account perms you desire  
 
 # Heads-up
 When you have master-ha, the cluster can function properly when there are up at least 1/2 + 1 masters (so the quorum will function). If you have 3 masters, you must have at least 2 masters up for the cluster function.
