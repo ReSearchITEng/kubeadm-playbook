@@ -9,7 +9,7 @@
 #  tasks:
 
 - set_fact:
-    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
   tags:
   - helm_reset
   - reset
@@ -47,7 +47,7 @@
 
   - name: helm reset - remove/cleanup
     environment: '{{env_kc}}'
-    shell: ( helm reset --force --remove-helm-home --tiller-connection-timeout 30 || true ) && sleep 2 && ( kubectl --namespace=kube-system delete --cascade=true --now=true --include-uninitialized=true --wait=true --ignore-not-found=true deployment tiller-deploy || true ) && sleep 2 && ( kubectl delete service --namespace=kube-system tiller-deploy  || true ) && (  kubectl delete clusterrolebinding tiller  || true ) && (  kubectl delete --namespace=kube-system sa tiller )
+    shell: ( helm reset --force --remove-helm-home --tiller-connection-timeout 30 || true ) && sleep 2 && ( kubectl --namespace=kube-system delete --cascade=true --now=true --wait=true --ignore-not-found=true deployment tiller-deploy || true ) && ( kubectl delete service --namespace=kube-system tiller-deploy  || true ) && (  kubectl delete clusterrolebinding tiller  || true ) && (  kubectl delete --namespace=kube-system sa tiller )
     ignore_errors: yes 
 
   - name: helm reset - list all k8s resources with tiller-deploy in their name
