@@ -9,6 +9,7 @@ https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-
 - all in one kubernetes cluster installation: not only k8s, but also the importand addons
 - all addons come from their official helm charts
 - this project does not hold any "custom" addon, everything that is installed is fetched directly their official repos (mostly helm repos)
+- drivers towards setting good practices: e.g. segregate nodes in 3 categories: masters, infra, compute; (infra holds ingress controller, prometheus, grafana, and similar support tools)
 - optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist. 
 - focused on "on-prem" deployments
 (more detailed comparison with other solutions towards the end of this readme) 
