@@ -155,7 +155,8 @@ For LB, one may want to check also:
 - https://github.com/kubernetes/contrib/tree/master/service-loadbalancer
 
 # DEMO:
-Installation demo k8s 1.7.8 on CentOS 7.4: [kubeadm ansible playbook install demo asciinema video](https://asciinema.org/a/Ii7NDu3eL9DsuM1fEFM9PMVTM)
+Installation demo k8s 1.16 on Ubuntu 18.04:
+[![kubeadm ansible playbook install demo asciinema video - demo single machine Ubuntu k8s 1.16](https://asciinema.org/a/278017.svg)](https://asciinema.org/a/278017)
 
 ## Vagrant 
 For using vagrant on one or multiple machines with bridged interface (public_network and ports accessible) all machines must have 1st interface as the bridged interface (so k8s processes will bind automatically to it). For this, use this script: vagrant_bridged_demo.sh.
