@@ -4,6 +4,9 @@
 # Quick explanation
 https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
 
+# What is it:
+kubernetes cluster installation + addons. All based only on the new kubeadm and helm.
+
 # What it makes it different:
 - pure kubeadm based (all needless complexity removed)
 - all in one kubernetes cluster installation: not only k8s, but also the importand addons
