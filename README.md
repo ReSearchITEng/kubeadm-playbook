@@ -15,6 +15,7 @@ kubernetes cluster installation + addons. All based only on the new kubeadm and 
 - drivers towards setting good practices: e.g. segregate nodes in 3 categories: masters, infra, compute; (infra holds ingress controller, prometheus, grafana, and similar support tools)
 - optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist. 
 - focused on "on-prem" deployments
+- enterprise-friendly: fully tested with http_proxy and private docker registry (usually private nexus registry proxy registry of docker.io, quay.io, k8s.gcr.io, etc; private mirror hostname&port fully configurable in this project)
 (more detailed comparison with other solutions towards the end of this readme) 
 
 # Since when
