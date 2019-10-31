@@ -11,10 +11,11 @@ b. in the other groups it has **ONLY** the machines you want to add (either mast
 
 # Removing nodes:
 To remove a node, do similarly:
-Put in the inventory (hosts file), under [nodes] group only the machines you wish to reset(remove) as well as populate the [primary-master] with the proper primary-master machine.  
+1. Put in the inventory (hosts file), under [nodes] group only the machines you wish to reset(remove) as well as populate the [primary-master] with the proper primary-master machine.  
+2. `ansible-playbook -i hosts site.yml --tags node`
 
 Note: the primary-master won't be touched, but it's required in order to properly drain the nodes before reset).
 
 # Removig secondary-masters:
 For safety reasons, currently it was decided that only nodes can be removed, while any [master] (being it primary-master or secondary-masters ) won't be automatically removed.    
-If you want to remove a machine that is secondary-master, you have to **move** it under [nodes] group, (and remove it from the [secondary-masters] group). 
+If you want to remove a machine that is secondary-master, you have to **move** it under [nodes] group, (and remove it from the [secondary-masters] group) - and follow the "Removing nodes" steps above.
