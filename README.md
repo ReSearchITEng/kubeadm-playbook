@@ -14,7 +14,10 @@ kubernetes cluster installation + addons. All based only on the new kubeadm and 
 - this project does not hold any "custom" addon, everything that is installed is fetched directly their official repos (mostly helm repos)
 - drivers towards setting good practices: e.g. segregate nodes in 3 categories: masters, infra, compute; (infra holds ingress controller, prometheus, grafana, and similar support tools)
 - optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist. 
-- focused on "on-prem" deployments
+- focused on "on-prem" deployments, still accepts anything kubeadm can do
+- works for any setup, from 1 machine cluster (devs) to productions sizes: all controlled by the provided inventory.
+- scale UP or DOWN any time: start with 1vm, then add nodes, then make multi-master -> all without downtime thanks to kubeadm.
+- HA setups accepts either: VIPs (using keepalived) or Hardware LB (when available)
 - enterprise-friendly: fully tested with http_proxy and private docker registry (usually private nexus registry proxy registry of docker.io, quay.io, k8s.gcr.io, etc; private mirror hostname&port fully configurable in this project)
 (more detailed comparison with other solutions towards the end of this readme) 
 
@@ -121,11 +124,11 @@ Read the site.yml. Here are also some explanations of important steps:
 - install nodes  (role/tag: node)
 - install network, helm, ingresses, (role/tag: post_deploy)
 
-## Add manage (add/reinstall) only one node (or set of nodes):
-- modify inventory (**hosts** file), and leave the master intact, but for nodes, keep *ONLY* the nodes to be managed (added/reset)
-- ``` ansible-playbook -i hosts site.yml --tags node ```
+## Add manage (add/reinstall) nodes:
+- modify inventory (**hosts** file), and leave the primary-master intact, but for nodes, keep *ONLY* the nodes to be managed (added/reset)
+- ``` ansible-playbook -i hosts site.yml --tags node ``` ; More in the docs section.
 
-## To remove a specific node (drain and afterwards kube reset, etc)
+## To remove a specific node (drains and afterwards kube resets, etc)
 - modify inventory (**hosts** file), and leave the master intact, but for nodes, keep *ONLY* the nodes to be removed
 - ``` ansible-playbook -i hosts site.yml --tags node_reset ```
 
@@ -140,6 +143,10 @@ The output should have already presented the required info (or run again: `ansib
 The Dashboard is set on the master host, and, additionally, if it was set, also at something like: http://dashboard.cloud.corp.example.com  (depending on the configured selected domain entry), and if the wildcard DNS was properly set up *.k8s.cloud.corp.example.com pointing to master machine public IP).
 
 e.g.  ``` curl -SLk 'http://k8s-master.example.com/#!/overview?namespace=_all' | grep browsehappy ```
+
+Dashboard is also listening on primary hostname, port 443 (or similar if ingress helm params were changed).   
+E.g., if your primary-master is vm01.com, browse: https://vm01.com:443/    
+Note: The http version (http://vm01.com:80/) will ask for token.
 
 For testing the Persistent volume, one may use/tune the files in the demo folder.
 ```shell
