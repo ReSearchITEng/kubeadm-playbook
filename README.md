@@ -5,7 +5,7 @@
 https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
 
 # What is it:
-kubernetes cluster installation + addons. All based only on the new kubeadm and helm.
+kubernetes cluster installation + addons. All based only on kubeadm and official helm charts.
 
 # What it makes it different:
 - pure kubeadm based (all needless complexity removed)
@@ -18,8 +18,15 @@ kubernetes cluster installation + addons. All based only on the new kubeadm and 
 - works for any setup, from 1 machine cluster (devs) to productions sizes: all controlled by the provided inventory.
 - scale UP or DOWN any time: start with 1vm, then add nodes, then make multi-master -> all without downtime thanks to kubeadm.
 - HA setups accepts either: VIPs (using keepalived) or Hardware LB (when available)
+- configuration reuses all kubeadm's yamls, and adds new yamls only when required   
 - enterprise-friendly: fully tested with http_proxy and private docker registry (usually private nexus registry proxy registry of docker.io, quay.io, k8s.gcr.io, etc; private mirror hostname&port fully configurable in this project)
 (more detailed comparison with other solutions towards the end of this readme) 
+- any helm chart can be removed added via addons.yml
+
+# What is in plan (contributions are welcome): 
+1. Authentication via LDAP (in plan KeyCloak); integrate it in dashboard, grafana, etc.
+2. Move from heapster to metrics server (once it will be stable)
+3. Logging stack (e.g. EFK - currently helm charts are not fully stable)
 
 # Since when
 Started years back. Battle tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04,18.04,19.10 (both with overlay2 and automatic docker_setup).    
