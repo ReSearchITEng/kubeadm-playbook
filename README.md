@@ -7,12 +7,13 @@ https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-
 # What is it:
 For 3 years we keep on gathering best guidelines and growing this project for best kubernetes **cluster installation + addons**. It's gluing: kubeadm, offical helm charts for various addons, fine-tunings from docs and best practices.
 
-All based purely on kubeadm and official helm charts. 
-It tries to bring together most (if not all) the steps to get from a freshly installed linux to a working k8s cluster.
-Its vision is to find and integrate the best tools out there (while using KISS priciple).  
+All based purely on kubeadm and official helm charts.    
+It tries to bring together most (if not all) the steps to get from a freshly installed linux to a working k8s cluster.    
+Its vision is to find and integrate the best tools out there (while using KISS priciple).    
 
 # Why
-Going beyond minikube, making your own (usually on prem) k8s cluster (with the usuall addons installed) is still too hard or needlesly complex. Kubeadm is so strong now, that complex projects don't make sense. The we felt that what is missing is getting things before and after the cluster installation, and getting an initial (simple/generic) platform up. 
+Going beyond minikube, making your own (usually on prem) k8s cluster (with the usuall addons installed) is still too hard or needlesly complex. Kubeadm is so strong now, that complex projects don't make sense.   
+The we felt that what is missing is getting things before and after the cluster installation, to get an initial (but reasonable) platform up. 
 
 # What it makes it different:
 - pure kubeadm based (all needless complexity removed); the stronger kubeadm will be, the smaller this project!
@@ -29,10 +30,11 @@ Going beyond minikube, making your own (usually on prem) k8s cluster (with the u
 - any helm chart can be configured/added/removed via addons.yml
 (more detailed comparison with other solutions towards the end of this readme) 
 
-# What is in plan (contributions are welcome): 
+# What is in plan 
 1. Authentication via LDAP (in plan KeyCloak); integrate it in dashboard, grafana, etc.
 2. Move from heapster to metrics server (once it will be stable)
 3. Logging stack (e.g. EFK - currently helm charts are not fully stable)
+(PRs are welcome :)
 
 # Since when
 Started years back. Battle tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04,18.04,19.10 (both with overlay2 and automatic docker_setup).    
@@ -49,10 +51,10 @@ The project is for those who want to create&recreate k8s cluster using the offic
 - prepares your machines (e.g. kernel params like: net.bridge.bridge-nf-call-iptables, etc.)
 - it tries to use modern methods of deploying the "addons". E.g. heapster, ingress, prometheus, etc -> all via helm. Pure and clean:
 - Ingresses (via helm chart)
-- Persistent storage (ceph or vsphere)
+- Persistent storage (vsphere/ceph/nfs) (vsphere up to date, rook.io (ceph) needs updates; NFS not actively tested) 
 - dashboard (via helm chart)
 - heapster (via helm chart)
-- support proxy
+- supports proxy
 - modular, clean code, supporting multiple activies by using ansible tags (e.g. add/reset a subgroup of nodes).
 - optionally help configuring container engine (e.g. docker)
 
