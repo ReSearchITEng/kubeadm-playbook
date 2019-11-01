@@ -5,24 +5,29 @@
 https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
 
 # What is it:
-kubernetes cluster installation + addons. All based only on kubeadm and official helm charts.    
-Its vision integrate best tools while using KISS priciple.  
+For 3 years we keep on gathering best guidelines and growing this project for best kubernetes **cluster installation + addons**. It's gluing: kubeadm, offical helm charts for various addons, fine-tunings from docs and best practices.
+
+All based purely on kubeadm and official helm charts. 
+It tries to bring together most (if not all) the steps to get from a freshly installed linux to a working k8s cluster.
+Its vision is to find and integrate the best tools out there (while using KISS priciple).  
+
+# Why
+Going beyond minikube, making your own (usually on prem) k8s cluster (with the usuall addons installed) is still too hard or needlesly complex. Kubeadm is so strong now, that complex projects don't make sense. The we felt that what is missing is getting things before and after the cluster installation, and getting an initial (simple/generic) platform up. 
 
 # What it makes it different:
-- pure kubeadm based (all needless complexity removed)
-- all in one kubernetes cluster installation: not only k8s, but also the importand addons
-- all addons come from their official helm charts
+- pure kubeadm based (all needless complexity removed); the stronger kubeadm will be, the smaller this project!
+- kubernetes cluster platform: not only k8s, but also the importand addons
 - this project does not hold any "custom" addon, everything that is installed is fetched directly their official repos (mostly helm repos)
-- drivers towards setting good practices: e.g. segregate nodes in 3 categories: masters, infra, compute; (infra holds ingress controller, prometheus, grafana, and similar support tools)
-- optionally, when docker_setup: True, this project will also setup the docker on the host if does not exist. 
-- focused on "on-prem" deployments, still accepts anything kubeadm can do
-- works for any setup, from 1 machine cluster (devs) to productions sizes: all controlled by the provided inventory.
-- scale UP or DOWN any time: start with 1vm, then add nodes, then make multi-master -> all without downtime thanks to kubeadm.
-- HA setups accepts either: VIPs (using keepalived) or Hardware LB (when available)
-- configuration reuses all kubeadm's yamls, and adds new yamls only when required   
+- drives users towards good practices: e.g. segregate nodes in 3 categories (when possible): masters, infra, compute; (infra holds ingress controller, prometheus, grafana, and similar support tools)
+- optionally, when docker_setup enabled, this project will also setup the docker with known kernel params for os (those from the k8s docs).
+- focused on "on-prem" deployments (but still accepts anything kubeadm can do); (vmware vsphere storage integration is actively used).
+- generates any cluster size, from 1 machine cluster (dev env) to productions sizes: all controlled by the provided inventory.
+- scale UP or DOWN post deployment (e.g. start small with 1 vm, then add nodes, then make multi-master) -> all without downtime thanks to kubeadm.
+- Master HA & ingress setups accepts either: VIPs (using keepalived) or Hardware LB (when available);
 - enterprise-friendly: fully tested with http_proxy and private docker registry (usually private nexus registry proxy registry of docker.io, quay.io, k8s.gcr.io, etc; private mirror hostname&port fully configurable in this project)
+- actively tested on both Ubuntu/Debian and CentOS/RHEL. 
+- any helm chart can be configured/added/removed via addons.yml
 (more detailed comparison with other solutions towards the end of this readme) 
-- any helm chart can be removed added via addons.yml
 
 # What is in plan (contributions are welcome): 
 1. Authentication via LDAP (in plan KeyCloak); integrate it in dashboard, grafana, etc.
