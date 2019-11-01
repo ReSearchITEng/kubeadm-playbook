@@ -5,7 +5,8 @@
 https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
 
 # What is it:
-kubernetes cluster installation + addons. All based only on kubeadm and official helm charts.
+kubernetes cluster installation + addons. All based only on kubeadm and official helm charts.    
+Its vision integrate best tools while using KISS priciple.  
 
 # What it makes it different:
 - pure kubeadm based (all needless complexity removed)
