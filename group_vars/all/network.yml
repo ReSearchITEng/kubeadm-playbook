@@ -32,7 +32,11 @@ custom:
     ## Can be either 'docker' or 'package' or 'provided' (when already installed outside of this playbook; this playbook will generate the configuration and check script)
     masterha_vip_keepalived_deploy_type: docker
     masterha_vip_keepalived_docker_image: osixia/keepalived:2.0.17 # 2.0.17+; older version do not have curl
-
+    
+    ## The right way is to always define machines with FQDN in the inventory file (hosts file)
+    ## using http proxy for getting to internet (outside of the env) works fine, only by setting nodes with fqdn in inventory, without the below settings
+    ## Use the below fqdn functionality only if really required (stong understanding of risks)!
+    ## Also do not mix (some fqdn some short name).
     fqdn: # decide where to force use fqdn for non masterha and nodes. When set to false, it will use the name as defined in the inventory file
       always: false # makes all the below true
       master: true  # when true, actions like wait/join will be done against dns name instead of IP
