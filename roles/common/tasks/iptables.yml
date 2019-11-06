@@ -14,7 +14,7 @@
     # https://github.com/kubernetes/contrib/tree/master/ansible/roles/
 
   - name: Install iptables-services (if does not exist) - RedHat/CentOS
-    package: state=installed name={{ item }} #-{{version}}
+    package: state=present name={{ item }} #-{{version}}
     #environment: '{{ proxy_env | default ({}) }}'
     when:  ansible_os_family == "RedHat"
     with_items:
@@ -23,7 +23,7 @@
     - Restart iptables
 
   - name: Install netfilter-persistent required for saving iptables rule - Debian
-    package: state=installed name={{ item }} #-{{version}}
+    package: state=present name={{ item }} #-{{version}}
     #environment: '{{ proxy_env | default ({}) }}'
     when:  ansible_os_family == "Debian"
     with_items:

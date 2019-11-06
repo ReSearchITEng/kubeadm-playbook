@@ -24,7 +24,7 @@ KEEPALIVED_VERSION: "1.3.5"
 
 ## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
 ## package_state: latest # Other valid options for this context: installed
-package_state: installed #latest #installed
+package_state: present #latest (use latest only on OSes which have package managers that understand it (most do))
 ## when package_state: installed and kube*_version params below are undefined, the playbook will not touch your kube* files, and you are in full control.
 ## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
 kubeadm_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it

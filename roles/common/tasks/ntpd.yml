@@ -2,7 +2,7 @@
 ### ntpd:
 - block:
   - name: ntpd and ntpdate | it is mandatory to have the time from all machines in sync
-    package: state=installed name={{ item }}
+    package: state=present name={{ item }}
     environment: '{{ proxy_env | default ({}) }}'
     with_items:
     - ntp
