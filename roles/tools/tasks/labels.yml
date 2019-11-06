@@ -6,8 +6,10 @@
 #    - not custom.networking.fqdn.node
 #    - inventory_hostname not in groups['masters']
 #  As it's overcomplicating and sometimes k8s still has nodes with short (even if fqdn is true), we default to:
+#  Due to ansible in probelmatic netw setups (https://github.com/ReSearchITEng/kubeadm-playbook/issues/81, https://github.com/ansible/ansible/issues/38777 )
+#  we have to add the 3rd option as well...
 
-  - name: labeling using inventory_hostname_short - {{ inventory_hostname_short }} - (this or below will end with error)
+  - name: labeling using inventory_hostname_short - {{ inventory_hostname_short }} - (this or below 2 will end with error)
     delegate_to: "{{groups['primary-master'][0]}}"
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
@@ -16,7 +18,16 @@
     changed_when: '"not labeled" not in command_result.stdout'
     ignore_errors: yes
 
-  - name: labeling using ansible_fqdn - {{ ansible_fqdn }} - (this or above will end with error)
+  - name: labeling using ansible_fqdn - {{ inventory_hostname }} - (this or above or below will end with error)
+    delegate_to: "{{groups['primary-master'][0]}}"
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+    shell: kubectl label nodes {{ inventory_hostname }} {{label | default ("node-role.kubernetes.io/compute=") }} --overwrite
+    register: command_result
+    changed_when: '"not labeled" not in command_result.stdout'
+    ignore_errors: yes
+
+  - name: labeling using ansible_fqdn - {{ ansible_fqdn }} - (this or one of the above 2 will end with error)
     delegate_to: "{{groups['primary-master'][0]}}"
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
