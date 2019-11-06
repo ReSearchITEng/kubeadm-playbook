@@ -209,11 +209,11 @@
   when:
   - inventory_hostname in groups['primary-master']
 
-- name: "Wait 500 seconds for primary-master to respond: {{ InitConfiguration.localAPIEndpoint.advertiseAddress | default (inventory_hostname) }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} "
+- name: "Wait 500 seconds for primary-master to respond: {{ InitConfiguration.localAPIEndpoint.advertiseAddress | default (master_name) }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} "
   #master_name
   wait_for:
     port: "{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }}"
-    host: "{{ InitConfiguration.localAPIEndpoint.advertiseAddress | default (ansible_fqdn) }}" #master_name
+    host: "{{ InitConfiguration.localAPIEndpoint.advertiseAddress | default (master_name) }}" #master_name
     delay: 1
     timeout: 500
   run_once: yes
@@ -383,6 +383,22 @@
   pause: seconds=10
   changed_when: false
 
+## In the below 4 cases, we should have used master_name, but k8s does not follow the fqdn definitions...
+- name: when cluster is one machine only, remove NoSchedule taint from master - using ansible_fqdn
+  ## TODO: Use InitConfiguration to remove the taint on master, with the same condition.
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  shell: 'kubectl taint nodes {{ ansible_fqdn }} {{ item }} --overwrite'
+  when:
+  - groups['all'] | length == 1
+  with_items: #'{{ taints_master }}'
+  - 'node-role.kubernetes.io/master:NoSchedule-'
+  - 'node-role.kubernetes.io/master=:PreferNoSchedule'
+  - 'node-role.kubernetes.io/infra=:PreferNoSchedule'
+  ignore_errors: yes
+  tags:
+  - taints
+
 - name: when cluster is one machine only, remove NoSchedule taint from master - using inventory_hostname_short
   ## TODO: Use InitConfiguration to remove the taint on master, with the same condition.
   environment:
@@ -394,10 +410,21 @@
   - 'node-role.kubernetes.io/master:NoSchedule-'
   - 'node-role.kubernetes.io/master=:PreferNoSchedule'
   - 'node-role.kubernetes.io/infra=:PreferNoSchedule'
+  ignore_errors: yes
   tags:
   - taints
 
-- name: when cluster is one machine only, labeling it also as infra node
+- name: when cluster is one machine only, labeling it also as infra node - using ansible_fqdn
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  shell: 'kubectl label nodes {{ ansible_fqdn }} "node-role.kubernetes.io/infra=" --overwrite'
+  when:
+  - groups['all'] | length == 1
+  register: command_result
+  changed_when: '"not labeled" not in command_result.stdout'
+  ignore_errors: yes
+
+- name: when cluster is one machine only, labeling it also as infra node - using inventory_hostname_short
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   shell: 'kubectl label nodes {{ inventory_hostname_short }} "node-role.kubernetes.io/infra=" --overwrite'
@@ -405,6 +432,7 @@
   - groups['all'] | length == 1
   register: command_result
   changed_when: '"not labeled" not in command_result.stdout'
+  ignore_errors: yes
 
 - name: "sanity - wait for alls pod to be running (besides kube-dns/coredns which won't be ready yet as overlay network is not yet deployed, and workder nodes are not yet installed (on clusters with more than one machine))"
   environment:
