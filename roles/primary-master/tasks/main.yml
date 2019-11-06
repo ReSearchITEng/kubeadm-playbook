@@ -301,14 +301,18 @@
 
 #This is mandatory especially when proxy is used, and the inventory_hostname is defined with fqdn
 #important, in order to ensure the connection to local server is not going via proxy (expecially when applying addons)
-
-- name: update in admin.conf and kubelet.conf the name of primary-master as defined in inventory (e.g. with dns name)
+#we are going to skip this when proxy_env is not defined due to issues like: https://github.com/ReSearchITEng/kubeadm-playbook/issues/81
+#where ansible_fqdn in decide_master_name.yml is different from inventory_hostname
+- name: update in admin.conf and kubelet.conf the name of primary-master detected {{ master_name }}
   replace:
     dest: '{{ item }}'
     regexp: '(\s+)(server: https:\/\/)[A-Za-z0-9\-\.]+:'
     replace: '\1\2{{ master_name }}:'
-    #backup: yes
-  #when: proxy_env is defined ### and master is defined with fqdn in the inventory file (e.g. master.example.com)
+    backup: yes
+  when: 
+  - proxy_env is defined 
+  - proxy_env.http_proxy is defined or proxy_env.https_proxy is defined
+  #- and test master is defined with fqdn in the inventory file (e.g. master.example.com)
   with_items:
   - /etc/kubernetes/admin.conf
   - /etc/kubernetes/kubelet.conf
@@ -317,6 +321,7 @@
   tags:
   - init
   - fqdn
+  - proxy
   notify:
   - Restart kubelet
 

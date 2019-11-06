@@ -1,5 +1,9 @@
 
 # Use FullyQualifiedDomainNames (FQDN) (e.g. machine1.corp.example.com)
+# make sure `hostname -s` returns indeed short name (e.g. master1)
+# make sure `hostname -f` returns indeed the desired fqdn name (e.g. master1.corp.example.com)
+# Also, ansible_fqdn should return the same as `hostname -f` (otherwise one can reach this: https://github.com/ansible/ansible/issues/38777 )
+# try: `ansible localhost -m setup -a "filter=ansible_fqdn"` and make sure it matches: `hostname -f`
 [primary-master]
 master1.corp.example.com
 
