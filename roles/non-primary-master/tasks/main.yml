@@ -4,11 +4,19 @@
     name: common
     tasks_from: decide_master_name
 
-- name: JoinConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the JoinConfiguration.nodeRegistration.kubeletExtraArgs
+- name: JoinConfiguration - setup nodeRegistration to inventory_hostname - {{ inventory_hostname }} (instead of letting it use the default node) when inventory_hostname is fqdn
+  set_fact:
+    JoinConfiguration: "{{ JoinConfiguration | combine ( { 'nodeRegistration': {'name': inventory_hostname } }, recursive=True) }}"
+  when:
+  - custom.networking.fqdn.always or custom.networking.fqdn.node
+  - '"." in inventory_hostname'
+
+- name: JoinConfiguration - setup nodeRegistration to ansible_fqdn - {{ ansible_fqdn }} (instead of letting it use the default node); (but we might hit ansible_fqdn bug) when inventory_hostname is not fqdn
   set_fact:
     JoinConfiguration: "{{ JoinConfiguration | combine ( { 'nodeRegistration': {'name': ansible_fqdn } }, recursive=True) }}"
   when:
   - custom.networking.fqdn.always or custom.networking.fqdn.node
+  - '"." not in inventory_hostname'
 
 - name: "Wait 500 seconds for master at {{ master_name }}:{{ custom.networking.masterha_bindPort | default (6443) }} to become open (MasterHA)"
   wait_for:
