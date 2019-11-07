@@ -10,34 +10,34 @@
     tasks_from: decide_master_name
 
 #- name: Install packages required by rook (ceph) storage setup
-#  package: name={{ item }} state={{ package_state | default ('latest') }}
+#  package: name={{ item }} state={{ package_state | default ('present') }}
 #  when: rook is defined and rook.enabled
 #  with_items:
 #  - jq
 #  - ceph-common
 
 ## PULL IMAGES
-- name: Pull master images on master - when DOCKER_IMAGES is defined
-  #TODO: to be removed/replaced in 1.11 with the kubeadm pull command (kubeadm config images pull --kubernetes-version v11.0.3 ), but better remove, as kubeadm pre-flight does the pull now anyway...
-  #command: /usr/bin/docker pull "{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
-  #command: /usr/bin/docker pull "{{ images_repo |default ('k8s.gcr.io') }}/{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
-  command: /usr/bin/docker pull "{{ item.name }}:{{ item.tag }}"
-  with_items: "{{ DOCKER_IMAGES }}"
-  tags:
-  - prepull_images
-  register: command_result
-  changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
-  #when: pre_pull_k8s_images is defined and pre_pull_k8s_images
-  #when: pre_pull_k8s_images is defined and pre_pull_k8s_images and ClusterConfiguration.kubernetesVersion is defined
-  #when: full_kube_reinstall is defined and full_kube_reinstall and ClusterConfiguration.kubernetesVersion is defined
-  when: 
-  - DOCKER_IMAGES is defined
-  - pre_pull_k8s_images is defined 
-  - pre_pull_k8s_images 
-  - images_repo is defined
-  #- ClusterConfiguration.kubernetesVersion is defined
-  #- ClusterConfiguration.apiVersion == "kubeadm.k8s.io/v1alpha1"
-  #when: full_kube_reinstall is defined and full_kube_reinstall and ClusterConfiguration.kubernetesVersion is defined
+#- name: Pull master images on master - when DOCKER_IMAGES is defined
+#  #TODO: to be removed/replaced in 1.11 with the kubeadm pull command (kubeadm config images pull --kubernetes-version v11.0.3 ), but better remove, as kubeadm pre-flight does the pull now anyway...
+#  #command: /usr/bin/docker pull "{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
+#  #command: /usr/bin/docker pull "{{ images_repo |default ('k8s.gcr.io') }}/{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
+#  command: /usr/bin/docker pull "{{ item.name }}:{{ item.tag }}"
+#  with_items: "{{ DOCKER_IMAGES }}"
+#  tags:
+#  - prepull_images
+#  register: command_result
+#  changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
+#  #when: pre_pull_k8s_images is defined and pre_pull_k8s_images
+#  #when: pre_pull_k8s_images is defined and pre_pull_k8s_images and ClusterConfiguration.kubernetesVersion is defined
+#  #when: full_kube_reinstall is defined and full_kube_reinstall and ClusterConfiguration.kubernetesVersion is defined
+#  when: 
+#  - DOCKER_IMAGES is defined
+#  - pre_pull_k8s_images is defined 
+#  - pre_pull_k8s_images 
+#  - images_repo is defined
+#  #- ClusterConfiguration.kubernetesVersion is defined
+#  #- ClusterConfiguration.apiVersion == "kubeadm.k8s.io/v1alpha1"
+#  #when: full_kube_reinstall is defined and full_kube_reinstall and ClusterConfiguration.kubernetesVersion is defined
 
 - name: Pull images on master (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io )
   command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
@@ -50,10 +50,6 @@
   - pre_pull_k8s_images 
   #- DOCKER_IMAGES is not defined ## or images_repo is not defined
   - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
-
-## moved to reset.yml
-# - name: Remove /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf if present from HA etcd setup time (in MasterHA)
-#   file: "path=/etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf state=absent"
 
 - name: making sure there is an apiServer section under ClusterConfiguration
   set_fact:
@@ -152,42 +148,6 @@
   when:
   - inventory_hostname in groups['primary-master']
 
-# moved to join.yml
-# - name: Writing  JoinConfiguration to /etc/kubernetes/kubeadm-master.conf for secondary-masters
-#   copy:
-#     dest: /etc/kubernetes/kubeadm-master.conf
-#     force: yes
-#     content: |
-#       {{ JoinConfiguration | to_nice_yaml }}
-#       ---
-#       {{ KubeProxyConfiguration | to_nice_yaml }}
-#       ---
-#       {{ KubeletConfiguration | to_nice_yaml }}
-#   when:
-#   - inventory_hostname in groups['secondary-masters']
-      
-# - name: Make sure that kubelet is not up (when on secondary-masters)
-#   service: name=kubelet state=stopped
-#   when:
-#   - groups['masters'] | length > 1
-#   - inventory_hostname not in groups['primary-master']
-
-# Removed starting v1.14
-# - name: Unarchive master-certs.tar.gz to /etc/kubernetes/pki/ (when on secondary-masters)
-#   unarchive: copy=yes src=/tmp/master-certs.tar.gz dest=/etc/kubernetes/pki/
-#   when:
-#   - groups['masters'] | length > 1
-#   - inventory_hostname not in groups['primary-master']
-
-# Removed starting v1.14
-# - name: kubeadm_init_args when MasterHA and this master node is also an etcd node (need to ignore two preflight errors here)
-#   set_fact:
-#     kubeadm_init_args: "{{ ' '.join((kubeadm_init_args | default(' '), '--ignore-preflight-errors=FileAvailable--etc-kubernetes-manifests-etcd.yaml', '--ignore-preflight-errors=Port-10250' )) }}"
-#     #, '--ignore-preflight-errors=DirAvailable--var-lib-etcd', '--ignore-preflight-errors=Port-2379'
-#   when: 
-#   - "'etcd' in group_names"
-#   - groups['etcd'] | length > 1
-
 - name: "Initialize cluster on primary master with kubeadm init {{kubeadm_init_args}} --config /etc/kubernetes/kubeadm-master.conf --upload-certs"
   # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
 #  environment: '{{env_kc}}'
@@ -223,19 +183,6 @@
 #  - groups['masters'] | length > 1
   - inventory_hostname in groups['primary-master']
 
-# ### Make sure certs are ready for secondary master and then join cluster
-# - block:
-#   - set_fact:
-#       env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
-
-#   - name: "Make sure certs are ready for secondary master to join cluster: kubeadm init phase upload-certs --upload-certs"
-#     # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
-#     environment: '{{env_kc}}'
-#     shell: "/usr/bin/kubeadm init phase upload-certs --upload-certs -- 2>/dev/null | tail -1 "
-#     register: kubeadm_upload_certificate_key
-#     delegate_to: "{{groups['primary-master'][0]}}"
-#     run_once: yes
-
 ### TODO: remake it in 1.15 !!!
   # - name: generate a join token on primary-master # TEMPORARY 1.14 till this is fixed: https://github.com/kubernetes/kubeadm/issues/1485
   #   shell: 'kubeadm token create --description "kubeadm-playbook-node-joining-token" --ttl 15m --print-join-command '
@@ -267,37 +214,6 @@
   # tags:
   # - init
   # - init_secondary_masters
-
-# Removed starting v1.14
-# - name: Archive /etc/kubernetes/pki/[cs]a.* (when on primary-master)
-#   archive: path=/etc/kubernetes/pki/[cs]a.*,/etc/kubernetes/pki/front-proxy-ca.crt,/etc/kubernetes/pki/front-proxy-ca.key dest=/tmp/master-certs.tar.gz
-#   when:
-#   - groups['masters'] | length > 1
-#   - inventory_hostname in groups['primary-master']
-
-# Removed starting v1.14
-# - name: Fetch /tmp/master-certs.tar.gz from primary-master to control machine (when on primary-master)
-#   fetch: src=/tmp/master-certs.tar.gz dest=/tmp/ flat=yes
-#   when:
-#   - groups['masters'] | length > 1
-#   - inventory_hostname in groups['primary-master']
-
-# - name: find the token of the newly created cluster
-#   command: bash -c '/usr/bin/kubeadm token list | grep -v "<invalid>" | grep "system:bootstrappers" | grep "authentication" | tail -n 1 | cut -f 1 -d" "'
-#   register: kubeadm_token
-#   when: 
-#   - InitConfiguration is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
-#     InitConfiguration.token is not defined
-#   - inventory_hostname in groups['primary-master'] or inventory_hostname == groups["master"][0]
-#   changed_when: false
-#   tags:
-#   - node  # it is required for the node to register
-
-#- name: populate the token in the ClusterConfiguration
-#  set_fact:
-#    ClusterConfiguration: "{{ ClusterConfiguration |
-#    combine ({ 'token' : ClusterConfiguration_token.stdout }) }}"
-#  when: ClusterConfiguration.token is not defined
 
 #This is mandatory especially when proxy is used, and the inventory_hostname is defined with fqdn
 #important, in order to ensure the connection to local server is not going via proxy (expecially when applying addons)
@@ -350,17 +266,6 @@
     when:
     - inventory_hostname in groups['primary-master']
 
-  ### TODO: remove it in 1.15 !!!
-  # - name: temporary hack for 1.14 (which does not allow 2nd master to join by using config file, so no .NodeRegistration.KubeletExtraArgs... )
-  #   copy:
-  #     dest: /etc/sysconfig/kubelet
-  #     content: |
-  #       KUBELET_EXTRA_ARGS=--cloud-config=/etc/kubernetes/cloud-config --cloud-provider=vsphere
-  #   when:
-  #   - inventory_hostname not in groups['primary-master'] # on primary all is ok...
-  #   notify:
-  #   - Restart kubelet
-  
   tags:
   - init
   - vpshere_recreate_master_nodes

@@ -24,5 +24,3 @@ node[1:2].corp.example.com label=node-role.kubernetes.io/infra=
 # All other nodes are automatically labeled "compute" and without any taint.
 node[3:7].corp.example.com # label=node-role.kubernetes.io/compute=
 
-[node:children]
-nodes

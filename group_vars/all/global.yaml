@@ -22,10 +22,11 @@ KEEPALIVED_VERSION: "1.3.5"
 # kubernetes_repo_create: true # (default true) - triggers creation of /etc/repos.d/kubernetes.repo and similar for debian apt sources. 
 ##                        When disabled, the code expects repo will be available already on the system, before starting the plabook.
 
-## Desired state for the yum packages (docker, kube*); it defaults to latest, trying to upgrade every time.
-## package_state: latest # Other valid options for this context: installed
-package_state: present #latest (use latest only on OSes which have package managers that understand it (most do))
-## when package_state: installed and kube*_version params below are undefined, the playbook will not touch your kube* files, and you are in full control.
+## Desired state for the yum packages (docker, kube*); it defaults to 'present'
+## package_state: present # Other valid options for this context: latest
+## (use latest only on OSes which have package managers that understand it (most do))
+package_state: present #latest
+## when package_state: present and kube*_version params below are undefined, the playbook will not touch your kube* files, and you are in full control.
 ## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
 kubeadm_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it
 kubelet_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it
@@ -40,9 +41,10 @@ kubectl_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not
 wait_charts_deploy_sanity: false #When defined, it will wait till all helm charts are fully working or fail before showing cluster-info
 
 ########## Image pre-pull on MASTERS (only)
-# Usually pre-pull not required, but there is this option here.
-# Depending on what images you plan to use during deployment, you 
-#####
+## Usually pre-pull not required, but there is this option here.
+## pre-pull is now done using kubeadm's pre-pull feature
+## it will pre-pull from either images_repo defined below; if not defined, from k8s.gcr.io
+####
 pre_pull_k8s_images: True
 #####
 
@@ -53,7 +55,8 @@ pre_pull_k8s_images: True
 # images_repo: "myk8sgcrio.corp.example.com"
 #####
 
-# Images for prefetching when pre_pull_k8s_images is true and images_repo is defined
+## Images for prefetching when pre_pull_k8s_images is true and images_repo is defined
+## Now kubeadm does the pre-pull; Use this section only if really required for other images.
 HOST_ARCH: amd64
 DOCKER_IMAGES: [
 #  { name: "{{images_repo}}/busybox", tag: "{{ BUSYBOX_TAG }}" },
@@ -68,15 +71,18 @@ full_kube_reinstall: False # undefined is False. #Make it False for faster redep
 etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 #####
 
-#kubeadm_init_args: "--skip-preflight-checks" 
-#kubeadm_join_args: "--skip-preflight-checks" #  For 1.8+ you may want to add: --discovery-token-unsafe-skip-ca-verification"
-#--ignore-preflight-errors=all
-#kubeadm_join_args: "--discovery-token-unsafe-skip-ca-verification"
-turn_swapoff: True #False #True #false # default true # Note: by default kubelet won't start if swap not disabled of or kubelet not instructed to accept swap on.
+#kubeadm_init_args: E.g.: "--skip-preflight-checks" 
+#kubeadm_join_args: E.g.: "--skip-preflight-checks" 
+# and/or "--discovery-token-unsafe-skip-ca-verification"
+# and/or "--ignore-preflight-errors=all"
+
+#######
+## This will turn off your swap !!!
+turn_swapoff: True #False # default True # Note: by default kubelet won't start if swap not disabled of or kubelet not instructed to accept swap on.
 
 #####
 ## NTP SETUP
-## it is mandatory to have the time from all machines in sync
+## it is mandatory to have the time from all machines in sync (especially for certs validity)
 ntp_setup: True  # Default True
 ## ntp does not work via proxy, so, if ntp cannot reach external servers, define here the internal ntp server:
 #ntp_conf: |

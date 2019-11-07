@@ -36,7 +36,7 @@
   - "alias wipt='watch -n1 iptables -vnL ' "
   
 - name: Install optional packages like bash-completion
-  package: name={{ item }} state={{ package_state | default ('latest') }}
+  package: name={{ item }} state={{ package_state | default ('present') }}
   with_items:
   - bash-completion
   ignore_errors: yes

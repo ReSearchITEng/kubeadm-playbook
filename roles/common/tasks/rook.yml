@@ -2,12 +2,12 @@
 ### Optionally install packages for rook
 - block:
     - name: Install packages required by rook (ceph) storage
-      package: name={{ item }} state={{ package_state | default ('latest') }}
+      package: name={{ item }} state={{ package_state | default ('present') }}
       with_items:
       - ceph-common
 
     - name: Install packages required by rook (ceph) storage setup (usually required only on masters)
-      package: name={{ item }} state={{ package_state | default ('latest') }}
+      package: name={{ item }} state={{ package_state | default ('present') }}
       with_items:
       - jq
   when: rook is defined and rook.enabled

@@ -172,7 +172,7 @@
   when: ( docker_setup is defined and docker_setup=="force" ) or
         ( (docker_setup is not defined or docker_setup=="auto" ) and docker_result is failed )
 
-#- name: Use overlay docker storage driver (note: overlay2 is not currently supported by k8s)
+#- name: Use overlay docker storage driver
 #  lineinfile:
 #    dest: /etc/sysconfig/docker-storage
 #    regexp: '^DOCKER_STORAGE_OPTIONS='
