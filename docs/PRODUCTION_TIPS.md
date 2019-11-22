@@ -25,6 +25,13 @@ So, if you upgrade the cluster at least once a year (which you should to keep up
 
 # Check security settings:
 - https://www.stackrox.com/post/2019/09/12-kubernetes-configuration-best-practices/ (PRs based on this are welcome)
+- https://kubernetes.io/docs/tasks/administer-cluster/securing-a-cluster/
+- secure using: https://github.com/nirmata/kyverno/blob/master/samples/README.md
+- test using: https://github.com/aquasecurity/kube-bench
 
 # Other usefull charts:
 - https://github.com/planetlabs/draino/tree/master/helm/draino -> when node is not heathy, it's automatically cordoned and containers drained (Kubernetes Node Problem Detector and Cluster Autoscaler).
+- Use Public IP Address from a cloud vendor, simulating a LoadBalancer: https://github.com/inlets/inlets-operator
+
+
+

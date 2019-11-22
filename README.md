@@ -222,6 +222,10 @@ Similar k8s install on physical/vagrant/vms (byo - on premises) projects you may
 - https://github.com/gluster/gluster-kubernetes/blob/master/vagrant/ -> it's much more simple, no ingress, helm, addons, proxy support, and persistent volumes only using glusterfs. Entire project is only focused on CentOS.
 - https://github.com/kubernetes-incubator/kubespray & https://github.com/kubernetes/kops (amazon) -> Neither of them used the official installtion tool: kubeadm; Updates: as of 2019 kubespray accepts kubeadm (to be checked if kubespray was fully redesigned around kubeadm or adopted as an option). As of May 2019: our projects accepts also master-HA using only kubeadm 1.14, with no other "magic" around.
 
+## Bonus goodies:
+other_tools/ hold scripts like k8s cli which installs easily kubectx, krew, kubeval, etc.    
+The docs folder hold info on how to secure cluster using operators in an elegant manner (along with aqua's set of security tests)    
+
 PRs are accepted and welcome.
 
 PS: work inspired from: @sjenning - and the master ha part from @mbert. PRs & suggestions from: @carlosedp - Thanks.
@@ -231,3 +235,4 @@ PS: work inspired from: @sjenning - and the master ha part from @mbert. PRs & su
 Our story: https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
 
 License: Public Domain 
+

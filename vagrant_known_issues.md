@@ -1,10 +1,3 @@
-## Bugs/Limitations of this project
-Solved & low importance:
-- helm reset: helm command not found even when it's there
-- drain -> does not work only against desired nodes, but it should!!!
-- dashboard via helmchart is ideal for versions 1.7+. So for 1.6 some items like CronJobs (and Overview) will not work.
-
-
 ## Virtualbox bugs (for those using vagrant solution):
 - Issue: After some times it shows on console:
   		 "kernel:NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s! kworker"
