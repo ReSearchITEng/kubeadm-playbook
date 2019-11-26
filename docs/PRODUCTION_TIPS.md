@@ -33,5 +33,13 @@ So, if you upgrade the cluster at least once a year (which you should to keep up
 - https://github.com/planetlabs/draino/tree/master/helm/draino -> when node is not heathy, it's automatically cordoned and containers drained (Kubernetes Node Problem Detector and Cluster Autoscaler).
 - Use Public IP Address from a cloud vendor, simulating a LoadBalancer: https://github.com/inlets/inlets-operator
 
-
+# Debian - package hold
+make sure k8s tools are not upgraded by mistake (do it post ansible)
+```
+sudo apt-mark hold kubectl kubelet kubeadm kubernetes-cni cri-tools
+```
+allow k8s tools to be upgraded (do it when upgrade is desired)
+```
+sudo apt-mark unhold kubectl kubelet kubeadm kubernetes-cni cri-tools
+```
 
