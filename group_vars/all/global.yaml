@@ -83,7 +83,8 @@ turn_swapoff: True #False # default True # Note: by default kubelet won't start 
 #####
 ## NTP SETUP
 ## it is mandatory to have the time from all machines in sync (especially for certs validity)
-ntp_setup: True  # Default True
+ntp_setup: False # when Chrony tasks will be ready, it will become default True
+ntp_package: ntp # future: chrony
 ## ntp does not work via proxy, so, if ntp cannot reach external servers, define here the internal ntp server:
 #ntp_conf: |
 #  server ntp1.corp.example.com
