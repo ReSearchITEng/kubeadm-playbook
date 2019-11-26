@@ -7,7 +7,7 @@
   - ip_vs_rr
   - ip_vs_sh
   - ip_vs
-  - nf_conntrack_ipv4
+#  - nf_conntrack_ipv4 # removed as it fails in newer kernels
 
 - name: kernel_modules - persist ip_vs kernel modules
   copy:
@@ -17,7 +17,7 @@
       ip_vs_rr
       ip_vs_sh
       ip_vs
-      nf_conntrack_ipv4
+#      nf_conntrack_ipv4 # removed as it fails in newer kernels
 
 - name: load bridge kernel module ( for /proc/sys/net/bridge/bridge-nf-call-iptables )
   modprobe: name={{item}} state=present
