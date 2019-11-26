@@ -41,6 +41,10 @@ helm:
 # For in between, one can keep: rbac.clusterReadOnlyRole=True (if bug https://github.com/helm/charts/issues/15118 was solved)
 # For a production, remove --set enableInsecureLogin=True --set enableSkipLogin=True --set rbac.clusterAdminRole=True
 
+# Option 2:
+# use the below if you are sure you don't need any auth to your dashboard, and you use k8s 1.15 or older.
+#    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' }
+
 ################
 ## Kured #######
 ## For restaring nodes when needed, in sequencial and proper manner
@@ -61,7 +65,7 @@ helm:
     - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --set controller.tolerations[0].effect=NoSchedule,controller.tolerations[0].key="node-role.kubernetes.io/infra" --set controller.tolerations[1].effect=PreferNoSchedule,controller.tolerations[1].key="node-role.kubernetes.io/infra" --set controller.nodeSelector."node\-role\.kubernetes\.io/infra=" --set controller.kind=DaemonSet --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443 --set controller.image.repository={{ images_repo | default ("quay.io") }}/kubernetes-ingress-controller/nginx-ingress-controller --set defaultBackend.image.repository={{ images_repo | default ("k8s.gcr.io") }}/defaultbackend-amd64 ' }
     # --set controller.service.externalTrafficPolicy="Local" # for better performance, when you have a LB for the ingress controllers (across all nodes with role label infra), add this as well, or use the useHostPort option below.
 
-    ### Option 2 - DaemonSet & hostPort - Use it when there is only one machine.
+    ### Option 2 - DaemonSet & hostPort - Use it when there is only one machine
     # - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --set controller.tolerations[0].effect=NoSchedule,controller.tolerations[0].key="node-role.kubernetes.io/infra" --set controller.tolerations[1].effect=PreferNoSchedule,controller.tolerations[1].key="node-role.kubernetes.io/infra" --set controller.nodeSelector."node\-role\.kubernetes\.io/infra=" --set controller.service.type=ClusterIP --set controller.kind=DaemonSet --set controller.daemonset.useHostPort=true --set controller.image.repository={{ images_repo | default ("quay.io") }}/kubernetes-ingress-controller/nginx-ingress-controller --set defaultBackend.image.repository={{ images_repo | default ("k8s.gcr.io") }}/defaultbackend-amd64 ' }
 
     ### Option 3 - Deployment & NodePort
