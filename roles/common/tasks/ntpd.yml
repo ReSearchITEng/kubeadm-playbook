@@ -24,6 +24,10 @@
     systemd: name=ntp state=restarted enabled=yes
     when: ansible_os_family == "Debian"
 
-  when: ntp_setup is defined and ntp_setup
+  when: 
+  - ntp_setup is defined
+  - ntp_setup 
+  - ntp_package is defined
+  - ntp_package == "ntp"
   tags:
   - ntp
