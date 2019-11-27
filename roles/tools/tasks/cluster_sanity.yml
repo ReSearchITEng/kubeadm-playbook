@@ -25,13 +25,13 @@
     delay: 3
     changed_when: false
 
-  - name: kubectl get nodes
+  - name: kubectl get pods
     shell: "kubectl get --namespace kube-system pods --no-headers | grep -v -w 'Running' || true "
     register: command_result
     tags:
     - pod_sanity
     until: command_result.stdout == ""
-    retries: 30
+    retries: 40
     delay: 3
     changed_when: false
 
