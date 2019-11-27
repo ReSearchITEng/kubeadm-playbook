@@ -1,6 +1,6 @@
 ---
 - name: Restart docker
-  systemd: name=docker state=restarted enabled=yes
+  systemd: name=docker state=restarted enabled=yes daemon_reload=yes
 
 - name: Restart docker-storage-setup
   systemd: name=docker-storage-setup state=restarted
