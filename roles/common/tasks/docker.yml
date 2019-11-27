@@ -123,24 +123,35 @@
     when: proxy_env is defined and  ansible_os_family == "Debian"
     tags:
     - docker
-    
-  - name: set https_proxy in docker (Debian)
+
+  - name: set https_proxy in docker (Debian) - section
     lineinfile:
       name: /etc/systemd/system/docker.service.d/http-proxy.conf
       state: present
       create: yes
-      line: "https_proxy={{proxy_env.https_proxy | default ([]) }}"
+      line: "[Service]"
+    when: proxy_env is defined and  ansible_os_family == "Debian"
+    tags:
+    - docker
+    notify:
+    - Restart docker
+    
+  - name: set https_proxy in docker (Debian) - https 
+    lineinfile:
+      name: /etc/systemd/system/docker.service.d/http-proxy.conf
+      state: present
+      line: 'Environment="https_proxy={{proxy_env.https_proxy | default ([]) }}"'
     when: proxy_env is defined and  ansible_os_family == "Debian"
     tags:
     - docker
     notify:
     - Restart docker
 
-  - name: set http_proxy in docker (Debian)
+  - name: set http_proxy in docker (Debian) - http
     lineinfile:
       name: /etc/systemd/system/docker.service.d/http-proxy.conf
       state: present
-      line: "http_proxy={{proxy_env.http_proxy | default ([]) }}"
+      line: 'Environment="http_proxy={{proxy_env.http_proxy | default ([]) }}"'
     when: proxy_env is defined and  ansible_os_family == "Debian"
     tags:
     - docker
