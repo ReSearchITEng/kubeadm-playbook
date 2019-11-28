@@ -1,4 +1,9 @@
-# global variables
+## global variables
+##
+## ansible 2.8+ accepts by default both python2 and python3
+## for older (2.5->2.7), if you want to use python3, uncomment this:
+# ansible_python_interpreter=/usr/bin/python3
+## (the variable can also be defined per host if there is a need for mix)
 
 #####
 ## PROXY

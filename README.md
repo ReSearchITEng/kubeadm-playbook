@@ -76,7 +76,7 @@ This project targets to get a fully working environment in matter of minutes on 
 - While for installing the cluster there is no need for internet access, the addons which come as helm charts by default look for their images on the internet (but charts have to be either cached or come from an internal helm repo). To take images from on-prem, please update the group_vars/all/addons.yaml to point to local registry version of the image.
 
 ## Prerequisites:
-- ansible min. 2.3 (but higher is recommeneded. Tested on 2.5+)
+- ansible min. 2.5 (but higher is recommeneded. Tested on 2.5-2.8+)
 - For a perfect experience, one should at least define a wildcard dns subdomain, to easily access the ingresses. The wildcard can pointed to the master (as it's quaranteed to exists).    
 Note: dashboard will by default use the master machine, but also deploy under the provided domain (in parallel, only additional ingress rule)
 - if docker_setup is True, it will also attempt to define your docker and set it up with overlay2 storage driver (one needs CentOS 7.4+)

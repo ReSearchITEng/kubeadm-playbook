@@ -6,11 +6,26 @@
   become: yes
   become_method: sudo
   pre_tasks:
-  - name: Install python2 for Ansible (usually required on ubuntu, which defaults to python3) # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
+  ## It would be best to have ansible already installed on all machines. 
+  ## But if it is not, we'll try to do it:
+  - name: when no python2, install python2 for Ansible<2.8 (usually required on ubuntu, which defaults to python3) # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
     raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal) || (yum install -y python2 python-simplejson)
     register: output
     changed_when: output.stdout != ""
     tags: always
+    when:
+    - ansible_version.full is version('2.8', '<')
+    - ( ansible_python_interpreter is not defined or ansible_python_interpreter == "/usr/bin/python" )
+    # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
+
+  - name: when no python(2/3), install python3(Debian) python2(RedHat) for Ansible>=2.8 # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python3-minimal) || (yum install -y python2 python-simplejson)
+    register: output
+    changed_when: output.stdout != ""
+    tags: always
+    when:
+    - ansible_version.full is version('2.8', '>=') or ( ansible_python_interpreter is defined and ansible_python_interpreter == "/usr/bin/python3" )
+    # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
 
   - setup: # aka gather_facts
     tags: always # required for tags, see ansible issue: #14228
