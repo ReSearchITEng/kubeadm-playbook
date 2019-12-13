@@ -67,6 +67,12 @@
   - ipset
 
 ### kubelet
+- name: uninstall kubelet
+  package: name={{ item }} state=absent
+  with_items:
+  - kubelet
+  when: full_kube_reinstallation is defined and full_kube_reinstallation
+
 - name: Install kubelet
   package: name={{ item }} state={{ package_state | default ('present') }}
   #environment: '{{ proxy_env | default ({}) }}'
@@ -97,6 +103,12 @@
 
 ##############
 ### kubectl
+- name: uninstall kubectl
+  package: name={{ item }} state=absent
+  with_items:
+  - kubectl
+  when: full_kube_reinstallation is defined and full_kube_reinstallation
+
 - name: Install kubectl
   package: name={{ item }} state={{ package_state | default ('present') }}
   #environment: '{{ proxy_env | default ({}) }}'
@@ -127,6 +139,12 @@
 
 #############
 ### kubeadm
+- name: uninstall kubeadm
+  package: name={{ item }} state=absent
+  with_items:
+  - kubeadm
+  when: full_kube_reinstallation is defined and full_kube_reinstallation
+
 - name: Install kubeadm
   package: name={{ item }} state={{ package_state | default ('present') }}
   #environment: '{{ proxy_env | default ({}) }}'

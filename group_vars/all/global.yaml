@@ -33,6 +33,7 @@ KEEPALIVED_VERSION: "1.3.5"
 package_state: present #latest
 ## when package_state: present and kube*_version params below are undefined, the playbook will not touch your kube* files, and you are in full control.
 ## kube* requires full_kube_reinstallation set to True! (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
+# full_kube_reinstallation: False # When true it will force uninstall first (kubelet, kubectl, kubeadm)
 kubeadm_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it
 kubelet_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it
 kubectl_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it
