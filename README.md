@@ -9,15 +9,15 @@ For 3 years we keep on gathering best guidelines and growing this project for be
 
 All based purely on kubeadm and official helm charts.    
 It tries to bring together most (if not all) the steps to get from a freshly installed linux to a working k8s cluster.    
-Its vision is to find and integrate the best tools out there (while using KISS priciple).    
+Its vision is to find and integrate the best tools out there (while using KISS principle).    
 
 # Why
-Going beyond minikube, making your own (usually on prem) k8s cluster (with the usuall addons installed) is still too hard or needlesly complex. Kubeadm is so strong now, that complex projects don't make sense.   
-The we felt that what is missing is getting things before and after the cluster installation, to get an initial (but reasonable) platform up. 
+Going beyond minikube, making your own (usually on prem) k8s cluster (with the usuall addons installed) is still too hard or needlessly complex. Kubeadm is so strong now, that complex projects don't make sense.   
+We felt that what was missing was getting things before and after the cluster installation, to get an initial (but reasonable) platform up. 
 
 # What it makes it different:
 - pure kubeadm based (all needless complexity removed); the stronger kubeadm will be, the smaller this project!
-- kubernetes cluster platform: not only k8s, but also the importand addons
+- kubernetes cluster platform: not only k8s, but also the important addons
 - this project does not hold any "custom" addon, everything that is installed is fetched directly their official repos (mostly helm repos)
 - drives users towards good practices: e.g. segregate nodes in 3 categories (when possible): masters, infra, compute; (infra holds ingress controller, prometheus, grafana, and similar support tools)
 - optionally, when docker_setup enabled, this project will also setup the docker with known kernel params for os (those from the k8s docs).
