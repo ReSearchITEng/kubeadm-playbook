@@ -5,7 +5,8 @@
 https://medium.com/@re.search.it.eng/batteries-included-kubernetes-for-everyone-bccf9b8558dd
 
 # What is it:
-For 3 years we keep on gathering best guidelines and growing this project for best kubernetes **cluster installation + addons**. It's gluing: kubeadm, offical helm charts for various addons, fine-tunings from docs and best practices.
+For 3 years we keep on gathering best guidelines and growing this project for best kubernetes **cluster installation + addons**. 
+It's gluing: pure kubeadm, offical helm charts for various addons, fine-tunings from docs and best practices.
 
 All based purely on kubeadm and official helm charts.    
 It tries to bring together most (if not all) the steps to get from a freshly installed linux to a working k8s cluster.    
