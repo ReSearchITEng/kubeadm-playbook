@@ -14,7 +14,7 @@
 - block:
   - name: helm charts/packages deployment
     environment: '{{env_kc}}'
-    command: 'helm install {{ item.repo }} --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.options | default ("") }}' #--name
+    command: 'helm install --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
     with_items: 
     - "{{ helm.packages_list }}"
     when: helm is defined and helm.packages_list is defined
