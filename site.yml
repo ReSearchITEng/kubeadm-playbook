@@ -14,9 +14,18 @@
     changed_when: output.stdout != ""
     tags: always
     when:
-    - ansible_version.full is version('2.8', '<')
+    - ansible_version.full is version_compare('2.8', '<')
     - ( ansible_python_interpreter is not defined or ansible_python_interpreter == "/usr/bin/python" )
     # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
+    ignore_errors: yes
+    ## reason for ignore_errors: yes
+    ## "version_compare" was replaced with "version" starting ansible 2.5;
+    ## CentOS/RHEL 7.x use ansible 2.4, so not able to grasp what version_compare is.
+    ## Ansible 2.9 removes the version_compare and does not recognize it any longer.
+    ## As our need is to add python2 only on versions before 2.8, if this fails
+    ## (due to missing version_compare command), we are fine.
+    ## We do not cover cases where it fails due to other reasons, but that is a reasonable risk,
+    ## and that issue will be captured later in the flow.
 
   - name: when no python(2/3), install python3(Debian) python2(RedHat) for Ansible>=2.8 # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
     raw: test -e /usr/bin/python || (apt -y update && apt install -y python3-minimal) || (yum install -y python2 python-simplejson)
@@ -26,6 +35,9 @@
     when:
     - ansible_version.full is version('2.8', '>=') or ( ansible_python_interpreter is defined and ansible_python_interpreter == "/usr/bin/python3" )
     # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
+    ignore_errors: yes
+    ## reason for ignore_errors: yes
+    ## is similar to the one explained above (complements it)
 
   - setup: # aka gather_facts
     tags: always # required for tags, see ansible issue: #14228
