@@ -8,10 +8,11 @@
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v2.16.1 # or "latest" #https://github.com/kubernetes/helm/releases
-  install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get' 
+  helm_version: v3.0.3 # or "latest" #https://github.com/kubernetes/helm/releases
+  install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
-    - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
+  - { name: stable, url: 'http://kubernetes-charts.storage.googleapis.com' }
+  - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
 
   packages_list: # when not defined, namespace defaults to "default" namespace
   ### List helm charts you wish pre-installed every time cluster is deployed:
@@ -49,8 +50,7 @@ helm:
 ## Kured #######
 ## For restaring nodes when needed, in sequencial and proper manner
 ################
-#    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s" --set image.repository={{ images_repo | default ("docker.io") }}/weaveworks/kured ' }
-
+    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s" --set image.repository={{ images_repo | default ("docker.io") }}/weaveworks/kured ' }
 
 ################
 ## metallb #####

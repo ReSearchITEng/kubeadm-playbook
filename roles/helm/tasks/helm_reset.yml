@@ -14,6 +14,7 @@
   - helm_reset
   - reset
   - helm_purge
+  - helm2
 
 - block:
   - name: helm reset - helm list all apps
@@ -68,4 +69,5 @@
   tags:
   - helm_reset
   - reset
+  - helm2
 

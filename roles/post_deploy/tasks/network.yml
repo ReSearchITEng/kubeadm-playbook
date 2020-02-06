@@ -24,7 +24,7 @@
   - name: Create cluster network
     command: /usr/bin/kubectl apply -f {{ item }}
     #with_items: "{{ k8s_network_addons_urls | default ([]) }}"
-    with_items: '{{ k8s_network_addons_urls | default ("https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml") }}'
+    with_items: '{{ k8s_network_addons_urls | default ("https://docs.projectcalico.org/manifests/calico.yaml") }}'
     environment: '{{env_kc}}'
     #when: k8s_network_addons_urls is defined
     tags:

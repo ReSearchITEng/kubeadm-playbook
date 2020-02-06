@@ -48,7 +48,7 @@
   - reset
   - master
   roles:
-  - { role: helm, task: helm_reset, tags: [ 'reset', 'helm_reset' ] }
+  #- { role: helm, task: helm_reset, tags: [ 'reset', 'helm_reset' ] } # in helm3 is no longer required
   - { role: storage, task: remove_pvs, tags: [ 'reset', 'storage_reset', 'pvs_reset' ] }
   - { role: storage, task: nfs_reset, tags: [ 'reset', 'storage_reset', 'nfs_reset' ] }
   - { role: storage, task: rook_reset, tags: [ 'reset', 'storage_reset', 'rook_reset' ] }
@@ -152,7 +152,7 @@
   roles:
   - { role: post_deploy, task: all, tags: [ 'post_deploy_no_helm' ] }
   - { role: storage, task: create_all, tags: [ 'storage', 'rook', 'nfs', 'vsphere' ] }
-  - { role: helm, task: all, tags: [ 'helm', 'helm_tiller' ] }
+  - { role: helm, task: helm, tags: [ 'helm' ] }
   - { role: helm, task: charts_deploy, tags: [ 'helm', 'charts_deploy' ] }
 
 ### For fixes like vsphere's bug, we have to reboot after some more fixes...
