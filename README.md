@@ -121,7 +121,7 @@ If for any reason anyone needs to relax RBAC, they can do:
 Use the release/branch that fits your k8s version needs.
 While  master may have additinal features, it's as tested as the releases.
 
-## Full cluster installation
+## Full cluster (re)installation (reset + install)
 ```shell
 git clone https://github.com/ReSearchITEng/kubeadm-playbook.git
 cd kubeadm-playbook/
@@ -140,7 +140,11 @@ Read the site.yml. Here are also some explanations of important steps:
 - install nodes  (role/tag: node)
 - install network, helm, ingresses, (role/tag: post_deploy)
 
-## Add manage (add/reinstall) nodes:
+## Add nodes:
+- modify inventory (**hosts** file), and leave the primary-master intact, but for nodes, keep *ONLY* the nodes to be managed (added/reset)
+- ``` ansible-playbook -i hosts only_nodes_only_install.yml --tags node ``` ; More in the docs section.
+
+## Add nodes in 2 steps: reset node + install node:
 - modify inventory (**hosts** file), and leave the primary-master intact, but for nodes, keep *ONLY* the nodes to be managed (added/reset)
 - ``` ansible-playbook -i hosts site.yml --tags node ``` ; More in the docs section.
 
@@ -153,6 +157,17 @@ There are other operations possible against the cluster, look at the file: site.
 - "--tags reset" -> which resets the cluster in a safe matter (first removes all helm chars, then cleans all PVs/NFS, drains nodes, etc.)
 - "--tags helm_reset" -> which removes all helm charts, and resets the helm.
 - "--tags cluster_sanity" -> which does, of course, cluster_sanity and prints cluster details (no changes performed)
+
+## Playbooks
+site.yml -> holds all tasks, including reset, install, post_deploy (overlay network, charts install), sanity;    
+This way, site.yml should be for install install of the cluster (where all steps are required).
+One may use site.yml for maintenance, but always use the tags for the desired actions (on top of keeping only primary-master and desired machines for which actions are targeted)
+
+The below playbooks are subsets of the site.yml:
+- all_install.yml -> holds install tasks only (no reset), but for all types of machines (
+- all_reset.yml -> reset kubernetes related packages and k8s setups in all machines in the inventory)
+- only_nodes_only_install.yml -> runs only install actions only on nodes in the inventory (nothing on masters)
+- only_secondaryMasters_only_install.yml -> runs install actions only on secondary-masters present in the inventory (and nothing on primary-masters or nodes)
 
 ## Check the installation of dashboard
 The output should have already presented the required info (or run again: `ansible-playbook -i hosts site.yml --tags cluster_sanity`).

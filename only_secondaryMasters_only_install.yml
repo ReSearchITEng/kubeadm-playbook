@@ -1,0 +1,135 @@
+---
+## Preparations
+## Making sure python exists on all nodes, so Ansible will be able to run:
+- hosts: secondary-masters
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  pre_tasks:
+  ## It would be best to have ansible already installed on all machines. 
+  ## But if it is not, we'll try to do it:
+  - name: when no python2, install python2 for Ansible<2.8 (usually required on ubuntu, which defaults to python3) # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal) || (yum install -y python2 python-simplejson)
+    register: output
+    changed_when: output.stdout != ""
+    tags: always
+    when:
+    - ansible_version.full is version_compare('2.8', '<')
+    - ( ansible_python_interpreter is not defined or ansible_python_interpreter == "/usr/bin/python" )
+    # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
+    ignore_errors: yes
+    ## reason for ignore_errors: yes
+    ## "version_compare" was replaced with "version" starting ansible 2.5;
+    ## CentOS/RHEL 7.x use ansible 2.4, so not able to grasp what version_compare is.
+    ## Ansible 2.9 removes the version_compare and does not recognize it any longer.
+    ## As our need is to add python2 only on versions before 2.8, if this fails
+    ## (due to missing version_compare command), we are fine.
+    ## We do not cover cases where it fails due to other reasons, but that is a reasonable risk,
+    ## and that issue will be captured later in the flow.
+
+  - name: when no python(2/3), install python3(Debian) python2(RedHat) for Ansible>=2.8 # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python3-minimal) || (yum install -y python2 python-simplejson)
+    register: output
+    changed_when: output.stdout != ""
+    tags: always
+    when:
+    - ansible_version.full is version('2.8', '>=') or ( ansible_python_interpreter is defined and ansible_python_interpreter == "/usr/bin/python3" )
+    # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
+    ignore_errors: yes
+    ## reason for ignore_errors: yes
+    ## is similar to the one explained above (complements it)
+
+  - setup: # aka gather_facts
+    tags: always # required for tags, see ansible issue: #14228
+    
+  - name: test min. vars (group_vars/all) are set (ClusterConfiguration and k8s_network_addons_urls)
+    debug: msg='Make sure min. vars are set in group_vars/all/ (e.g. ClusterConfiguration and k8s_network_addons_urls)'
+    when: 
+    - ClusterConfiguration is not defined
+    - JoinConfiguration is not defined
+    failed_when: 
+    - ClusterConfiguration is not defined
+    - JoinConfiguration is not defined
+    tags: always # always check if we have vars in place
+
+- hosts: secondary-masters
+  become: yes
+  become_method: sudo
+  tags:
+  - master
+  - secondary_masters
+  roles:
+  - { role: tools, task: reset, tags: [ 'reset', 'master_reset' ] }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'master_reset', 'network_reset', 'weave', 'weave_reset' ] }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'master_install'] }
+
+## master -> install keepalived on masters (relevat if HA)
+- hosts: secondary-masters
+  become: yes
+  become_method: sudo
+  any_errors_fatal: yes
+  tags:
+  - master
+  - install
+  - ha
+  - master_install
+  - secondary_masters
+  roles:
+  - role: keepalived
+    tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived']
+    when: 
+    - ( groups['masters'] | length ) > 1 
+    - ( custom.networking.masterha_type | default('vip') ) == 'vip'
+
+- hosts: secondary-masters
+  become: yes
+  become_method: sudo
+  any_errors_fatal: yes
+  tags:
+  - master
+  - install
+  - ha
+  - master_install
+  - secondary_masters
+  roles:
+  - { role: non-primary-master, tags: [ 'secondary-masters', 'master', 'install', 'master_install', 'secondary_masters'] } 
+
+### For fixes like vsphere's bug, we have to reboot after some more fixes...
+#https://github.com/vmware/kubernetes/issues/495
+- hosts: mustrebootlist
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  tags:
+  - mustrebootlist
+  - vsphere_bug_fix
+  - vsphere
+  roles:
+  - { role: tools, task: reboot, tags: [ 'reboot_minimal' ], when: "ClusterConfiguration.cloudProvider is defined and ClusterConfiguration.cloudProvider == 'vsphere' and allow_restart | default(False) and vsphere_bug_fix is defined and vsphere_bug_fix" }
+
+## Generic Sanity
+- hosts: secondary-masters
+  become: yes
+  become_method: sudo
+  tags:
+  - master
+  - secondary_masters
+  pre_tasks:
+  - name: remove temporary mustreboot temporary group
+    group:
+      name: mustrebootlist
+      state: absent
+  roles:
+  - { role: tools, task: cluster_sanity, tags: [ 'cluster_sanity', 'sanity' ] }
+  - { role: tools, task: postinstall_messages, tags: [ 'cluster_sanity', 'sanity' ] }
+
+## to reset/add only some (more) nodes:
+##   1. keep in hosts only:
+##      - the master
+##      - the affected node (all other nodes should not be there)
+##   2. Have the token defined in the group_vars/all
+##   3. Run using only this/these tag(s):
+## ansible-playbook -i hosts -v site.yml --tags "node"   # same with: ansible-playbook -i hosts -v site.yml --tags "node_reset,node_install,cluster_sanity,cluster_info"
+
+## To get cluster info/sanity:
+## ansible-playbook -i hosts -v site.yml --tags "cluster_sanity,cluster_info"

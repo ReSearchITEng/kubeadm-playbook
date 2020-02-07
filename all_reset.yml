@@ -1,0 +1,87 @@
+---
+## Preparations
+## Making sure python exists on all nodes, so Ansible will be able to run:
+- hosts: all
+  gather_facts: no
+  become: yes
+  become_method: sudo
+  pre_tasks:
+  ## It would be best to have ansible already installed on all machines. 
+  ## But if it is not, we'll try to do it:
+  - name: when no python2, install python2 for Ansible<2.8 (usually required on ubuntu, which defaults to python3) # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal) || (yum install -y python2 python-simplejson)
+    register: output
+    changed_when: output.stdout != ""
+    tags: always
+    when:
+    - ansible_version.full is version_compare('2.8', '<')
+    - ( ansible_python_interpreter is not defined or ansible_python_interpreter == "/usr/bin/python" )
+    # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
+    ignore_errors: yes
+    ## reason for ignore_errors: yes
+    ## "version_compare" was replaced with "version" starting ansible 2.5;
+    ## CentOS/RHEL 7.x use ansible 2.4, so not able to grasp what version_compare is.
+    ## Ansible 2.9 removes the version_compare and does not recognize it any longer.
+    ## As our need is to add python2 only on versions before 2.8, if this fails
+    ## (due to missing version_compare command), we are fine.
+    ## We do not cover cases where it fails due to other reasons, but that is a reasonable risk,
+    ## and that issue will be captured later in the flow.
+
+  - name: when no python(2/3), install python3(Debian) python2(RedHat) for Ansible>=2.8 # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
+    raw: test -e /usr/bin/python || (apt -y update && apt install -y python3-minimal) || (yum install -y python2 python-simplejson)
+    register: output
+    changed_when: output.stdout != ""
+    tags: always
+    when:
+    - ansible_version.full is version('2.8', '>=') or ( ansible_python_interpreter is defined and ansible_python_interpreter == "/usr/bin/python3" )
+    # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
+    ignore_errors: yes
+    ## reason for ignore_errors: yes
+    ## is similar to the one explained above (complements it)
+
+  - setup: # aka gather_facts
+    tags: always # required for tags, see ansible issue: #14228
+    
+  - name: test min. vars (group_vars/all) are set (ClusterConfiguration and k8s_network_addons_urls)
+    debug: msg='Make sure min. vars are set in group_vars/all/ (e.g. ClusterConfiguration and k8s_network_addons_urls)'
+    when: 
+    - ClusterConfiguration is not defined
+    - JoinConfiguration is not defined
+    failed_when: 
+    - ClusterConfiguration is not defined
+    - JoinConfiguration is not defined
+    tags: always # always check if we have vars in place
+
+## proper reset of any previous cluster (if any)
+- hosts: primary-master
+  become: yes
+  become_method: sudo
+  tags:
+  - reset
+  - master
+  roles:
+  #- { role: helm, task: helm_reset, tags: [ 'reset', 'helm_reset' ] } # in helm3 is no longer required
+  - { role: storage, task: remove_pvs, tags: [ 'reset', 'storage_reset', 'pvs_reset' ] }
+  - { role: storage, task: nfs_reset, tags: [ 'reset', 'storage_reset', 'nfs_reset' ] }
+  - { role: storage, task: rook_reset, tags: [ 'reset', 'storage_reset', 'rook_reset' ] }
+  - { role: tools, task: reset_drain, tags: [ 'reset', 'node_reset', 'drain', 'node_drain' ] } #done on master, affecting nodes
+
+## nodes -> reset and install common part (for all nodes)
+- hosts: nodes
+  become: yes
+  become_method: sudo
+  tags:
+  - node
+  roles:
+  - { role: tools, task: reset, tags: [ 'reset', 'node_reset' ], when: "inventory_hostname not in groups['masters']" }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['masters']" }
+
+- hosts: masters
+  become: yes
+  become_method: sudo
+  tags:
+  - master
+  roles:
+  - { role: tools, task: reset, tags: [ 'reset', 'master_reset' ] }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'master_reset', 'network_reset', 'weave', 'weave_reset' ] }
+
