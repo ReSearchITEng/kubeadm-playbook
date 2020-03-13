@@ -50,7 +50,7 @@ helm:
 ## Kured #######
 ## For restaring nodes when needed, in sequencial and proper manner
 ################
-#    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s" --set image.repository={{ images_repo | default ("docker.io") }}/weaveworks/kured ' }
+    - { name: kured, repo: stable/kured, namespace: kube-system, options: '--set extraArgs.period="0h07m0s" --set image.repository={{ images_repo | default ("docker.io") }}/weaveworks/kured ' }
 
 ################
 ## metallb #####
