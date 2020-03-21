@@ -29,6 +29,9 @@ So, if you upgrade the cluster at least once a year (which you should to keep up
 - secure using: https://github.com/nirmata/kyverno/blob/master/samples/README.md
 - test using: https://github.com/aquasecurity/kube-bench
 
+# Security improvements already done:
+- inhibited nginx version info in headers: server-token=False, hide-headers=Server ; More params on: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md
+
 # Other usefull charts:
 - https://github.com/planetlabs/draino/tree/master/helm/draino -> when node is not heathy, it's automatically cordoned and containers drained (Kubernetes Node Problem Detector and Cluster Autoscaler).
 - Use Public IP Address from a cloud vendor, simulating a LoadBalancer: https://github.com/inlets/inlets-operator
