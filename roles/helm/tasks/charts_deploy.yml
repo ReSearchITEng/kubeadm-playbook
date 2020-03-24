@@ -11,10 +11,36 @@
   tags:
   - always
 
+- name: helm related crds,webhooks,rbacs,operators via manifests
+  block:
+  - name: applying pre_helm_manifests
+    command: kubectl apply -f {{ item }}
+    with_items: '{{ pre_helm_manifests }}'
+    environment: '{{env_kc}}'
+    when:
+    - pre_helm_manifests is defined
+    - pre_helm_manifests | length > 0
+    register: command_result
+    changed_when: '" changed" in command_result.stdout or " created" in command_result.stdout'
+    # there might be mutiplce artifacts in the same yaml, so we cannot simply rely on "unchanged"
+  tags:
+  - pre_helm_manifests
+  - charts_deploy
+
 - block:
+  - name: create the namespaces required by the helm charts deployment
+    environment: '{{env_kc}}'
+    shell: 'kubectl create namespace {{ item.namespace | default(default) }} || true '
+    with_items:
+    - "{{ helm.packages_list }}"
+    when: helm is defined and helm.packages_list is defined
+    register: command_result
+    changed_when: '"already exists" not in command_result.stderr'
+
   - name: helm charts/packages deployment
     environment: '{{env_kc}}'
-    command: 'helm install --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
+    command: 'helm upgrade --install --atomic --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
+    # --atomic is required for helm3, to make sure even failed releases are updated. This at least till this issue is closed: https://github.com/helm/helm/issues/5595
     with_items: 
     - "{{ helm.packages_list }}"
     when: helm is defined and helm.packages_list is defined

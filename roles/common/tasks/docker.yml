@@ -10,173 +10,194 @@
   ignore_errors: yes
 
 - block:
-  - name: Install in CentOS/RHEL docker (if does not exist)
-    package: state=present name={{ item }} #-{{version}}
-    environment: '{{ proxy_env | default ({}) }}'
-    with_items:
-    - docker
-    tags:
-    - docker
-    when: ansible_os_family == "RedHat"
-    notify:
-    - Restart docker
+  - name: CentOS/RedHat docker install and setup
+    block:
+    - name: Install in CentOS/RHEL docker (if does not exist)
+      package: state=present name={{ item }} #-{{version}}
+      environment: '{{ proxy_env | default ({}) }}'
+      with_items:
+      - docker
+      tags:
+      - docker
+      when: ansible_os_family == "RedHat"
+      notify:
+      - Restart docker
 
-  - name: Install in debian docker (if does not exist)
-    package: state=present name={{ item }} #-{{version}}
-    environment: '{{ proxy_env | default ({}) }}'
-    with_items:
-    - docker.io # this is ubuntu's official version. Stable and tested
-    #- docker-engine  # this is the version from the docker project, not fully tested.
-    tags:
-    - docker
-    when: ansible_os_family == "Debian"
-    notify:
-    - Restart docker
+    - name: prepare docker-storage-setup (CentOS/RHEL)
+      copy:
+        content: |
+          EXTRA_STORAGE_OPTIONS="--storage-opt overlay2.override_kernel_check=true"
+          STORAGE_DRIVER="overlay2"
+        dest: /etc/sysconfig/docker-storage-setup
+        backup: yes
+      run_once: yes
+      tags:
+      - docker
+      when: ansible_os_family == "RedHat"
+      notify:
+      - Restart docker-storage-setup
+      - Restart docker
+      # CURRENTLY tested in CentOS/RHEL.
 
-  - name: set docker storage to overlay2 (Debian) - overlay2 works only with ubuntu's official docker distribution (docker.io)
-    copy:
-      content: |
-        {
-          "storage-driver": "overlay2"
-        }
-      dest: /etc/docker/daemon.json
-      backup: yes
-    tags:
-    - docker
-    when: ansible_os_family == "Debian"
-    notify:
-    - Restart docker
+    - name: remove previous /etc/sysconfig/docker-storage (CentOS/RHEL)
+      file:
+        path: /etc/sysconfig/docker-storage
+        state: absent
+      tags:
+      - docker
+      notify:
+      - Restart docker-storage-setup
+      - Restart docker
 
-  - name: prepare docker-storage-setup (CentOS/RHEL)
-    copy:
-      content: |
-        EXTRA_STORAGE_OPTIONS="--storage-opt overlay2.override_kernel_check=true"
-        STORAGE_DRIVER="overlay2"
-      dest: /etc/sysconfig/docker-storage-setup
-      backup: yes
-    run_once: yes
-    tags:
-    - docker
-    when: ansible_os_family == "RedHat"
-    notify:
-    - Restart docker-storage-setup
-    - Restart docker
-    # CURRENTLY tested in CentOS/RHEL.
-    # For Ubuntu/Debian probably this should go to: /etc/default/docker # Or keep the defaults (loopback for tests)
+    - name: Restart docker-storage-setup  (CentOS/RHEL)
+      systemd: name=docker-storage-setup state=restarted
+      tags:
+      - docker
+      notify:
+      - Restart docker
 
-  - name: remove previous /etc/sysconfig/docker-storage (CentOS/RHEL)
-    file:
-      path: /etc/sysconfig/docker-storage
-      state: absent
-    when: ansible_os_family == "RedHat"
-    tags:
-    - docker
-    notify:
-    - Restart docker-storage-setup
-    - Restart docker
+    - name: set https proxy in docker (CentOS/RHEL)
+      lineinfile:
+        name: /etc/sysconfig/docker
+        state: present
+        line: "https_proxy={{proxy_env.https_proxy | default ('') }}"
+      when:
+      - proxy_env is defined
+      - proxy_env.https_proxy is defined
+      #- proxy_env.https_proxy | length > 0
+      tags:
+      - docker
+      notify:
+      - Restart docker
 
-  - name: Restart docker-storage-setup  (CentOS/RHEL)
-    systemd: name=docker-storage-setup state=restarted
-    when: ansible_os_family == "RedHat"
-    tags:
-    - docker
-    notify:
-    - Restart docker
+    - name: set http proxy in docker (CentOS/RHEL)
+      lineinfile:
+        name: /etc/sysconfig/docker
+        state: present
+        line: "http_proxy={{proxy_env.http_proxy | default ('') }}"
+      when:
+      - proxy_env is defined
+      - proxy_env.http_proxy is defined
+      #- proxy_env.http_proxy | length > 0
+      tags:
+      - docker
+      notify:
+      - Restart docker
 
-  - name: set https proxy in docker (CentOS/RHEL)
-    lineinfile:
-      name: /etc/sysconfig/docker
-      state: present
-      line: "https_proxy={{proxy_env.https_proxy | default ([]) }}"
-    when: proxy_env is defined and  ansible_os_family == "RedHat"
-    tags:
-    - docker
-    notify:
-    - Restart docker
+    - name: set no_proxy in docker (CentOS/RHEL)
+      lineinfile:
+        name: /etc/sysconfig/docker
+        state: present
+        line: "no_proxy={{proxy_env.no_proxy | default ('') }}"
+      when:
+      - proxy_env is defined
+      - proxy_env.no_proxy is defined
+      #- proxy_env.no_proxy | length > 0
+      tags:
+      - docker
+      notify:
+      - Restart docker
 
-  - name: set http proxy in docker (CentOS/RHEL)
-    lineinfile:
-      name: /etc/sysconfig/docker
-      state: present
-      line: "http_proxy={{proxy_env.http_proxy | default ([]) }}"
-    when: proxy_env is defined and  ansible_os_family == "RedHat"
-    tags:
-    - docker
-    notify:
-    - Restart docker
+    - name: Add docker insecure registry
+      lineinfile:
+        dest: /etc/sysconfig/docker
+        regexp: '^# INSECURE_REGISTRY='
+        line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
+      notify:
+      - Restart docker
+      when: kubeadm_docker_insecure_registry is defined
 
-  - name: set no_proxy in docker (CentOS/RHEL)
-    lineinfile:
-      name: /etc/sysconfig/docker
-      state: present
-      line: "no_proxy={{proxy_env.no_proxy | default ([]) }}"
-    when: proxy_env is defined and  ansible_os_family == "RedHat"
-    tags:
-    - docker
-    notify:
-    - Restart docker
+    when:
+    - ansible_os_family == "RedHat"
+  ## Block for CentOS/RedHat ends here
 
-  - name: set https_proxy in docker (Debian)
-    file:
-      path: /etc/systemd/system/docker.service.d/
-      state: directory
-    when: proxy_env is defined and  ansible_os_family == "Debian"
-    tags:
-    - docker
+  ### DEBIAN/Ubuntu:
+  - name: Debian/Ubuntu docker installation and docker_setup
+    block:
 
-  - name: set https_proxy in docker (Debian) - section
-    lineinfile:
-      name: /etc/systemd/system/docker.service.d/http-proxy.conf
-      state: present
-      create: yes
-      line: "[Service]"
-    when: proxy_env is defined and  ansible_os_family == "Debian"
-    tags:
-    - docker
-    notify:
-    - Restart docker
-    
-  - name: set https_proxy in docker (Debian) - https 
-    lineinfile:
-      name: /etc/systemd/system/docker.service.d/http-proxy.conf
-      state: present
-      line: 'Environment="https_proxy={{proxy_env.https_proxy | default ([]) }}"'
-    when: proxy_env is defined and  ansible_os_family == "Debian"
-    tags:
-    - docker
-    notify:
-    - Restart docker
+    - name: Install in debian docker (if does not exist)
+      package: state=present name={{ item }} #-{{version}}
+      environment: '{{ proxy_env | default ({}) }}'
+      with_items:
+      - docker.io # this is ubuntu's official version. Stable and tested
+      #- docker-engine  # this is the version from the docker project, not fully tested.
+      tags:
+      - docker
+      when: ansible_os_family == "Debian"
+      notify:
+      - Restart docker
 
-  - name: set http_proxy in docker (Debian) - http
-    lineinfile:
-      name: /etc/systemd/system/docker.service.d/http-proxy.conf
-      state: present
-      line: 'Environment="http_proxy={{proxy_env.http_proxy | default ([]) }}"'
-    when: proxy_env is defined and  ansible_os_family == "Debian"
-    tags:
-    - docker
-    notify:
-    - Restart docker
+    - name: set docker storage to overlay2 (Debian) - overlay2 works only with ubuntu's official docker distribution (docker.io)
+      copy:
+        content: |
+          {
+            "storage-driver": "overlay2"
+          }
+        dest: /etc/docker/daemon.json
+        backup: yes
+      tags:
+      - docker
+      when: ansible_os_family == "Debian"
+      notify:
+      - Restart docker
+      # also look at: /etc/default/docker
 
-  - name: set no_proxy in docker (Debian)
-    lineinfile:
-      name: /etc/systemd/system/docker.service.d/http-proxy.conf
-      state: present
-      line: "no_proxy={{proxy_env.no_proxy | default ([]) }}"
-    when: proxy_env is defined and  ansible_os_family == "Debian"
-    tags:
-    - docker
-    notify:
-    - Restart docker
+    - name: set https_proxy in docker (Debian)
+      file:
+        path: /etc/systemd/system/docker.service.d/
+        state: directory
+      when: proxy_env is defined and  ansible_os_family == "Debian"
+      tags:
+      - docker
 
-  - name: Add docker insecure registry
-    lineinfile:
-      dest: /etc/sysconfig/docker
-      regexp: '^# INSECURE_REGISTRY='
-      line: "INSECURE_REGISTRY='--insecure-registry {{ kubeadm_docker_insecure_registry }}'"
-    notify:
-    - Restart docker
-    when: ansible_os_family == "RedHat" and kubeadm_docker_insecure_registry is defined
+    - name: set https_proxy in docker (Debian) - section
+      lineinfile:
+        name: /etc/systemd/system/docker.service.d/http-proxy.conf
+        state: present
+        create: yes
+        line: "[Service]"
+      when: proxy_env is defined and  ansible_os_family == "Debian"
+      tags:
+      - docker
+      notify:
+      - Restart docker
+
+    - name: set https_proxy in docker (Debian) - https
+      lineinfile:
+        name: /etc/systemd/system/docker.service.d/http-proxy.conf
+        state: present
+        line: 'Environment="https_proxy={{proxy_env.https_proxy | default ([]) }}"'
+      when: proxy_env is defined and  ansible_os_family == "Debian"
+      tags:
+      - docker
+      notify:
+      - Restart docker
+
+    - name: set http_proxy in docker (Debian) - http
+      lineinfile:
+        name: /etc/systemd/system/docker.service.d/http-proxy.conf
+        state: present
+        line: 'Environment="http_proxy={{proxy_env.http_proxy | default ([]) }}"'
+      when: proxy_env is defined and  ansible_os_family == "Debian"
+      tags:
+      - docker
+      notify:
+      - Restart docker
+
+    - name: set no_proxy in docker (Debian)
+      lineinfile:
+        name: /etc/systemd/system/docker.service.d/http-proxy.conf
+        state: present
+        line: "no_proxy={{proxy_env.no_proxy | default ([]) }}"
+      when: proxy_env is defined
+      tags:
+      - docker
+      notify:
+      - Restart docker
+
+    when:
+    - ansible_os_family == "Debian"
+    ## END of Debian/Ubuntu block
 
   #- name: Use json-file docker logging driver
   #  lineinfile:

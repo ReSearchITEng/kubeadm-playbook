@@ -20,6 +20,20 @@
   #   - cluster_info
   #   - cluster_status
 
+  - name: Get deployed helm charts
+    shell: "helm list --all-namespaces --all --superseded --pending"
+    changed_when: false
+    register: command_result
+    tags:
+    - cluster_status
+    - helm
+    - post_deploy
+
+  - name: Print all helm charts
+    debug:
+      var: command_result.stdout_lines
+    changed_when: false
+
   - name: Get pods
     command: "kubectl get pods -o wide --all-namespaces --show-labels=true --show-kind=true"
     register: command_result

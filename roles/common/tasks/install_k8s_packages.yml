@@ -38,11 +38,14 @@
       dest: /etc/yum.repos.d/kubernetes.repo
       section: "{{item}}"
       option: proxy
-      value: "{{proxy_env.https_proxy | default ([]) }}"
+      value: "{{proxy_env.https_proxy | default ('') }}"
     with_items: [ 'kubernetes' ]
-    when: proxy_env is defined and ansible_os_family == "RedHat"
+    when:
+    - proxy_env is defined
+    - proxy_env.https_proxy is defined
+    #- proxy_env.https_proxy | length > 0
+    - ansible_os_family == "RedHat"
   when: kubernetes_repo_create | default('true')
-
 
 - name: Clean yum metadata
   command: yum clean all

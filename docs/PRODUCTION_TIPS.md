@@ -32,6 +32,10 @@ So, if you upgrade the cluster at least once a year (which you should to keep up
 # Security improvements already done:
 - inhibited nginx version info in headers: server-token=False, hide-headers=Server ; More params on: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/configmap.md
 
+# Known pending improvements of k8s/kubeadm:
+- metrics-server cannot validate kubelet certs; Proper fix for "--kubelet-insecure-tls" will be in k8s 1.19 https://github.com/kubernetes/kubeadm/issues/1602 ; Alternatives is manually generating and approving certs for each node: serverTLSBootstrap: https://github.com/kubernetes-sigs/metrics-server/issues/146#issuecomment-472655656
+
+
 # Other usefull charts:
 - https://github.com/planetlabs/draino/tree/master/helm/draino -> when node is not heathy, it's automatically cordoned and containers drained (Kubernetes Node Problem Detector and Cluster Autoscaler).
 - Use Public IP Address from a cloud vendor, simulating a LoadBalancer: https://github.com/inlets/inlets-operator

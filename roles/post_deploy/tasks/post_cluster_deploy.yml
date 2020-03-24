@@ -6,14 +6,17 @@
 #   - k8s_addons
 #   tasks:
   - set_fact:
-      env_kc: '{{ proxy_env |default({}) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+      env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
     tags:
     - always
 
+  # k8s_addons_urls is usually empty
   - name: Install k8s_addons_urls (with proxy)
-    command: /usr/bin/kubectl apply -f {{ item }}
+    command: kubectl apply -f {{ item }}
     with_items: "{{ k8s_addons_urls | default ('') }}"
     environment: '{{env_kc}}'
-    when: k8s_addons_urls is defined
+    when:
+    - k8s_addons_urls is defined
+    - k8s_addons_urls | length > 0
     tags:
     - k8s_addons
