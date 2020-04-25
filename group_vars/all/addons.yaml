@@ -74,7 +74,7 @@ helm:
 ####################
 ## DASHBOARD 2.0 ###
 ####################
-#    - { name: dashboard, repo: funkypenguin/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true ' }
+#    - { name: dashboard, repo: funkypenguin/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true,metricsScraper.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/metrics-scraper --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true ' }
 
 ################
 ## Kured #######
