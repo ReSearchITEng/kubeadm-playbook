@@ -16,12 +16,13 @@ pre_helm_manifests:
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v3.1.2 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v3.2.0 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
   - { name: stable, url: 'http://kubernetes-charts.storage.googleapis.com' }
   - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
   - { name: jetstack, url: 'https://charts.jetstack.io' } # cert-manager
+  #- { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-charts' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
 
   packages_list: # when not defined, namespace defaults to "default" namespace
   # use "--wait" in the options section if you want to wait till min. pods are up.
@@ -40,6 +41,7 @@ helm:
 ################
 #### Heapster ##
 ################
+# Will be deprecated as soon as we can use metrics-server from dashboard 2.0 helm chart will be officially released.
     - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/heapster-{{ HOST_ARCH }} --set resizer.image.repository={{ images_repo | default ("k8s.gcr.io") }}/addon-resizer --set resizer.enabled=False ' }
 # --set resizer.enabled=False ->> this is not working with taints due to some bug, thefore disabling it for now.
 #    - { name: heapster, repo: stable/heapster, namespace: kube-system, options: '--set service.nameOverride=heapster,rbac.create=true' }
@@ -59,6 +61,7 @@ helm:
 ################
 ## DASHBOARD ###
 ################
+## This (v1) will be deprecated in favour of 2.0 - soon to be released
     - { name: dashboard, repo: stable/kubernetes-dashboard, namespace: kube-system, options: '--set image.repository={{ images_repo | default ("k8s.gcr.io") }}/kubernetes-dashboard-{{ HOST_ARCH }} --set rbac.create=True,ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set rbac.create=True,rbac.clusterAdminRole=True --set enableInsecureLogin=True --set enableSkipLogin=True ' }
 # For a learning/development --set rbac.clusterAdminRole=True with skip login and insecure might be acceptable, but not for real case scenarios!!!
 # For in between, one can keep: rbac.clusterReadOnlyRole=True (if bug https://github.com/helm/charts/issues/15118 was solved)
@@ -67,6 +70,11 @@ helm:
 # Option 2:
 # use the below if you are sure you don't need any auth to your dashboard, and you use k8s 1.15 or older.
 #    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' }
+
+####################
+## DASHBOARD 2.0 ###
+####################
+#    - { name: dashboard, repo: funkypenguin/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true ' }
 
 ################
 ## Kured #######
