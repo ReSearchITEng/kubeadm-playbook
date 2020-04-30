@@ -1,4 +1,5 @@
-#https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2
+#https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2?tab=doc#ClusterConfiguration
+#check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm?tab=subdirectories
 ClusterConfiguration:
   apiVersion: kubeadm.k8s.io/v1beta2
   apiServer:

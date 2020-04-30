@@ -1,4 +1,5 @@
-#https://godoc.org/k8s.io/kube-proxy/config/v1alpha1#KubeProxyConfiguration
+#https://pkg.go.dev/k8s.io/kube-proxy/config/v1alpha1?tab=doc#KubeProxyConfiguration
+#check latest api ver here: https://pkg.go.dev/k8s.io/kube-proxy/config/
 KubeProxyConfiguration:
   apiVersion: kubeproxy.config.k8s.io/v1alpha1
   # bindAddress: 0.0.0.0

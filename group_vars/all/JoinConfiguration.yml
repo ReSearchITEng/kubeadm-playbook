@@ -1,4 +1,5 @@
-#https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta1#JoinConfiguration
+#https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2?tab=doc#JoinConfiguration
+#check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm?tab=subdirectories
 JoinConfiguration:
 #  controlPlane: # define controlPlane section only in secondary-masters; not required in minions.
 #    localAPIEndpoint:
