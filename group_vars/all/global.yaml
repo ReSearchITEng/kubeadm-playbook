@@ -33,6 +33,7 @@ KEEPALIVED_VERSION: "1.3.5"
 package_state: present #latest
 ## when package_state: present and kube*_version params below are undefined, the playbook will not touch your kube* files, and you are in full control.
 ## kube* requires full_kube_reinstall set to True! (find it below) (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
+## full_kube_apt_unhold is required when packages were put on hold previously.
 kubeadm_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it
 kubelet_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it
 kubectl_version: "{{ KUBERNETES_VERSION }}*" #1.9.* #when undefined, it will not check it
@@ -75,6 +76,7 @@ DOCKER_IMAGES: [
 full_kube_reinstall: False # undefined is False. #Make it False for faster redeployments. Make true when you need downgrade (ansible does not downgrade rpms autoamtically)
                            # reinstall is set to True, kubectl, kubelet, kubeadm, kubernetes-cni will be uninstalled first
 full_kube_apt_unhold: False # undefined is False. # use it together with full_kube_reinstall (usually in non-prod) when you want automatic unhold of packages on (debian based like ubuntu)
+                            # unhold is required also when you define version for kube* packages, and packages were hold initially
 etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 #####
 
