@@ -39,7 +39,7 @@
     ## reason for ignore_errors: yes
     ## is similar to the one explained above (complements it)
 
-  - name: Make sure proxy_env map is defined, even if not required; must be a map, e.g. empty map: {}
+  - name: Make sure proxy_env map is defined, even if not required; must be a map, e.g. empty map
     set_fact:
       proxy_env: '{{ proxy_env |default({}) }}'
       cacheable: yes
