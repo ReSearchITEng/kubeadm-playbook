@@ -64,7 +64,7 @@
 - name: add completion to kubectl aliases in ~/.bashrc (if exists)
   lineinfile:
     dest: ~/.bashrc
-    line: ""[[ -n $PS1 ]] && complete -F __start_kubectl {{ item }}"
+    line: "[[ -n $PS1 ]] && complete -F __start_kubectl {{ item }}"
     state: present
     create: no
   ignore_errors: yes
