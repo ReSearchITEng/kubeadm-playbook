@@ -58,10 +58,10 @@
   ignore_errors: yes
   with_items:
   - "# k8s shell completion; for zsh min vers is 5.2+"
-  - "source <(kubectl completion {{ shell | default ('bash') }} 2>/dev/null || true)"
-  - "source <(kubeadm completion {{ shell | default ('bash') }} 2>/dev/null || true)"
-  - "source <(helm    completion {{ shell | default ('bash') }} 2>/dev/null || true)"
-  - "complete -F __start_kubectl k"
+  - "[[ -n $PS1 ]] && source <(kubectl completion {{ shell | default ('bash') }} 2>/dev/null || true)"
+  - "[[ -n $PS1 ]] && source <(kubeadm completion {{ shell | default ('bash') }} 2>/dev/null || true)"
+  - "[[ -n $PS1 ]] && source <(helm    completion {{ shell | default ('bash') }} 2>/dev/null || true)"
+  - "[[ -n $PS1 ]] && complete -F __start_kubectl k"
   
 - name: add kubectl/kubeadm/helm shell competions to ~/.zshrc (if exists)
   lineinfile:
@@ -72,7 +72,7 @@
   ignore_errors: yes
   with_items:
   - "# k8s shell completion; for zsh min vers is 5.2+"
-  - "source <(kubectl completion {{ shell | default ('bash') }} 2>/dev/null || true)"
-  - "source <(kubeadm completion {{ shell | default ('bash') }} 2>/dev/null || true)"
-  - "source <(helm    completion {{ shell | default ('bash') }} 2>/dev/null || true)"
-  - "complete -F __start_kubectl k"
+  - "[[ -n $PS1 ]] && source <(kubectl completion {{ shell | default ('bash') }} 2>/dev/null || true)"
+  - "[[ -n $PS1 ]] && source <(kubeadm completion {{ shell | default ('bash') }} 2>/dev/null || true)"
+  - "[[ -n $PS1 ]] && source <(helm    completion {{ shell | default ('bash') }} 2>/dev/null || true)"
+  - "[[ -n $PS1 ]] && complete -F __start_kubectl k"
