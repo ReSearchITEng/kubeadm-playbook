@@ -9,6 +9,18 @@
 
 - block:
 
+  - name: stop keepalived for cleanup activities
+    systemd: name={{ item }} state=stopped
+    with_items:
+    - keepalived
+    tags:
+    - kubelet
+    - uninstall
+    ignore_errors: yes
+    when: 
+    - groups['masters'] | length > 1 
+    - ( custom.networking.masterha_type | default('vip') ) == 'vip'
+
   - name: Reset weave network # if it was used
     shell: /usr/local/bin/weave reset --force
     ignore_errors: yes
@@ -58,6 +70,33 @@
     ignore_errors: yes
     # TODO: if cluster is installed, but kubedm is no longer available on the machine, we will not have a reset of cluster...
 
+  - name: stop kubelet and etcd for cleanup activities
+    systemd: name={{ item }} state=stopped
+    with_items:
+    - kubelet
+    - etcd
+    tags:
+    - kubelet
+    - uninstall
+    ignore_errors: yes
+
+  - name: unhold before reinstall packages
+    shell: apt-mark unhold {{ item }}
+    ignore_errors: yes
+    with_items:
+    - kubeadm
+    - kubelet
+    - kubectl
+    - kubernetes-cni
+    - cri-tools
+    when:
+    - full_kube_reinstall | default (False)
+    - full_kube_apt_unhold | default (False)
+    - ansible_os_family == "Debian"
+    tags:
+    - kubelet
+    - uninstall
+
   - name: Remove before reinstall packages
     package: name={{ item }} state=absent
     with_items:
@@ -69,28 +108,6 @@
     tags:
     - kubelet
     - uninstall
-
-  - name: stop kubelet and etcd for cleanup activities
-    systemd: name={{ item }} state=stopped
-    with_items:
-    - kubelet
-    - etcd
-    tags:
-    - kubelet
-    - uninstall
-    ignore_errors: yes
-
-  - name: stop keepalived for cleanup activities
-    systemd: name={{ item }} state=stopped
-    with_items:
-    - keepalived
-    tags:
-    - kubelet
-    - uninstall
-    ignore_errors: yes
-    when: 
-    - groups['masters'] | length > 1 
-    - ( custom.networking.masterha_type | default('vip') ) == 'vip'
 
   - name: remove plugins mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     #shell: 'umount $(mount | grep " on /var/lib/kubelet/plugins/kubernetes.io/" | cut -f1 -d" ")'
