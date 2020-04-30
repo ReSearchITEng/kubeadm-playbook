@@ -188,7 +188,7 @@
       lineinfile:
         name: /etc/systemd/system/docker.service.d/http-proxy.conf
         state: present
-        line: "no_proxy={{proxy_env.no_proxy | default ([]) }}"
+        line: 'Environment="no_proxy={{proxy_env.no_proxy | default ([]) }}"'
       when: proxy_env is defined
       tags:
       - docker
