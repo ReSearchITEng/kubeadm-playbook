@@ -223,9 +223,9 @@
 #   - node_sanity
 
 ###
-- name: export KUBECONFIG in nodes' ~/.bash_profile
+- name: export KUBECONFIG in nodes' ~/.bashrc
   lineinfile:
-    dest: ~/.bash_profile
+    dest: ~/.bashrc
     line: "export KUBECONFIG=/etc/kubernetes/kubelet.conf"
     state: present
     create: yes
@@ -234,9 +234,9 @@
   - shell is undefined or shell == 'bash'
   - inventory_hostname in groups['nodes']
 
-- name: export KUBECONFIG in secondary-masters' ~/.bash_profile
+- name: export KUBECONFIG in secondary-masters' ~/.bashrc
   lineinfile: 
-    dest: ~/.bash_profile
+    dest: ~/.bashrc
     line: "export KUBECONFIG=/etc/kubernetes/admin.conf"
     state: present
     create: yes

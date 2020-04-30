@@ -273,9 +273,9 @@
   - ClusterConfiguration.cloudProvider is defined 
   - ClusterConfiguration.cloudProvider == "vsphere"
 
-- name: export KUBECONFIG in master's ~/.bash_profile
+- name: export KUBECONFIG in master's ~/.bashrc
   lineinfile: 
-    dest: ~/.bash_profile
+    dest: ~/.bashrc
     line: "export KUBECONFIG=/etc/kubernetes/admin.conf"
     state: present
     create: yes

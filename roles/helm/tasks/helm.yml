@@ -47,10 +47,10 @@
     args:
       warn: no
 
-  - name: helm completion to ~/.bash_profile
+  - name: helm completion to ~/.bashrc
     lineinfile:
-      dest: ~/.bash_profile
-      line: '[[ -x ${HOME}/.kube/helm_completion.bash.inc ]] && source ${HOME}/.kube/helm_completion.bash.inc'
+      dest: ~/.bashrc
+      line: '[[ -n $PS1 ]] && [[ -x ${HOME}/.kube/helm_completion.bash.inc ]] && source ${HOME}/.kube/helm_completion.bash.inc'
       state: present
     when: shell is undefined or shell == 'bash'
 
