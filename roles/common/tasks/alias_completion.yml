@@ -77,7 +77,7 @@
 - name: add completion to helm aliases in ~/.bashrc (if exists)
   lineinfile:
     dest: ~/.bashrc
-    line: ""[[ -n $PS1 ]] && complete -F __start_helm {{ item }}"
+    line: "[[ -n $PS1 ]] && complete -F __start_helm {{ item }}"
     state: present
     create: no
   ignore_errors: yes
@@ -103,7 +103,7 @@
 - name: add completion to kubectl aliases in ~/.zshrc (if exists)
   lineinfile:
     dest: ~/.zshrc
-    line: ""[[ -n $PS1 ]] && compdef __start_kubectl {{ item }}"
+    line: "[[ -n $PS1 ]] && compdef __start_kubectl {{ item }}"
     state: present
     create: no
   ignore_errors: yes
@@ -116,7 +116,7 @@
 - name: add completion to helm aliases in ~/.zshrc (if exists)
   lineinfile:
     dest: ~/.zshrc
-    line: ""[[ -n $PS1 ]] && compdef __start_helm {{ item }}"
+    line: "[[ -n $PS1 ]] && compdef __start_helm {{ item }}"
     state: present
     create: no
   ignore_errors: yes
