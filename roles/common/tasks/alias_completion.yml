@@ -60,8 +60,33 @@
   - "[[ -n $PS1 ]] && source <(kubectl completion bash 2>/dev/null || true)"
   - "[[ -n $PS1 ]] && source <(kubeadm completion bash 2>/dev/null || true)"
   - "[[ -n $PS1 ]] && source <(helm    completion bash 2>/dev/null || true)"
-  - "[[ -n $PS1 ]] && complete -F __start_kubectl k"
-  
+
+- name: add completion to kubectl aliases in ~/.bashrc (if exists)
+  lineinfile:
+    dest: ~/.bashrc
+    line: ""[[ -n $PS1 ]] && complete -F __start_kubectl {{ item }}"
+    state: present
+    create: no
+  ignore_errors: yes
+  with_items:
+  - k
+  - ks
+  - km
+  - kg
+
+- name: add completion to helm aliases in ~/.bashrc (if exists)
+  lineinfile:
+    dest: ~/.bashrc
+    line: ""[[ -n $PS1 ]] && complete -F __start_helm {{ item }}"
+    state: present
+    create: no
+  ignore_errors: yes
+  with_items:
+  - hs
+  - hm
+  - hg
+
+## SAME for ZSH:
 - name: add kubectl/kubeadm/helm shell competions to ~/.zshrc (if exists)
   lineinfile:
     dest: ~/.zshrc
@@ -74,4 +99,28 @@
   - "[[ -n $PS1 ]] && source <(kubectl completion zsh 2>/dev/null || true)"
   - "[[ -n $PS1 ]] && source <(kubeadm completion zsh 2>/dev/null || true)"
   - "[[ -n $PS1 ]] && source <(helm    completion zsh 2>/dev/null || true)"
-  - "[[ -n $PS1 ]] && compdef __start_kubectl k"
+
+- name: add completion to kubectl aliases in ~/.zshrc (if exists)
+  lineinfile:
+    dest: ~/.zshrc
+    line: ""[[ -n $PS1 ]] && compdef __start_kubectl {{ item }}"
+    state: present
+    create: no
+  ignore_errors: yes
+  with_items:
+  - k
+  - ks
+  - km
+  - kg
+
+- name: add completion to helm aliases in ~/.zshrc (if exists)
+  lineinfile:
+    dest: ~/.zshrc
+    line: ""[[ -n $PS1 ]] && compdef __start_helm {{ item }}"
+    state: present
+    create: no
+  ignore_errors: yes
+  with_items:
+  - hs
+  - hm
+  - hg

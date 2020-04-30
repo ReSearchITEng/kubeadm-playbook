@@ -49,7 +49,7 @@ helm:
 #####################
 ## Metrics-Server ###
 #####################
-    - { name: metrics-server, repo: stable/metrics-server, namespace: monitoring, options: '--set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/metrics-server-{{ HOST_ARCH }} --set "args={--kubelet-insecure-tls}" ' }
+    - { name: metrics-server, repo: stable/metrics-server, namespace: monitoring, options: '--set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/metrics-server-{{ HOST_ARCH }} --set "args={--kubelet-insecure-tls,--kubelet-preferred-address-types=InternalIP}" ' }
 # Proper fix for "--kubelet-insecure-tls" will be in k8s 1.19 https://github.com/kubernetes/kubeadm/issues/1602 ; Alternatives is manually generating and approving certs for each node: serverTLSBootstrap, which is complex. cert-manager option was not investigated.: https://github.com/kubernetes-sigs/metrics-server/issues/146#issuecomment-472655656
 
 ##################
