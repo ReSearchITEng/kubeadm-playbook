@@ -1,5 +1,5 @@
 ---
-- name: kubectl aliases to ~/.bashrc (if exists)
+- name: kubectl and helm aliases to ~/.bashrc (if exists)
   lineinfile:
     dest: ~/.bashrc
     line: "{{ item }}"
@@ -11,7 +11,11 @@
   - "alias k='kubectl ' "
   - "alias kk='kubectl -o wide --show-labels '"
   - "alias ks='kubectl -n kube-system ' "
+  - "alias hs='helm --namespace kube-system ' "
+  - "alias km='kubectl -n monitoring ' "
+  - "alias hm='helm --namespace monitoring ' "
   - "alias kg='kubectl get --all-namespaces -o wide '" # --show-labels '"
+  - "alias hg='helm list --all --all-namespaces --pending '"
   - "alias kgl='kubectl get --all-namespaces -o wide --show-labels '"
   - "alias kgp='kubectl get --all-namespaces -o wide --show-labels po'"
   - "alias wp='watch kg po '" # -w --show-labels '"
@@ -29,7 +33,11 @@
   - "alias k='kubectl ' "
   - "alias kk='kubectl -o wide --show-labels '"
   - "alias ks='kubectl -n kube-system ' "
+  - "alias hs='helm --namespace kube-system ' "
+  - "alias km='kubectl -n monitoring ' "
+  - "alias hm='helm --namespace monitoring ' "
   - "alias kg='kubectl get --all-namespaces -o wide '" # --show-labels '"
+  - "alias hg='helm list --all --all-namespaces --pending '"
   - "alias kgl='kubectl get --all-namespaces -o wide --show-labels '"
   - "alias kgp='kubectl get --all-namespaces -o wide --show-labels po'"
   - "alias wp='watch kg po '" # -w --show-labels '"
