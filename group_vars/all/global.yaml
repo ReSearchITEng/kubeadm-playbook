@@ -74,7 +74,7 @@ DOCKER_IMAGES: [
 ## Should be used only if a downgrade in kube* tools is required, otherwise it will waste a lot of time reinstalling unnecessary.
 full_kube_reinstall: False # undefined is False. #Make it False for faster redeployments. Make true when you need downgrade (ansible does not downgrade rpms autoamtically)
                            # reinstall is set to True, kubectl, kubelet, kubeadm, kubernetes-cni will be uninstalled first
-
+full_kube_apt_unhold: False # undefined is False. # use it together with full_kube_reinstall (usually in non-prod) when you want automatic unhold of packages on (debian based like ubuntu)
 etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 #####
 
