@@ -2,12 +2,6 @@
 If the inventory has only [primary-master] section populated, it understands it's a one machine cluster (at least for now).
 The playbook will do most of the settings accordingly.
 
-# no auth dashboard
-If you want a quick dashboard without any auth, you may want to use k8s 1.15, and use the older dashboard in addons.yml, replacing the dashboard defined there, with this:
-```
-    - { name: dashboard, repo: stable/kubernetes-dashboard, options: '--set rbac.create=True,ingress.enabled=True,ingress.hosts[0]={{groups["primary-master"][0]}},ingress.hosts[1]=dashboard.{{ custom.networking.dnsDomain }},image.tag=v1.8.3 --version=0.5.3' }
-```
-
 # ingress with local binding
 For ingress controller to listen to 127.*, you may want to use option 2 of the ingress controller defined in addons.yml
 
@@ -36,6 +30,14 @@ sudo systemctl stop kubelet || true
 sudo systemctl disable kubelet || true
 docker rmi -f $(docker images -q)
 ```
+
+# If you want to temporary turn off your kubernetes (keep only its configuration), do:
+```
+sudo systemctl stop kubelet; sudo systemctl disable kubelet; docker ps | grep kube | cut -d" " -f1 | xargs docker stop ; docker ps | grep k8s | cut -d" " -f1 | xargs docker stop; docker ps
+```
+
+# To save space, you may want to also delete some or even all docker images which are not currently used:
+`docker rmi $(docker images -q)`
 
 # other tipcs:
 you may want to do `sudo fstrim /`

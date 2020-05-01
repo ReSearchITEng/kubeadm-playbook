@@ -11,6 +11,7 @@ KubeProxyConfiguration:
   #   qps: 5
   # clusterCIDR: ""
   clusterCIDR: "{{ POD_NETWORK_CIDR }}"
+  ##podSubnet -> Calico is now able to autodetect. If calico is used, this can be commented out.
  # Not required: if here is empty it will read from the ClusterConfiguration.
   # configSyncPeriod: 15m0s
   # conntrack:

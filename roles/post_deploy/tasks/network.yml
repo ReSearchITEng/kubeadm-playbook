@@ -21,12 +21,16 @@
     - weave
     - network
     
-  - name: Create cluster network
+  - name: Create cluster network (when is via manifest instead of helm chart)
     command: /usr/bin/kubectl apply -f {{ item }}
+    with_items: "{{ k8s_network_addons_urls }}"
     #with_items: "{{ k8s_network_addons_urls | default ([]) }}"
-    with_items: '{{ k8s_network_addons_urls | default ("https://docs.projectcalico.org/manifests/calico.yaml") }}'
+    #with_items: '{{ k8s_network_addons_urls | default ("https://docs.projectcalico.org/manifests/calico.yaml") }}'
     environment: '{{env_kc}}'
-    #when: k8s_network_addons_urls is defined
+    when:
+    - k8s_network_addons_urls is defined
+#    - k8s_network_addons_urls | length > 0
+    - ( k8s_network_addons_urls | default([]) ) | length > 0
     tags:
     - k8s_network_addons
     - network

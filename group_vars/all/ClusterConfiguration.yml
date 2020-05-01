@@ -33,9 +33,7 @@ ClusterConfiguration:
     serviceSubnet: "{{ SERVICE_NETWORK_CIDR }}"
   #   podSubnet: ""
     podSubnet: "{{ POD_NETWORK_CIDR }}"
-    #podSubnet: '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
-    #podSubnet: '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
-    #podSubnet: '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
+    ##podSubnet -> Calico is now able to autodetect. If calico is used, this can be commented out.
   # useHyperKubeImage: True 
   #cloudProvider: 'vsphere' # WE NEED THIS Even after 1.11 (v1alpha2) (due to a bug in ansible on vars with "-"); this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
   # controllerManager:

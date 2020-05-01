@@ -49,8 +49,8 @@
   - setup: # aka gather_facts
     tags: always # required for tags, see ansible issue: #14228
     
-  - name: test min. vars (group_vars/all) are set (ClusterConfiguration and k8s_network_addons_urls)
-    debug: msg='Make sure min. vars are set in group_vars/all/ (e.g. ClusterConfiguration and k8s_network_addons_urls)'
+  - name: test min. vars (group_vars/all) are set, like ClusterConfiguration (and k8s_network_addons_urls if netw is not via helm chart)
+    debug: msg='Make sure min. vars (group_vars/all) are set, like ClusterConfiguration (and k8s_network_addons_urls if netw is not via helm chart)'
     when: 
     - ClusterConfiguration is not defined
     - JoinConfiguration is not defined

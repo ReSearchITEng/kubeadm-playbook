@@ -68,23 +68,25 @@ podNetwork: 'flannel'
 #     #- "https://cloud.weave.works/k8s/net?k8s-version={{ClusterConfiguration.kubernetesVersion}}&env.IPALLOC_RANGE={{POD_NETWORK_CIDR | default ('10.32.0.0/12') }}"
 #     - "https://cloud.weave.works/k8s/net?k8s-version={{ClusterConfiguration.kubernetesVersion}}&env.IPALLOC_RANGE='10.32.0.0/12'"
 
-# Network settings
-# '10.244.0.0/16'  # Exactly this one is required when Flannel network is used. If you other network solutions, commented out this entry.
-# '192.168.0.0/16'  # Exactly this one is required when Calico network is used. If you other network solutions, this entry can be commented out.
-# '10.32.0.0/12'  # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
-
-POD_NETWORK_CIDR: 10.244.0.0/16
-#POD_NETWORK_CIDR: '192.168.0.0/16'
-#POD_NETWORK_CIDR: '10.32.0.0/12'
+POD_NETWORK_CIDR: 10.244.0.0/16 # Exactly this one is required when Flannel network is used. It can be used also for calico which autodetects the range.
+#POD_NETWORK_CIDR: '192.168.0.0/16' # Calico is able to autodetect, this should never be required.
+#POD_NETWORK_CIDR: '10.32.0.0/12' # Exactly this one is required when Weave network is used (with defaults). If you other network solutions, this entry can be commented out.
 
 #####
 ## NETWORK
-## usually, it's not possible to have more than one network solution (but workarounds exist)
+## usually, it's not possible to have more than one network solution (but projects like "Multus" exist)
 ## options: https://kubernetes.io/docs/admin/addons/
 ## Usually choices are: flannel, weavenet, calico
 
-k8s_network_addons_urls:
+## We have moved the networking deploy part of the helm charts (addons.yaml)
+## Should you want to use an overlay network that does not have helm chart, uncomment k8s_network_addons_urls along with of its options:
+
+#k8s_network_addons_urls:
+
 ## CALICO # For Calico one has to also ensure above setting ClusterConfiguration.networking.podSubnet is set to 192.168.0.0/16 )
+## new 2020: as per: https://docs.projectcalico.org/getting-started/kubernetes/self-managed-onprem/onpremises#install-calico-with-kubernetes-api-datastore-50-nodes-or-less
+## "If you are using a different pod CIDR with kubeadm, no changes are required - Calico will automatically detect the CIDR based on the running configuration."
+  #- https://docs.projectcalico.org/manifests/calico.yaml
 #  - https://docs.projectcalico.org/v3.2/getting-started/kubernetes/installation/hosted/etcd.yaml
 #  - https://docs.projectcalico.org/v3.2/getting-started/kubernetes/installation/rbac.yaml
 #  - https://docs.projectcalico.org/v3.2/getting-started/kubernetes/installation/hosted/calico.yaml
@@ -92,19 +94,23 @@ k8s_network_addons_urls:
 #   - https://docs.projectcalico.org/v3.2/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml
 ## OLDER_CALICO:
 #   - https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml # versions are 2.4,2.5,2.6
-#     newer calico 3.0 :     
-#   - https://docs.projectcalico.org/v3.0/getting-started/kubernetes/installation/hosted/kubeadm/1.7/calico.yaml  
+
+
 ## OR 
+
 ## Flanned: (for Flanned one has to also ensure above setting ClusterConfiguration.networking.podSubnet is set to 10.244.0.0/16 )
   ##- https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
   #- https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml # For latest, replace v0.9.0 with master
   #- https://raw.githubusercontent.com/coreos/flannel/v0.10.0/Documentation/kube-flannel.yml
   # flannel for 1.12 (fixes toleartions, and fix is not in v0.10.0)
-  - https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  #- https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
 # OR 
+
 ## Weave: #https://www.weave.works/docs/net/latest/kubernetes/kube-addon/ 
  #- https://cloud.weave.works/k8s/net?k8s-version={{ClusterConfiguration.kubernetesVersion}}&{{POD_NETWORK_CIDR | default ('env.IPALLOC_RANGE=10.32.0.0/12') }}
  #- "https://cloud.weave.works/k8s/net?k8s-version={{ClusterConfiguration.kubernetesVersion}}&env.IPALLOC_RANGE={{POD_NETWORK_CIDR | default ('10.32.0.0/12') }}"
+
 # OR
 ## kube-router
  #- https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kube-router-all-service-daemonset.yaml

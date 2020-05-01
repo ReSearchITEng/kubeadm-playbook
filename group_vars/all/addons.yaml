@@ -33,7 +33,7 @@ helm:
 ## Networking: calico or other options
 ## Calico overlay network #
 ###########################
-#    - { name: calico, repo: flexkube/calico, namespace: kube-system, options: '--set podCIDR={{ POD_NETWORK_CIDR }}' }
+    - { name: calico, repo: flexkube/calico, namespace: kube-system, options: '--set podCIDR="" ' } # if autodetect does not work, use '--set podCIDR={{ POD_NETWORK_CIDR }}' } # if not needed, also add --skip-crds
 
 ########################
 ## Monitoring: prometheus, using coreos's prometheus-operator, which includes: grafana, alertmanager, prometheus.
