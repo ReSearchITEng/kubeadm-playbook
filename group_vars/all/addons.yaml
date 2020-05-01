@@ -23,10 +23,17 @@ helm:
   - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
   - { name: jetstack, url: 'https://charts.jetstack.io' } # cert-manager
   - { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-charts' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
+  - { name: flexkube, url: 'https://flexkube.github.io/charts' } # calico helm chart till official will be ready: https://github.com/projectcalico/calico/issues/717 and https://github.com/projectcalico/calico/tree/master/_includes/charts/calico
 
   packages_list: # when not defined, namespace defaults to "default" namespace
   # use "--wait" in the options section if you want to wait till min. pods are up.
   ### List helm charts you wish pre-installed every time cluster is deployed:
+
+###########################
+## Networking: calico or other options
+## Calico overlay network #
+###########################
+#    - { name: calico, repo: flexkube/calico, namespace: kube-system, options: '--set podCIDR={{ POD_NETWORK_CIDR }}' }
 
 ########################
 ## Monitoring: prometheus, using coreos's prometheus-operator, which includes: grafana, alertmanager, prometheus.
@@ -74,7 +81,7 @@ helm:
 ####################
 ## DASHBOARD 2.0 ###
 ####################
-    - { name: dashboard, repo: funkypenguin/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true,metricsScraper.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/metrics-scraper --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true --version 2.0.0-rc7-fp6' }
+    - { name: dashboard, repo: funkypenguin/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true,metricsScraper.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/metrics-scraper --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true --version 2.0.0' }
 
 ################
 ## Kured #######
