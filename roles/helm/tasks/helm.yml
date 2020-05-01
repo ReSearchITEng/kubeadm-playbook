@@ -12,34 +12,27 @@
   - always
 
 - block:
-  - name: 'Download {{ helm.install_script_url | default ("https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3") }}'
-    #environment: '{{ proxy_env | default ({}) }}'
+  - name: 'Download helm binary archive https://get.helm.sh/helm-{{ HELM_VERSION }}-linux-amd64.tar.gz'
     environment: '{{env_kc}}'
-    get_url: url={{ helm.install_script_url | default ("https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3") }} dest=/tmp/helm_install_script force=yes mode="0755"
-    when: helm is defined
+    get_url: 
+      url: "https://get.helm.sh/helm-{{ HELM_VERSION }}-linux-{{ HOST_ARCH }}.tar.gz"
+      dest: /tmp/helm-{{ HELM_VERSION }}-linux-{{ HOST_ARCH }}.tar.gz
+      force: no
+      mode: "0755"
+    
+  - name: unarchive
+    unarchive:
+      dest: /tmp/
+      src: /tmp/helm-{{ HELM_VERSION }}-linux-{{ HOST_ARCH }}.tar.gz
+      mode: "0755"
 
-  - name: 'Download "https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3" '
-    environment: '{{ proxy_env | default ({}) }}'
-    get_url: url="https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3" dest=/tmp/helm_install_script force=yes mode="0755"
-    when: helm is not defined
-
-  - name: Run /tmp/helm_install_script
-    environment: '{{env_kc}}'
-    shell: "/tmp/helm_install_script --version {{helm.helm_version | default ('latest')}}"
-    register: command_result
-    changed_when: '"is up-to-date" not in command_result.stdout'
-    when: helm is defined
-    args:
-      chdir: /tmp/
-
-  - name: Run /tmp/helm_install_script
-    environment: '{{env_kc}}'
-    shell: "/tmp/helm_install_script --version latest "
-    register: command_result
-    changed_when: '"is up-to-date" not in command_result.stdout'
-    when: helm is not defined
-    args:
-      chdir: /tmp/
+  - name: helm - place binary in destination folder
+    copy:
+      src: /tmp/linux-{{ HOST_ARCH }}/helm
+      dest: /usr/local/bin/
+      force: yes
+    become: yes
+    become_user: root
 
   - name: helm completion shell
     environment: '{{env_kc}}'
