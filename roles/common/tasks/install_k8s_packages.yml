@@ -17,7 +17,7 @@
     when: ansible_os_family == "Debian"
 
   - apt_repository:
-      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
       state: present
       #filename: 'kubernetes.list'
       update_cache: yes
