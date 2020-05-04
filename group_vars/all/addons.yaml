@@ -22,7 +22,7 @@ helm:
   - { name: stable, url: 'http://kubernetes-charts.storage.googleapis.com' }
   - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
   - { name: jetstack, url: 'https://charts.jetstack.io' } # cert-manager
-  - { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-charts' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
+  - { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-kubernetes-dashboard' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
   - { name: flexkube, url: 'https://flexkube.github.io/charts' } # calico helm chart till official will be ready: https://github.com/projectcalico/calico/issues/717 and https://github.com/projectcalico/calico/tree/master/_includes/charts/calico
 
   packages_list: # when not defined, namespace defaults to "default" namespace
