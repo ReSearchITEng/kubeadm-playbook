@@ -31,6 +31,7 @@
       src: /tmp/linux-{{ HOST_ARCH }}/helm
       dest: /usr/local/bin/
       force: yes
+      mode: "0755"
     become: yes
     become_user: root
 
