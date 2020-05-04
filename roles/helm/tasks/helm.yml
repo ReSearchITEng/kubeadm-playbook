@@ -12,18 +12,18 @@
   - always
 
 - block:
-  - name: 'Download helm binary archive https://get.helm.sh/helm-{{ HELM_VERSION }}-linux-amd64.tar.gz'
+  - name: 'Download helm binary archive https://get.helm.sh/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz'
     environment: '{{env_kc}}'
     get_url: 
-      url: "https://get.helm.sh/helm-{{ HELM_VERSION }}-linux-{{ HOST_ARCH }}.tar.gz"
-      dest: /tmp/helm-{{ HELM_VERSION }}-linux-{{ HOST_ARCH }}.tar.gz
+      url: "https://get.helm.sh/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz"
+      dest: /tmp/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz
       force: no
       mode: "0755"
     
   - name: unarchive
     unarchive:
       dest: /tmp/
-      src: /tmp/helm-{{ HELM_VERSION }}-linux-{{ HOST_ARCH }}.tar.gz
+      src: /tmp/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz
       mode: "0755"
 
   - name: helm - place binary in destination folder
