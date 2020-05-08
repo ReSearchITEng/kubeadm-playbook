@@ -1,4 +1,8 @@
 ---
+- set_fact:
+    env_kc: '{{ {} | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin/"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+  tags:
+  - always
 
 ### Post install messages
 - block:
@@ -104,9 +108,7 @@
 #  - name: Print cluster information and other useful commands.
 #    debug: vars=command_result
 #    changed_when: false
-
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
+  environment: '{{env_kc}}'
   tags:
   - cluster_info
   - postinstall_messages
