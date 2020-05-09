@@ -86,8 +86,9 @@ etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
 # and/or "--ignore-preflight-errors=all"
 
 #######
-## This will turn off your swap !!!
-turn_swapoff: True #False # default True # Note: by default kubelet won't start if swap not disabled of or kubelet not instructed to accept swap on.
+## SWAP
+fail_swap_on: True # default True # If you want to use swap (which k8s does not recommend in productions), put this False. #Making this False will set failSwapOn in the kubelet config and add ignore preflight in kubeadm init
+turn_swapoff: True # default True # ## This will turn off your swap !!! # Note: by default kubelet won't start if swap not disabled of or kubelet not instructed to accept swap on.
 
 #####
 ## NTP SETUP
