@@ -35,19 +35,6 @@
     become: yes
     become_user: root
 
-  - name: helm completion shell
-    environment: '{{env_kc}}'
-    shell: helm completion {{ shell | default ('bash') }} > ~/.kube/helm_completion.bash.inc
-    args:
-      warn: no
-
-  - name: helm completion to ~/.bashrc
-    lineinfile:
-      dest: ~/.bashrc
-      line: '[[ -n $PS1 ]] && [[ -x ${HOME}/.kube/helm_completion.bash.inc ]] && source ${HOME}/.kube/helm_completion.bash.inc'
-      state: present
-    when: shell is undefined or shell == 'bash'
-
   - name: helm repo add 
     environment: '{{env_kc}}'
     command: helm repo add {{ item.name }} {{ item.url }}

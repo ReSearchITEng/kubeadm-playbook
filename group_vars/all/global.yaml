@@ -169,15 +169,50 @@ taint_for_label:
 - label: 'node-role.kubernetes.io/infra='
   taint: 'PreferNoSchedule'
 
-
 ########## VARIOUS GENERIC SETTINGS #####
-## This will be removed in the future versions
+## This will be removed in the future versions:
 # kubeadm_docker_insecure_registry: registry.example.com:5000
 #####
 
 #####
-# VARIOUS
-# shell for bash-completion for kubectl, kubeadm, helm; currently only bash and zsh is supported.
-shell: 'bash'
+# BASH and ZSH aliases and cli completion
+# shell for bash-completion for kubectl, kubeadm, helm; currently bash and zsh are supported (adding more is very simple)
+
+aliases: # to disable adding aliases, comment out this entire section
+  rc: local # local -> ~root/.bashrc && ~root/.zshrc # local is the default, if undefined
+            # global -> '/etc/bash.bashrc' (ubuntu) '/etc/bashrc' (REDHAT); global -> '/etc/zshrc' (both ubuntu&RH)
+            # custom -> see the below:
+  rc_bash_custom: '/etc/profile.d/k8s_aliases.sh' # /etc/profile.d/*.sh location is sourced by all *sh, non-bash ones might not compatible with the generated file. Use with care.
+  rc_zsh_custom: '/etc/zshrc' # /etc/profile.d/*.sh location is sourced by all *sh, non-bash ones might not compatible with the generated file. Use with care.
+  file_create_if_missing: no # destination file will be created only if this is enabled. Otherwise the file will be updated only if exists.
+  list:
+  - "alias k='kubectl '"
+  - "alias kf='kubectl delete --force --grace-period=0 --ignore-not-found '"
+  - "alias kx='kubectl config use-context '"
+  - "alias ks='kubectl -n kube-system '"
+  - "alias km='kubectl -n monitoring '"
+  - "alias kg='kubectl get --all-namespaces -o wide '" # --show-labels '"
+  - "alias kgl='kubectl get --all-namespaces -o wide --show-labels '"
+  - "alias kgp='kubectl get --all-namespaces -o wide --show-labels po '"
+  - "alias kk='kubectl -o wide --show-labels '"
+  - "alias watch='watch '"
+  - "alias wp='watch kg po '" # -w --show-labels '"
+  - "alias wipt='watch -n1 iptables -vnL '"
+  - "alias hs='helm --namespace kube-system '"
+  - "alias hm='helm --namespace monitoring '"
+  - "alias hg='helm list --all --all-namespaces --pending '"
+  kubectl_complete_also_aliases:
+  - k
+  - kf
+  - kx
+  - ks
+  - km
+  - kg
+  - kk
+  helm_complete_also_aliases:
+  - hs
+  - hm
+  - hg
+
 #####
 

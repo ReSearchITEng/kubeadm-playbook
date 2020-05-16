@@ -14,4 +14,4 @@
 - include: rook.yml
   when: rook is defined and rook.enabled | default (False)
 - include: various.yml
-- include: alias_completion.yml
+- include: aliases_completion.yml

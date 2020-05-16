@@ -1,126 +1,129 @@
 ---
-- name: kubectl and helm aliases to ~/.bashrc (if exists)
-  lineinfile:
-    dest: ~/.bashrc
-    line: "{{ item }}"
-    state: present
-    create: no
-  ignore_errors: yes
-  with_items:
-  - "alias watch='watch ' "
-  - "alias k='kubectl ' "
-  - "alias kk='kubectl -o wide --show-labels '"
-  - "alias ks='kubectl -n kube-system ' "
-  - "alias hs='helm --namespace kube-system ' "
-  - "alias km='kubectl -n monitoring ' "
-  - "alias hm='helm --namespace monitoring ' "
-  - "alias kg='kubectl get --all-namespaces -o wide '" # --show-labels '"
-  - "alias hg='helm list --all --all-namespaces --pending '"
-  - "alias kgl='kubectl get --all-namespaces -o wide --show-labels '"
-  - "alias kgp='kubectl get --all-namespaces -o wide --show-labels po'"
-  - "alias wp='watch kg po '" # -w --show-labels '"
-  - "alias wipt='watch -n1 iptables -vnL ' "
+- name: aliases and shell completion
+  block:
+### BASHRC / ZSHRC file set
+  - name: aliases - choose where to put aliaseses - default local
+    set_fact: 
+      BASHRC: '~/.bashrc'
+      ZSHRC: '~/.zshrc'
 
-- name: kubectl aliases to ~/.zshrc (if exists)
-  lineinfile:
-    dest: ~/.zshrc
-    line: "{{ item }}"
-    state: present
-    create: no
-  ignore_errors: yes
-  with_items:
-  - "alias watch='watch ' "
-  - "alias k='kubectl ' "
-  - "alias kk='kubectl -o wide --show-labels '"
-  - "alias ks='kubectl -n kube-system ' "
-  - "alias hs='helm --namespace kube-system ' "
-  - "alias km='kubectl -n monitoring ' "
-  - "alias hm='helm --namespace monitoring ' "
-  - "alias kg='kubectl get --all-namespaces -o wide '" # --show-labels '"
-  - "alias hg='helm list --all --all-namespaces --pending '"
-  - "alias kgl='kubectl get --all-namespaces -o wide --show-labels '"
-  - "alias kgp='kubectl get --all-namespaces -o wide --show-labels po'"
-  - "alias wp='watch kg po '" # -w --show-labels '"
-  - "alias wipt='watch -n1 iptables -vnL ' "
-  
-- name: Install optional packages like bash-completion
-  package: name={{ item }} state={{ package_state | default ('present') }}
-  with_items:
-  - bash-completion
-  ignore_errors: yes
+  - name: aliases - choose where to put aliaseses - when global, on Debian family
+    set_fact: 
+      BASHRC: '/etc/bash.bashrc'
+      ZSHRC: '/etc/zshrc'
+    when:
+    - aliases.rc is defined
+    - aliases.rc == "global"
+    - ansible_os_family == "Debian"
 
-- name: add kubectl/kubeadm/helm shell competions to ~/.bashrc (if exists)
-  lineinfile:
-    dest: ~/.bashrc
-    line: "{{ item }}"
-    state: present
-    create: no
-  ignore_errors: yes
-  with_items:
-  - "[[ -n $PS1 ]] && source <(kubectl completion bash 2>/dev/null || true)"
-  - "[[ -n $PS1 ]] && source <(kubeadm completion bash 2>/dev/null || true)"
-  - "[[ -n $PS1 ]] && source <(helm    completion bash 2>/dev/null || true)"
+  - name: aliases - choose where to put aliaseses - when global, on RedHat family
+    set_fact: 
+      BASHRC: '/etc/bashrc'
+      ZSHRC: '/etc/zshrc'
+    when:
+    - aliases.rc is defined
+    - aliases.rc == "global"
+    - ansible_os_family == "RedHat"
 
-- name: add completion to kubectl aliases in ~/.bashrc (if exists)
-  lineinfile:
-    dest: ~/.bashrc
-    line: "[[ -n $PS1 ]] && complete -F __start_kubectl {{ item }}"
-    state: present
-    create: no
-  ignore_errors: yes
-  with_items:
-  - k
-  - ks
-  - km
-  - kg
+  - name: aliases - choose where to put aliaseses - when custom
+    set_fact: 
+      BASHRC: "{{ aliases.rc_bash_custom | default ('~/.bashrc') }}"
+      ZSHRC: "{{ aliases.rc_zsh_custom | default ('~/.zshrc') }}"
+    when:
+    - aliases.rc is defined
+    - aliases.rc == "custom"
 
-- name: add completion to helm aliases in ~/.bashrc (if exists)
-  lineinfile:
-    dest: ~/.bashrc
-    line: "[[ -n $PS1 ]] && complete -F __start_helm {{ item }}"
-    state: present
-    create: no
-  ignore_errors: yes
-  with_items:
-  - hs
-  - hm
-  - hg
+### BASH aliaseses
+  - name: aliases-bash - kubectl and helm aliaseses to "{{ BASHRC | default ('~/.bashrc') }}" (if exists)
+    lineinfile:
+      dest: "{{ BASHRC | default ('~/.bashrc') }}"
+      line: "{{ item }}"
+      state: present
+      create: "{{ aliases.file_create_if_missing | default ('no') }}"
+    with_items: "{{ aliases.list | default ([]) }}"
 
-## SAME for ZSH:
-- name: add kubectl/kubeadm/helm shell competions to ~/.zshrc (if exists)
-  lineinfile:
-    dest: ~/.zshrc
-    line: "{{ item }}"
-    state: present
-    create: no
-  ignore_errors: yes
-  with_items:
-  - "# k8s shell completion; for zsh min vers is 5.2+"
-  - "[[ -n $PS1 ]] && source <(kubectl completion zsh 2>/dev/null || true)"
-  - "[[ -n $PS1 ]] && source <(kubeadm completion zsh 2>/dev/null || true)"
-  - "[[ -n $PS1 ]] && source <(helm    completion zsh 2>/dev/null || true)"
+### ZSH aliaseses
+  - name: aliases-zsh - kubectl aliaseses to "{{ ZSHRC | default ('~/.zshrc') }}" (if exists)
+    lineinfile:
+      dest: "{{ ZSHRC | default ('~/.zshrc') }}"
+      line: "{{ item }}"
+      state: present
+      create: "{{ aliases.file_create_if_missing | default ('no') }}"
+    with_items: "{{ aliases.list | default ([]) }}"
 
-- name: add completion to kubectl aliases in ~/.zshrc (if exists)
-  lineinfile:
-    dest: ~/.zshrc
-    line: "[[ -n $PS1 ]] && compdef __start_kubectl {{ item }}"
-    state: present
-    create: no
-  ignore_errors: yes
-  with_items:
-  - k
-  - ks
-  - km
-  - kg
+### BASH Completion    
+  - name: aliases-bash-completion - Install optional packages like bash-completion
+    package: name={{ item }} state={{ package_state | default ('present') }}
+    with_items:
+    - bash-completion
 
-- name: add completion to helm aliases in ~/.zshrc (if exists)
-  lineinfile:
-    dest: ~/.zshrc
-    line: "[[ -n $PS1 ]] && compdef __start_helm {{ item }}"
-    state: present
-    create: no
+  - name: aliases-bash-completion add kubectl/kubeadm/helm shell competions to ~/.bashrc (if exists)
+    lineinfile:
+      dest: "{{ BASHRC | default ('~/.bashrc') }}"
+      line: "{{ item }}"
+      state: present
+      create: "{{ aliases.file_create_if_missing | default ('no') }}"
+    with_items:
+    - "[[ -n $PS1 ]] && source <(kubectl completion bash 2>/dev/null || true)"
+    - "[[ -n $PS1 ]] && source <(kubeadm completion bash 2>/dev/null || true)"
+    - "[[ -n $PS1 ]] && source <(helm    completion bash 2>/dev/null || true)"
+
+  - name: aliases-bash-completion to kubectl aliaseses in "{{ BASHRC | default ('~/.bashrc') }}" (if exists)
+    lineinfile:
+      dest: "{{ BASHRC | default ('~/.bashrc') }}"
+      line: "[[ -n $PS1 ]] && complete -F __start_kubectl {{ item }}"
+      state: present
+      create: "{{ aliases.file_create_if_missing | default ('no') }}"
+    with_items: "{{ aliases.kubectl_complete_also_aliaseses | default ([]) }}"
+    when:
+    - aliases.kubectl_complete_also_aliaseses is defined
+
+  - name: aliases-bash-completion to helm aliaseses in "{{ BASHRC | default ('~/.bashrc') }}" (if exists)
+    lineinfile:
+      dest: "{{ BASHRC | default ('~/.bashrc') }}"
+      line: "[[ -n $PS1 ]] && complete -F __start_helm {{ item }}"
+      state: present
+      create: "{{ aliases.file_create_if_missing | default ('no') }}"
+    with_items: "{{ aliases.helm_complete_also_aliaseses | default ([]) }}"
+    when:
+    - aliases.helm_complete_also_aliaseses is defined
+
+### ZSH Completion
+  - name: aliases-zsh-completion kubectl/kubeadm/helm shell competions to "{{ ZSHRC | default ('~/.zshrc') }}" (if exists)
+    lineinfile:
+      dest: "{{ ZSHRC | default ('~/.zshrc') }}"
+      line: "{{ item }}"
+      state: present
+      create: "{{ aliases.file_create_if_missing | default ('no') }}"
+    with_items:
+    - "# k8s shell completion; for zsh min vers is 5.2+"
+    - "[[ -n $PS1 ]] && source <(kubectl completion zsh 2>/dev/null || true)"
+    - "[[ -n $PS1 ]] && source <(kubeadm completion zsh 2>/dev/null || true)"
+    - "[[ -n $PS1 ]] && source <(helm    completion zsh 2>/dev/null || true)"
+
+  - name: aliases-zsh-completion to kubectl aliaseses in "{{ ZSHRC | default ('~/.zshrc') }}" (if exists)
+    lineinfile:
+      dest: "{{ ZSHRC | default ('~/.zshrc') }}"
+      line: "[[ -n $PS1 ]] && compdef __start_kubectl {{ item }}"
+      state: present
+      create: "{{ aliases.file_create_if_missing | default ('no') }}"
+    with_items: "{{ aliases.kubectl_complete_also_aliaseses | default ([]) }}"
+    when:
+    - aliases.kubectl_complete_also_aliaseses is defined
+
+  - name: aliases-zsh-completion to helm aliaseses in "{{ ZSHRC | default ('~/.zshrc') }}" (if exists)
+    lineinfile:
+      dest: "{{ ZSHRC | default ('~/.zshrc') }}"
+      line: "[[ -n $PS1 ]] && compdef __start_helm {{ item }}"
+      state: present
+      create: "{{ aliases.file_create_if_missing | default ('no') }}"
+    ignore_errors: yes
+    with_items: "{{ aliases.helm_complete_also_aliaseses | default ([]) }}"
+    when:
+    - aliases.helm_complete_also_aliaseses is defined
+
+  tags:
+  - aliases
+  when:
+  - aliases is defined
   ignore_errors: yes
-  with_items:
-  - hs
-  - hm
-  - hg
