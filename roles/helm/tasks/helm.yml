@@ -25,7 +25,7 @@
       dest: /tmp/
       src: /tmp/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz
       mode: "0755"
-    remote_src: yes
+      remote_src: yes
 
   - name: helm - place binary in destination folder
     copy:
