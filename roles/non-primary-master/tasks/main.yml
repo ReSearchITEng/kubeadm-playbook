@@ -101,7 +101,7 @@
 
   ## PULL IMAGES
   - name: Pull images on master (from internet when images_repo is not defined)
-    command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository images_repo |default ('k8s.gcr.io') "
+    command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
     tags:
     - prepull_images
     register: command_result
