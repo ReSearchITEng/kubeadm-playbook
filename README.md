@@ -91,7 +91,7 @@ Note: dashboard will by default use the master machine, but also deploy under th
 * Install the kubeadm repo
 * Install kubeadm, kubelet, kubernetes-cni, and kubectl
 * If desired, manipulate SELinux setting (control via `group_vars/all`)
-* Set kubelet `--cgroup-driver=systemd` , swap-off, and many other settings required by kubelet to work (control via `group_vars/all`)  
+* Control/set kubelet cgroup driver, swap-off, and many other settings required by kubelet to work (control via `group_vars/all`)  
 * Reset activities (like kubeadm reset, unmount of `/var/lib/kubelet/*` mounts, ip link delete cbr0, cni0 , etc.) - important for reinstallations.
 * Initialize the cluster on master with `kubeadm init`
 * Install user specified pod network from `group_vars/all` (flannel, calico, weave, etc)
