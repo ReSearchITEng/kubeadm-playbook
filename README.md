@@ -39,7 +39,7 @@ We felt that what was missing was getting things before and after the cluster in
 
 # Since when
 Started years back. Battle tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04,18.04,19.10 (both with overlay2 and automatic docker_setup).    
-Actively used on a daily basis and tested with k8s starting 1.7 till 1.16.    
+Actively used on a daily basis and tested with k8s starting 1.7 till 1.19.    
 
 ## Targets/pros&cons
 Kubeadm simplifies drastically the installation, so for BYO (vms,desktops,baremetal), complex projects like kubespray/kops are not required any longer.
@@ -53,9 +53,10 @@ The project is for those who want to create&recreate k8s cluster using the offic
 - it tries to use modern methods of deploying the "addons". E.g. heapster, ingress, prometheus, etc -> all via helm. Pure and clean:
 - Ingresses (via helm chart)
 - Persistent storage (vsphere/ceph/nfs) (vsphere up to date, rook.io (ceph) needs updates; NFS not actively tested) 
-- dashboard (via helm chart)
-- heapster (via helm chart)
-- supports proxy
+- dashboard 2.0 (via helm chart)
+- metrics-server (via helm chart)
+- supports corporate http proxy
+- supports (corporate/intranet) docker registry mirrors (which should mirror: k8s.gcr.io,docker.io,quay.io)
 - modular, clean code, supporting multiple activies by using ansible tags (e.g. add/reset a subgroup of nodes).
 - optionally help configuring container engine (e.g. docker)
 
