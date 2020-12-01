@@ -32,7 +32,7 @@ helm:
 #  - { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-kubernetes-dashboard' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
   - { name: kubernetes-dashboard, url: 'https://kubernetes.github.io/dashboard/' }
   - { name: flexkube, url: 'https://flexkube.github.io/charts' } # calico helm chart till official will be ready: https://github.com/projectcalico/calico/issues/717 and https://github.com/projectcalico/calico/tree/master/_includes/charts/calico # plan to move to tigera-opearator
-
+  - { name: rook-release, url: 'https://charts.rook.io/release' }
   packages_list: # when not defined, namespace defaults to "default" namespace
   # use "--wait" in the options section if you want to wait till min. pods are up.
   ### List helm charts you wish pre-installed every time cluster is deployed:
@@ -126,4 +126,8 @@ helm:
     # - { name: nginx-ingress, repo: stable/nginx-ingress, namespace: kube-system, options: '--set rbac.create=true,serviceAccount.create=true --set controller.stats.enabled=true,controller.metrics.enabled=true,controller.metrics.serviceMonitor.enabled=true --set controller.metrics.serviceMonitor.namespace=monitoring --set controller.metrics.serviceMonitor.additionalLabels.monitoring=prometheusoperator --set controller.service.type=NodePort --set controller.service.nodePorts.http=80 --set controller.service.nodePorts.https=443  --set controller.tolerations[0].effect=NoSchedule,controller.tolerations[0].key="node-role.kubernetes.io/infra" --set controller.tolerations[1].effect=PreferNoSchedule,controller.tolerations[1].key="node-role.kubernetes.io/infra" --set controller.nodeSelector."node\-role\.kubernetes\.io/infra=" --set-string controller.config.server-tokens=false --set controller.config.hide-headers=Server --set controller.image.registry={{ images_repo | default ("us.gcr.io") }} --set controller.image.repository=k8s-artifacts-prod/ingress-nginx/controller --set defaultBackend.image.repository={{ images_repo | default ("k8s.gcr.io") }}/defaultbackend-{{ HOST_ARCH }} --set controller.kind=Deployment ' }
 # --set controller.service.externalTrafficPolicy="Local" # See notes above
 
+####################
+## ROOK.IO STORAGE #
+####################
+    #- { name: rook-ceph, repo: rook-release/rook-ceph, namespace: rook-ceph, options: '.image.repository={{ images_repo | default ("docker.io") }}/rook/ceph --set csi.cephcsi.image={{ images_repo | default ("quay.io") }}/cephcsi/cephcsi:v3.1.2 --set csi.registrar.image={{ images_repo | default ("k8s.gcr.io") }}/sig-storage/csi-node-driver-registrar:v2.0.1 --set csi.resizer.image {{ images_repo | default ("k8s.gcr.io") }}/sig-storage/csi-resizer:v1.0.0 --set csi.provisioner.image {{ images_repo | default ("k8s.gcr.io") }}/sig-storage/csi-provisioner:v2.0.0 --set csi.snapshotter.image {{ images_repo | default ("k8s.gcr.io") }}/sig-storage/csi-snapshotter:v3.0.0 --set csi.attacher.image {{ images_repo | default ("k8s.gcr.io") }}/sig-storage/csi-attacher:v3.0.0 '
 #####
