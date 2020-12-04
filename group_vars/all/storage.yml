@@ -4,12 +4,12 @@
 ## General Storage settings
 ## When reseting a previous instalaltion, should it first remove the exsting pvcs&pvs (default false)?
 storage:
-  delete_pvs: true
+  delete_pvs: false
 
 ##### STORAGE OPTION: VMWARE VSPHERE Storage #
 ##############################################
-##### Note: This requires the cloud provider setting above:
-##### ClusterConfiguration.cloudProvider: 'vsphere'
+##### Note: This requires the cloud provider settings below:
+# ClusterConfiguration.cloudProvider: 'vsphere'
 
 vsphere_storageclass_urls:
   - https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/storage-class/vsphere/default.yaml
@@ -53,7 +53,7 @@ cloud_config: |
 
       [Workspace]
       server = "{{ cloud_config_vsphere_specific.server }}"
-      datacenter = ILRNA-DTO-TRN
+      datacenter = DC01
       default-datastore = DS01
       folder = kubernetes # for VRA usually folder name is: VRM
       ## Working dir is necessary when your machines are under a directory (and all have to be under the same one)
@@ -88,7 +88,7 @@ nfs_k8s: #https://github.com/kubernetes/kubernetes/blob/master/examples/volumes/
 ## Rook - Ceph Distributed Software Storage
 ## As per spec section of: https://github.com/rook/rook/blob/master/demo/kubernetes/rook-cluster.yaml
 
-## NOTE: rook/ceph option is not tested for long time. PRs are welcome!
+## NOTE: rook/ceph is moved to the chart version instead! BELOW is not up to date!
 rook:
   enabled: false
   os_packages:
