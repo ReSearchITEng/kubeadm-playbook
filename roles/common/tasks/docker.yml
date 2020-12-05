@@ -243,6 +243,19 @@
   - check_docker
   - docker
   changed_when: false
+  when:
+  - images_repo is not defined
+
+- name: check docker {{images_repo}}/hello world - test 2/2 # It will not work if there is no internet connection
+  shell: docker run --rm -i {{images_repo}}/hello-world | awk '/Hello/ {print $1}'
+  register: command_result
+  failed_when: command_result.stdout != "Hello"
+  tags:
+  - check_docker
+  - docker
+  changed_when: false
+  when:
+  - images_repo is defined
 
 # Ideally, to ensure there is no x509 certificate error like:
 #' docker pull gcr.io/google_containers/kube-apiserver-amd64:v1.7.2

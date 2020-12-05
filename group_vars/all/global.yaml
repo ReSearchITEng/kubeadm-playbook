@@ -56,9 +56,8 @@ pre_pull_k8s_images: True
 
 ####
 ## Docker images repo
-## If you have your internal docker registry which proxies them (e.g. a nexus3 with docker proxy), replace the value here:
-# images_repo: "k8s.gcr.io"
-# images_repo: "myk8sgcrio.corp.example.com"
+## If you have your internal docker registry which proxies them (e.g. a nexus3 with docker proxy mirroring at least: k8s.gcr.io,docker.io,quay.io), replace the value below.
+# images_repo: "docker-regisptry-proxy.corp.example.com"
 #####
 
 ## Images for prefetching when pre_pull_k8s_images is true and images_repo is defined

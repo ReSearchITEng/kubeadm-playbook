@@ -21,9 +21,10 @@
     - groups['masters'] | length > 1 
     - ( custom.networking.masterha_type | default('vip') ) == 'vip'
 
-  - name: Reset weave network # if it was used
-    shell: /usr/local/bin/weave reset --force
-    ignore_errors: yes
+# We had to remove it, as it blocks the flow. It also fetches docker.io images and in some setups there is no access to or fails due to limits on docker hub...
+#  - name: Reset weave network # if it was used
+#    shell: /usr/local/bin/weave reset --force
+#    ignore_errors: yes
   
   - name: remove pods NFS mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     shell: umount -f $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~nfs' | awk '{print $3}')
