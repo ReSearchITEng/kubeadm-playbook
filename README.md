@@ -38,7 +38,7 @@ We felt that what was missing was getting things before and after the cluster in
 (PRs are welcome :)
 
 # Since when
-Started years back. Battle tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04,18.04,19.10 (both with overlay2 and automatic docker_setup).    
+Started years back. Battle tested on for all Centos/RHEL 7.2+ till 7.6 and Ubuntu 16.04,18.04,19.10,20.04 (both with overlay2 and automatic docker_setup).    
 Actively used on a daily basis and tested with k8s starting 1.7 till 1.19.    
 
 ## Targets/pros&cons
@@ -130,7 +130,7 @@ cp hosts.example hosts
 vi hosts <add hosts>
 # Setul vars in group_vars
 vi group_vars/all/* <modify vars as needed>
-ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"]
+ansible-playbook -i hosts site.yml [--skip-tags "docker,prepull_images,kubelet"] [-f1]
 ```
 If there are any issues, you may want to run only some of the steps, by choosing the appropriate tags to run.
 Read the site.yml. Here are also some explanations of important steps:
@@ -140,6 +140,7 @@ Read the site.yml. Here are also some explanations of important steps:
 - install master (role/tag: master)
 - install nodes  (role/tag: node)
 - install network, helm, ingresses, (role/tag: post_deploy)
+- read the docs/Troubleshooting.md
 
 ## Add nodes:
 - modify inventory (**hosts** file), and leave the primary-master intact, but for nodes, keep *ONLY* the nodes to be managed (added/reset)
