@@ -126,6 +126,9 @@
     - uninstall
     ignore_errors: yes
 
+  - name: docker network prune -f
+    shell: 'docker network prune -f'
+
   #https://github.com/kubernetes/kubernetes/issues/39557
   - name: cni0/cbr0 IP alloction issue
     shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ip link delete cni0; ip link delete cbr0 ; ip link delete flannel.1; ip link delete weave'
