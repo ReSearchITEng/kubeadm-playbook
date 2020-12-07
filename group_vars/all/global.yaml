@@ -11,7 +11,7 @@
 #proxy_env:
 #  http_proxy: 'http://proxy.corp.example.com:8080'
 #  https_proxy: 'http://proxy.corp.example.com:8080'
-#  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,/var/run/docker.sock,.sock,sock' 
+#  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,127.0.1.1,127.254.254.254,/var/run/docker.sock,.sock,sock,.socket'
 #####
 
 KUBERNETES_VERSION: "1.19.4"
