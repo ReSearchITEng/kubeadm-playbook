@@ -17,7 +17,7 @@ pre_helm_manifests:
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v3.4.1 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v3.4.2 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
   - { name: center, url: 'https://repo.chartcenter.io' } # https://rimusz.net/migrating-to-ingress-nginx
@@ -27,7 +27,7 @@ helm:
   - { name: prometheus-community, url: 'https://prometheus-community.github.io/helm-charts' } # for prometheus-community/kube-prometheus-stack and prometheus-community/prometheus-node-exporter # calls grafana/grafana and stable/kube-state-metrics
   - { name: ingress-nginx, url: 'https://kubernetes.github.io/ingress-nginx' }
   - { name: kured, url: 'https://weaveworks.github.io/kured' }
-  - { name: incubator, url: 'http://storage.googleapis.com/kubernetes-charts-incubator' }
+  - { name: incubator, url: 'https://charts.helm.sh/incubator' }
   - { name: jetstack, url: 'https://charts.jetstack.io' } # cert-manager
 #  - { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-kubernetes-dashboard' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
   - { name: kubernetes-dashboard, url: 'https://kubernetes.github.io/dashboard/' }
