@@ -17,10 +17,9 @@ pre_helm_manifests:
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v3.4.2 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v3.6.0 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
-  - { name: center, url: 'https://repo.chartcenter.io' } # https://rimusz.net/migrating-to-ingress-nginx
   #- { name: stable, url: 'http://kubernetes-charts.storage.googleapis.com' }  # for metrics server till this is fixed: https://github.com/kubernetes-sigs/metrics-server/pull/606 and kube-state-metrics (see https://github.com/kubernetes/kube-state-metrics/pull/1237 )
   - { name: stable, url: 'https://charts.helm.sh/stable' }  # for metrics server till this is fixed: https://github.com/kubernetes-sigs/metrics-server/pull/606 and kube-state-metrics (see https://github.com/kubernetes/kube-state-metrics/pull/1237 )
   - { name: grafana, url: 'https://grafana.github.io/helm-charts' }  # for grafana/grafana which is called by kube-prometehus-stack  #https://github.com/grafana/helm-charts/tree/main/charts/grafana
