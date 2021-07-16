@@ -11,22 +11,22 @@
 pre_helm_manifests:
 ## cert-manager crds:
 #- https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
-- https://github.com/jetstack/cert-manager/releases/download/v1.1.0/cert-manager.crds.yaml
+- https://github.com/jetstack/cert-manager/releases/download/v1.4.0/cert-manager.crds.yaml
 
 ###################
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v3.6.0 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v3.6.3 # or "latest" #https://github.com/kubernetes/helm/releases
   install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' 
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
   #- { name: stable, url: 'http://kubernetes-charts.storage.googleapis.com' }  # for metrics server till this is fixed: https://github.com/kubernetes-sigs/metrics-server/pull/606 and kube-state-metrics (see https://github.com/kubernetes/kube-state-metrics/pull/1237 )
-  - { name: stable, url: 'https://charts.helm.sh/stable' }  # for metrics server till this is fixed: https://github.com/kubernetes-sigs/metrics-server/pull/606 and kube-state-metrics (see https://github.com/kubernetes/kube-state-metrics/pull/1237 )
+  #- { name: stable, url: 'https://charts.helm.sh/stable' }  # for metrics server till this is fixed: https://github.com/kubernetes-sigs/metrics-server/pull/606 and kube-state-metrics (see https://github.com/kubernetes/kube-state-metrics/pull/1237 )
   - { name: grafana, url: 'https://grafana.github.io/helm-charts' }  # for grafana/grafana which is called by kube-prometehus-stack  #https://github.com/grafana/helm-charts/tree/main/charts/grafana
   - { name: prometheus-community, url: 'https://prometheus-community.github.io/helm-charts' } # for prometheus-community/kube-prometheus-stack and prometheus-community/prometheus-node-exporter # calls grafana/grafana and stable/kube-state-metrics
   - { name: ingress-nginx, url: 'https://kubernetes.github.io/ingress-nginx' }
   - { name: kured, url: 'https://weaveworks.github.io/kured' }
-  - { name: incubator, url: 'https://charts.helm.sh/incubator' }
+  #- { name: incubator, url: 'https://charts.helm.sh/incubator' }
   - { name: jetstack, url: 'https://charts.jetstack.io' } # cert-manager
 #  - { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-kubernetes-dashboard' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
   - { name: kubernetes-dashboard, url: 'https://kubernetes.github.io/dashboard/' } # https://artifacthub.io/packages/helm/k8s-dashboard/kubernetes-dashboard
@@ -89,7 +89,7 @@ helm:
 ####################
 ## DASHBOARD 2.0 ###
 ####################
-    - { name: dashboard, repo: kubernetes-dashboard/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true,metricsScraper.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/metrics-scraper --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true --version 4.0.0' } # https://github.com/kubernetes/dashboard/blob/master/aio/deploy/helm-chart/kubernetes-dashboard/Chart.yaml#L17
+    - { name: dashboard, repo: kubernetes-dashboard/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true,metricsScraper.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/metrics-scraper --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true' } # --version 4.0.0' } # https://github.com/kubernetes/dashboard/blob/master/aio/deploy/helm-chart/kubernetes-dashboard/Chart.yaml#L17
 
 ################
 ## Kured #######
