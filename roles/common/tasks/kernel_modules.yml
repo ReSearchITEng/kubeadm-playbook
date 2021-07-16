@@ -29,6 +29,7 @@
   modprobe: name={{item}} state=present
   with_items:
   - bridge
+  ignore_errors: yes
 
 - name: every reboot load bridge kernel modules
   copy:
