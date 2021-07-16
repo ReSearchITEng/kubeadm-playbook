@@ -30,7 +30,8 @@ helm:
   - { name: jetstack, url: 'https://charts.jetstack.io' } # cert-manager
 #  - { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-kubernetes-dashboard' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
   - { name: kubernetes-dashboard, url: 'https://kubernetes.github.io/dashboard/' } # https://artifacthub.io/packages/helm/k8s-dashboard/kubernetes-dashboard
-  - { name: flexkube, url: 'https://flexkube.github.io/charts' } # calico helm chart till official will be ready: https://github.com/projectcalico/calico/issues/717 and https://github.com/projectcalico/calico/tree/master/_includes/charts/calico # plan to move to tigera-opearator
+    #- { name: flexkube, url: 'https://flexkube.github.io/charts' } # calico helm chart till official will be ready: https://github.com/projectcalico/calico/issues/717 and https://github.com/projectcalico/calico/tree/master/_includes/charts/calico # plan to move to tigera-opearator
+  - { name: projectcalico, url: 'https://docs.projectcalico.org/charts' } 
   - { name: rook-release, url: 'https://charts.rook.io/release' }
   packages_list: # when not defined, namespace defaults to "default" namespace
   # use "--wait" in the options section if you want to wait till min. pods are up.
@@ -40,7 +41,8 @@ helm:
 ## Networking: calico or other options
 ## Calico overlay network #
 ###########################
-    - { name: calico, repo: flexkube/calico, namespace: kube-system, options: '--set podCIDR="" --set typha.image.registry={{ images_repo | default ("docker.io") }} --set node.image.registry={{ images_repo | default ("docker.io") }}' } # if autodetect does not work, use '--set podCIDR={{ POD_NETWORK_CIDR }}' } # if not needed, also add --skip-crds
+    - { name: tigera-operator, repo: projectcalico/tigera-operator, namespace: tigera-operator, options: '--set tigeraOperator.registry={{ images_repo | default ("quay.io") }} --set calicoctl.image={{ images_repo | default ("quay.io") }}/calico/ctl' }
+      #- { name: calico, repo: flexkube/calico, namespace: kube-system, options: '--set podCIDR="" --set typha.image.registry={{ images_repo | default ("docker.io") }} --set node.image.registry={{ images_repo | default ("docker.io") }}' } # if autodetect does not work, use '--set podCIDR={{ POD_NETWORK_CIDR }}' } # if not needed, also add --skip-crds
 
 ########################
 ## Monitoring: prometheus, using coreos's prometheus-operator, which includes: grafana, alertmanager, prometheus.
@@ -64,7 +66,8 @@ helm:
 #####################
 ## Metrics-Server ###
 #####################
-    - { name: metrics-server, repo: stable/metrics-server, namespace: monitoring, options: '--set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/metrics-server-{{ HOST_ARCH }} --set "args={--kubelet-insecure-tls,--kubelet-preferred-address-types=InternalIP}" ' }
+    - { name: metrics-server, repo: prometheus-community/kube-state-metrics, namespace: monitoring, options: '--set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/kube-state-metrics --set "args={--kubelet-preferred-address-types=InternalIP}" ' }
+      #- { name: metrics-server, repo: prometheus-community/metrics-server, namespace: monitoring, options: '--set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set image.repository={{ images_repo | default ("k8s.gcr.io") }}/metrics-server-{{ HOST_ARCH }} --set "args={--kubelet-insecure-tls,--kubelet-preferred-address-types=InternalIP}" ' }
 # Proper fix for "--kubelet-insecure-tls" will be in k8s 1.19 https://github.com/kubernetes/kubeadm/issues/1602 ; Alternatives is manually generating and approving certs for each node: serverTLSBootstrap, which is complex. cert-manager option was not investigated.: https://github.com/kubernetes-sigs/metrics-server/issues/146#issuecomment-472655656
 
 ##################
