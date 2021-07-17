@@ -52,6 +52,7 @@ wait_charts_deploy_sanity: false #When defined, it will wait till all helm chart
 ## it will pre-pull from either images_repo defined below; if not defined, from k8s.gcr.io
 ####
 pre_pull_k8s_images: True
+# pre_pull_k8s_images_ignore_errors: no
 #####
 
 ####

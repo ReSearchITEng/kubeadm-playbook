@@ -30,20 +30,39 @@
 - block:
   - name: create the namespaces required by the helm charts deployment
     environment: '{{env_kc}}'
-    shell: 'kubectl create namespace {{ item.namespace | default(default) }} || true '
+    shell: 'kubectl create namespace {{ item.namespace }} || true '
     with_items:
     - "{{ helm.packages_list }}"
-    when: helm is defined and helm.packages_list is defined
+    when:
+    - helm is defined
+    - helm.packages_list is defined
+    - item.namespace is defined
+    - item.namespace != ""
     register: command_result
     changed_when: '"already exists" not in command_result.stderr'
 
-  - name: helm charts/packages deployment
+  - name: helm charts/packages deployment - first for the special ones that do not have namespace defined (tigera-operator that creates ns itself)
     environment: '{{env_kc}}'
-    command: 'helm upgrade --install --atomic --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
+    command: 'helm upgrade --install --atomic {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
     # --atomic is required for helm3, to make sure even failed releases are updated. This at least till this issue is closed: https://github.com/helm/helm/issues/5595
     with_items: 
     - "{{ helm.packages_list }}"
-    when: helm is defined and helm.packages_list is defined
+    when:
+    - helm is defined
+    - helm.packages_list is defined
+    - ( item.namespace is not defined ) or ( item.namespace == "" )
+
+  - name: helm charts/packages deployment - now for those that do have namespace defined (most of the charts)
+    environment: '{{env_kc}}'
+    command: 'helm upgrade --install --atomic --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
+    # --atomic is required for helm3, to make sure even failed releases are updated. This at least till this issue is closed: https://github.com/helm/helm/issues/5595
+    with_items:
+    - "{{ helm.packages_list }}"
+    when:
+    - helm is defined
+    - helm.packages_list is defined
+    - item.namespace is defined
+    - item.namespace != ""
 
   - name: Wait few seconds for deployments to start
     pause: seconds=3

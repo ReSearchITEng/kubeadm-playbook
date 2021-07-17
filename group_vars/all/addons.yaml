@@ -31,7 +31,7 @@ helm:
 #  - { name: funkypenguin, url: 'https://funkypenguin.github.io/helm-kubernetes-dashboard' } #dashboard 2.0 (till PR kubernetes/dashboard#4502 merged in official repo)
   - { name: kubernetes-dashboard, url: 'https://kubernetes.github.io/dashboard/' } # https://artifacthub.io/packages/helm/k8s-dashboard/kubernetes-dashboard
     #- { name: flexkube, url: 'https://flexkube.github.io/charts' } # calico helm chart till official will be ready: https://github.com/projectcalico/calico/issues/717 and https://github.com/projectcalico/calico/tree/master/_includes/charts/calico # plan to move to tigera-opearator
-  - { name: projectcalico, url: 'https://docs.projectcalico.org/charts' } 
+  - { name: projectcalico, url: 'https://docs.projectcalico.org/charts' }
   - { name: rook-release, url: 'https://charts.rook.io/release' }
   packages_list: # when not defined, namespace defaults to "default" namespace
   # use "--wait" in the options section if you want to wait till min. pods are up.
@@ -41,7 +41,7 @@ helm:
 ## Networking: calico or other options
 ## Calico overlay network #
 ###########################
-    - { name: tigera-operator, repo: projectcalico/tigera-operator, namespace: tigera-operator, options: '--set tigeraOperator.registry={{ images_repo | default ("quay.io") }} --set calicoctl.image={{ images_repo | default ("quay.io") }}/calico/ctl' }
+    - { name: tigera-operator, repo: projectcalico/tigera-operator, namespace: "", options: '--set tigeraOperator.registry={{ images_repo | default ("quay.io") }} --set calicoctl.image={{ images_repo | default ("quay.io") }}/calico/ctl' }
       #- { name: calico, repo: flexkube/calico, namespace: kube-system, options: '--set podCIDR="" --set typha.image.registry={{ images_repo | default ("docker.io") }} --set node.image.registry={{ images_repo | default ("docker.io") }}' } # if autodetect does not work, use '--set podCIDR={{ POD_NETWORK_CIDR }}' } # if not needed, also add --skip-crds
 
 ########################
