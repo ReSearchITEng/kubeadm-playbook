@@ -41,7 +41,8 @@ helm:
 ## Networking: calico or other options
 ## Calico overlay network #
 ###########################
-    - { name: tigera-operator, repo: projectcalico/tigera-operator, namespace: "", options: '--set tigeraOperator.registry={{ images_repo | default ("quay.io") }} --set calicoctl.image={{ images_repo | default ("quay.io") }}/calico/ctl' }
+    #- { name: tigera-operator, repo: projectcalico/tigera-operator, namespace: "", options: '--set tigeraOperator.registry={{ images_repo | default ("quay.io") }} --set calicoctl.image={{ images_repo | default ("quay.io") }}/calico/ctl' }
+    - { name: tigera-operator, repo: projectcalico/tigera-operator, namespace: "", options: '--set tigeraOperator.registry={{ images_repo | default ("quay.io") }} --set calicoctl.image={{ images_repo | default ("quay.io") }}/calico/ctl --set typha.image={{ images_repo | default ("quay.io") }}/calico/typha --set cni.image={{ images_repo | default ("quay.io") }}/calico/cni --set node.image={{ images_repo | default ("quay.io") }}/calico/node --set flexvol.image={{ images_repo | default ("quay.io") }}/calico/pod2daemon-flexvol --set kubeControllers.image={{ images_repo | default ("quay.io") }}/calico/kube-controllers' }
       #- { name: calico, repo: flexkube/calico, namespace: kube-system, options: '--set podCIDR="" --set typha.image.registry={{ images_repo | default ("docker.io") }} --set node.image.registry={{ images_repo | default ("docker.io") }}' } # if autodetect does not work, use '--set podCIDR={{ POD_NETWORK_CIDR }}' } # if not needed, also add --skip-crds
 
 ########################
