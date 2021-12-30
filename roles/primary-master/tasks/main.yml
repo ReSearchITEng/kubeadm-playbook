@@ -39,6 +39,24 @@
 #  #- ClusterConfiguration.apiVersion == "kubeadm.k8s.io/v1alpha1"
 #  #when: full_kube_reinstall is defined and full_kube_reinstall and ClusterConfiguration.kubernetesVersion is defined
 
+
+- name: Prepull coredns image kubeadm_coredns_image_issue_2525
+  shell: kubeadm config --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} images list | grep coredns
+  register: kubeadm_coredns_image_issue_2525_origimg
+  ignore_errors: yes
+  when:
+  - pre_pull_k8s_images is defined
+  - pre_pull_k8s_images
+  - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
+
+- name: Prepull coredns image kubeadm_coredns_image_issue_2525_PULL
+  command: "docker pull {{ kubeadm_coredns_image_issue_2525_origimg.stdout_lines[0] | regex_replace ('k8s.gcr.io',images_repo |default ('k8s.gcr.io')) | regex_replace ('/coredns/','/' ) }}"
+  ignore_errors: yes
+  when:
+  - pre_pull_k8s_images is defined
+  - pre_pull_k8s_images
+  - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
+
 - name: Pull images on master (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io )
   command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
   tags:
