@@ -33,8 +33,8 @@
     - nfs_reset
     ignore_errors: yes
 
-  - name: Reset cluster (kubeadm reset --force)
-    command: /usr/bin/kubeadm reset --force
+  - name: Reset cluster (kubeadm reset --force --ignore-preflight-errors=all )
+    command: /usr/bin/kubeadm reset --force --ignore-preflight-errors=all
     ignore_errors: yes
     # TODO: if cluster is installed, but kubedm is no longer available on the machine, we will not have a reset of cluster...
 
