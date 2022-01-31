@@ -38,23 +38,26 @@
     ignore_errors: yes
   when:
   - inventory_hostname not in groups['masters']
+  tags:
+  - all
 
-  - block:
-    - name: get name of primary_master when single node cluster
-      environment:
-        KUBECONFIG: /etc/kubernetes/admin.conf
-      shell: 'kubectl get no -o=jsonpath="{.items[0].metadata.name}"'
-      register: result_primary_master_name
+
+- block:
+#    - name: get name of primary_master when single node cluster
+#      environment:
+#        KUBECONFIG: /etc/kubernetes/admin.conf
+#      shell: 'kubectl get no -o=jsonpath="{.items[0].metadata.name}"'
+#      register: result_primary_master_name
 
     - name: when cluster is one machine only, labeling it also as infra node
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
-      shell: 'kubectl label nodes {{ result_primary_master_name.stdout_lines[0] }} "node-role.kubernetes.io/infra=" --overwrite'
+      shell: 'kubectl label nodes -l="node-role.kubernetes.io/master=" "node-role.kubernetes.io/infra=" --overwrite'
       register: command_result
       changed_when: '"not labeled" not in command_result.stdout'
       ignore_errors: yes
-    when:
-    - groups['all'] | length == 1
-    tags:
-    - all
+  when:
+  - groups['all'] | length == 1
+  tags:
+  - all
     
