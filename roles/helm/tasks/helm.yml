@@ -37,17 +37,17 @@
     become: yes
     become_user: root
 
-  - name: helm repo remove (before add)
-    environment: '{{env_kc}}'
-    command: helm repo remove {{ item.name }}
-    with_items:
-    - '{{ helm.repos | default("") }}'
-    when: helm is defined and helm.repos is defined
-    ignore_errors: yes
+#  - name: helm repo remove (before add) - deprecated by --force-update flag
+#    environment: '{{env_kc}}'
+#    command: helm repo remove {{ item.name }}
+#    with_items:
+#    - '{{ helm.repos | default("") }}'
+#    when: helm is defined and helm.repos is defined
+#    ignore_errors: yes
 
   - name: helm repo add 
     environment: '{{env_kc}}'
-    command: helm repo add {{ item.name }} {{ item.url }}
+    command: helm repo add --force-update {{ item.name }} {{ item.url }}
     with_items: 
     - '{{ helm.repos | default("") }}'
     when: helm is defined and helm.repos is defined
