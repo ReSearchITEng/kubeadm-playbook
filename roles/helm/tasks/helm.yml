@@ -12,6 +12,30 @@
   - always
 
 - block:
+  - name: check helm version (if exists)
+    shell: helm version --template="{{ '{{.Version}}' }}"
+    #local_action: shell helm version --template="{{ '{{.Version}}' }}"
+    register: helm_version_result
+
+  - name: set_fact helm_install_not_required when existing version is identical
+    set_fact: helm_install_not_required="not"
+    when:
+    - helm_version_result is defined
+    - helm_version_result.stdout | length > 0
+    - helm_version_result.stdout_lines[0] == helm.helm_version
+
+  - debug:
+      msg: 'helm versions compare. Existing (if any): requested: {{helm.helm_version}} and existings (if any): {{helm_version_result.stdout_lines[0]}}'
+    when:
+    - helm_version_result is defined
+    - helm_version_result.stdout | length > 0
+    #when: helm_version_result.stdout_lines[0] == helm.helm_version
+
+  ignore_errors: yes
+  tags:
+  - helm
+
+- block:
   - name: 'Download helm binary archive https://get.helm.sh/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz'
     environment: '{{env_kc}}'
     get_url: 
@@ -36,6 +60,12 @@
       remote_src: yes
     become: yes
     become_user: root
+  when:
+  - helm_install_not_required is not defined
+  tags:
+  - helm
+
+- block:
 
 #  - name: helm repo remove (before add) - deprecated by --force-update flag
 #    environment: '{{env_kc}}'

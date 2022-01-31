@@ -312,32 +312,32 @@
   pause: seconds=10
   changed_when: false
 
-- name: get name of primary_master when single node cluster
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  shell: 'kubectl get no -o=jsonpath="{.items[0].metadata.name}"'
-  when:
-  - groups['all'] | length == 1
-  register: result_primary_master_name
-  tags:
-  - all
+#- name: MOVED TO labels and taints roles: get name of primary_master when single node cluster
+#  environment:
+#    KUBECONFIG: /etc/kubernetes/admin.conf
+#  shell: 'kubectl get no -o=jsonpath="{.items[0].metadata.name}"'
+#  when:
+#  - groups['all'] | length == 1
+#  register: result_primary_master_name
+#  tags:
+#  - all
 
 ## In the below 4 cases, we should have used master_name, but k8s does not follow the fqdn definitions...
-- name: when cluster is one machine only, remove NoSchedule taint from master - using ansible_fqdn
-  ## TODO: Use InitConfiguration to remove the taint on master, with the same condition.
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  #shell: 'kubectl taint nodes {{ ansible_fqdn }} {{ item }} --overwrite'
-  shell: 'kubectl taint nodes {{ result_primary_master_name.stdout_lines[0] }} {{ item }} --overwrite'
-  when:
-  - groups['all'] | length == 1
-  with_items: #'{{ taints_master }}'
-  - 'node-role.kubernetes.io/master:NoSchedule-'
-  - 'node-role.kubernetes.io/master=:PreferNoSchedule'
-  - 'node-role.kubernetes.io/infra=:PreferNoSchedule'
-  ignore_errors: yes
-  tags:
-  - taints
+#- name: MOVED TO taints.yaml: when cluster is one machine only, remove NoSchedule taint from master - using ansible_fqdn
+#  ## TODO: Use InitConfiguration to remove the taint on master, with the same condition.
+#  environment:
+#    KUBECONFIG: /etc/kubernetes/admin.conf
+#  #shell: 'kubectl taint nodes {{ ansible_fqdn }} {{ item }} --overwrite'
+#  shell: 'kubectl taint nodes {{ result_primary_master_name.stdout_lines[0] }} {{ item }} --overwrite'
+#  when:
+#  - groups['all'] | length == 1
+#  with_items: #'{{ taints_master }}'
+#  - 'node-role.kubernetes.io/master:NoSchedule-'
+#  - 'node-role.kubernetes.io/master=:PreferNoSchedule'
+#  - 'node-role.kubernetes.io/infra=:PreferNoSchedule'
+#  ignore_errors: yes
+#  tags:
+#  - taints
 
 # - name: when cluster is one machine only, remove NoSchedule taint from master - using inventory_hostname_short
 #   ## TODO: Use InitConfiguration to remove the taint on master, with the same condition.
@@ -354,16 +354,16 @@
 #   tags:
 #   - taints
 
-- name: when cluster is one machine only, labeling it also as infra node - using ansible_fqdn
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  shell: 'kubectl label nodes {{ result_primary_master_name.stdout_lines[0] }} "node-role.kubernetes.io/infra=" --overwrite'
-  #shell: 'kubectl label nodes {{ ansible_fqdn }} "node-role.kubernetes.io/infra=" --overwrite'
-  when:
-  - groups['all'] | length == 1
-  register: command_result
-  changed_when: '"not labeled" not in command_result.stdout'
-  ignore_errors: yes
+#- name: MOVED TO labels role : when cluster is one machine only, labeling it also as infra node
+#  environment:
+#    KUBECONFIG: /etc/kubernetes/admin.conf
+#  shell: 'kubectl label nodes {{ result_primary_master_name.stdout_lines[0] }} "node-role.kubernetes.io/infra=" --overwrite'
+#  #shell: 'kubectl label nodes {{ ansible_fqdn }} "node-role.kubernetes.io/infra=" --overwrite'
+#  when:
+#  - groups['all'] | length == 1
+#  register: command_result
+#  changed_when: '"not labeled" not in command_result.stdout'
+#  ignore_errors: yes
 
 # - name: when cluster is one machine only, labeling it also as infra node - using inventory_hostname_short
 #   environment:
