@@ -169,6 +169,7 @@
   tags:
   - post_deploy
   roles:
+  - { role: tools, task: labels, tags: [ 'label'] }
   - { role: post_deploy, task: all, tags: [ 'post_deploy_no_helm' ] }
   - { role: storage, task: create_all, tags: [ 'storage', 'rook', 'nfs', 'vsphere' ] }
   - { role: helm, task: helm, tags: [ 'helm' ] }

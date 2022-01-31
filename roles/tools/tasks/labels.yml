@@ -9,6 +9,7 @@
 #  Due to ansible in probelmatic netw setups (https://github.com/ReSearchITEng/kubeadm-playbook/issues/81, https://github.com/ansible/ansible/issues/38777 )
 #  we have to add the 3rd option as well...
 
+- block:
   - name: labeling using inventory_hostname_short - {{ inventory_hostname_short }} - (this or below 2 will end with error)
     delegate_to: "{{groups['primary-master'][0]}}"
     environment:
@@ -35,6 +36,8 @@
     register: command_result
     changed_when: '"not labeled" not in command_result.stdout'
     ignore_errors: yes
+  when:
+  - inventory_hostname not in groups['masters']
 
   - block:
     - name: get name of primary_master when single node cluster
