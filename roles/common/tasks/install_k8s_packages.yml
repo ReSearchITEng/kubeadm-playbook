@@ -62,12 +62,30 @@
 # End OS dependent repo setup
 
 ### socat
+- name: Ansible check /usr/bin/socat exists
+  stat:
+    path: /usr/bin/socat
+  register: statsocat
+
 - name: Install socat from centos/rhel/ubuntu repo
   package: name={{ item }} state={{ package_state | default ('present') }}
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - socat
+  when: statsocat.stat.exists is not defined or statsocat.stat.exists == False
+
+- name: Ansible check /usr/bin/socat exists
+  stat:
+    # ubuntu 18.04 /sbin/ipset, but we skip checking it there to simplify code. Keeping only ubuntu 20.04 and rhel based
+    path: /usr/sbin/ipset
+  register: statipset
+
+- name: Install ipset from centos/rhel/ubuntu repo
+  package: name={{ item }} state={{ package_state | default ('present') }}
+  #environment: '{{ proxy_env | default ({}) }}'
+  with_items:
   - ipset
+  when: statipset.stat.exists is not defined or statipset.stat.exists == False
 
 ### unhold (debian)
 - name: unhold before upgrade/install packages (when on debian)

@@ -18,7 +18,8 @@ pre_helm_manifests:
 ###################
 helm:
   helm_version: v3.8.0 # or "latest" #https://github.com/kubernetes/helm/releases
-  install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' 
+  #install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' # OBSOLETE
+  archive_url: 'https://get.helm.sh' # it expects there the archive: /helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
   #- { name: stable, url: 'http://kubernetes-charts.storage.googleapis.com' }  # for metrics server till this is fixed: https://github.com/kubernetes-sigs/metrics-server/pull/606 and kube-state-metrics (see https://github.com/kubernetes/kube-state-metrics/pull/1237 )
   #- { name: stable, url: 'https://charts.helm.sh/stable' }  # for metrics server till this is fixed: https://github.com/kubernetes-sigs/metrics-server/pull/606 and kube-state-metrics (see https://github.com/kubernetes/kube-state-metrics/pull/1237 )

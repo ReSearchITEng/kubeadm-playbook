@@ -39,7 +39,7 @@
   - name: 'Download helm binary archive https://get.helm.sh/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz'
     environment: '{{env_kc}}'
     get_url: 
-      url: "https://get.helm.sh/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz"
+      url: "{{ helm.archive_url | default ('https://get.helm.sh') }}/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz"
       dest: /tmp/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz
       force: no
       mode: "0755"
