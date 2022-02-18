@@ -36,7 +36,7 @@
   - helm
 
 - block:
-  - name: 'Download helm binary archive https://get.helm.sh/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz'
+  - name: 'Download helm binary archive {{ helm.archive_url | default ("https://get.helm.sh") }}/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz'
     environment: '{{env_kc}}'
     get_url: 
       url: "{{ helm.archive_url | default ('https://get.helm.sh') }}/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz"
