@@ -81,11 +81,19 @@
     with_items: 
     - '{{ helm.repos | default("") }}'
     when: helm is defined and helm.repos is defined
+    retries: 7
+    delay: 3
+    register: result
+    until: result.rc == 0
 
   - name: helm repo update #Sometimes initial repo add corrupts the repo and update fixes it.
     environment: '{{env_kc}}'
     command: helm repo update
     when: helm is defined
+    retries: 7
+    delay: 3
+    register: result
+    until: result.rc == 0
 
   tags:
   - helm

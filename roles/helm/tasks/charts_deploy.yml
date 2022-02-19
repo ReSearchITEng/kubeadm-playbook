@@ -51,6 +51,10 @@
     - helm is defined
     - helm.packages_list is defined
     - ( item.namespace is not defined ) or ( item.namespace == "" )
+    retries: 3
+    delay: 3
+    register: result
+    until: result.rc == 0
 
   - name: helm charts/packages deployment - now for those that do have namespace defined (most of the charts)
     environment: '{{env_kc}}'
@@ -63,6 +67,10 @@
     - helm.packages_list is defined
     - item.namespace is defined
     - item.namespace != ""
+    retries: 3
+    delay: 3
+    register: result
+    until: result.rc == 0
 
   - name: Wait few seconds for deployments to start
     pause: seconds=3
