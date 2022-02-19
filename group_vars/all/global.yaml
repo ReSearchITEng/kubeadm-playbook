@@ -67,12 +67,11 @@ pre_pull_k8s_images: True
 HOST_ARCH: amd64
 #CALICO_VERSION: "v3.22.0"
 DOCKER_IMAGES: [
-#  { name: "{{images_repo}}/busybox", tag: "{{ BUSYBOX_TAG }}" },
-  #{ name: "{{images_repo}}/calico/kube-controllers  ", tag: "{{ CALICO_VERSION }}" },
-  #{ name: "{{images_repo}}/calico/apiserver         ", tag: "{{ CALICO_VERSION }}" },
-  #{ name: "{{images_repo}}/calico/cni               ", tag: "{{ CALICO_VERSION }}" },
+  #{ name: "{{images_repo}}/calico/kube-controllers", tag: "{{ CALICO_VERSION }}" },
+  #{ name: "{{images_repo}}/calico/apiserver", tag: "{{ CALICO_VERSION }}" },
+  #{ name: "{{images_repo}}/calico/cni", tag: "{{ CALICO_VERSION }}" },
   #{ name: "{{images_repo}}/calico/pod2daemon-flexvol", tag: "{{ CALICO_VERSION }}" },
-  #{ name: "{{images_repo}}/calico/node              ", tag: "{{ CALICO_VERSION }}" }
+  #{ name: "{{images_repo}}/calico/node", tag: "{{ CALICO_VERSION }}" }
 ]
 
 ################################DONE HA
