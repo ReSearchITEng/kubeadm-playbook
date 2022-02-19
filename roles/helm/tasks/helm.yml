@@ -43,6 +43,10 @@
       dest: /tmp/helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz
       force: no
       mode: "0755"
+    retries: 3
+    delay: 3
+    register: result
+    until: result.rc == 0
     
   - name: unarchive
     unarchive:

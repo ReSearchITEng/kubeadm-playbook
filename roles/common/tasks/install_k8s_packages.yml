@@ -113,14 +113,14 @@
   when: kubelet_version is not defined
 
 - name: Install kubelet
-  package: name="{{ item }}={{kubelet_version | regex_replace('v')}}*" state=present
+  package: name="{{ item }}={{kubelet_version | regex_replace('v')}}*" state=present force=yes
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
   when: kubelet_version is defined and ( kubelet_version!='present' or kubelet_version!='latest' ) and ansible_os_family == "Debian" 
 
 - name: Install kubelet
-  package: name="{{ item }}-{{kubelet_version | regex_replace('v')}}" state=present
+  package: name="{{ item }}-{{kubelet_version | regex_replace('v')}}" state=present force=yes
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubelet
@@ -143,14 +143,14 @@
   when: kubectl_version is not defined
 
 - name: Install kubectl # ansible bug 29705
-  package: name="{{ item }}={{kubectl_version | regex_replace('v')}}*" state=present
+  package: name="{{ item }}={{kubectl_version | regex_replace('v')}}*" state=present force=yes
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubectl
   when: kubectl_version is defined and ( kubectl_version!='present' or kubectl_version!='latest' ) and ansible_os_family == "Debian"
 
 - name: Install kubectl
-  package: name="{{ item }}-{{kubectl_version | regex_replace('v')}}" state=present
+  package: name="{{ item }}-{{kubectl_version | regex_replace('v')}}" state=present force=yes
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubectl
@@ -173,14 +173,14 @@
   when: kubeadm_version is not defined
 
 - name: Install kubeadm # ansible bug 29705
-  package: name="{{ item }}={{kubeadm_version | regex_replace('v')}}*" state=present
+  package: name="{{ item }}={{kubeadm_version | regex_replace('v')}}*" state=present force=yes
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubeadm
   when: kubeadm_version is defined and ( kubeadm_version!='present' or kubeadm_version!='latest' ) and ansible_os_family == "Debian"
 
 - name: Install kubeadm
-  package: name={{ item }}-{{kubeadm_version | regex_replace('v')}} state=present
+  package: name={{ item }}-{{kubeadm_version | regex_replace('v')}} state=present force=yes
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
   - kubeadm
