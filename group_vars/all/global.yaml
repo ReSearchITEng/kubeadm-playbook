@@ -52,7 +52,7 @@ wait_charts_deploy_sanity: false #When defined, it will wait till all helm chart
 ## it will pre-pull from either images_repo defined below; if not defined, from k8s.gcr.io
 ####
 pre_pull_k8s_images: True
-# pre_pull_k8s_images_ignore_errors: no
+# pre_pull_k8s_images_ignore_errors: False
 #####
 
 ####
@@ -62,6 +62,7 @@ pre_pull_k8s_images: True
 #####
 
 ## Images for prefetching when pre_pull_k8s_images is true and images_repo is defined
+## They are pulled on primary-master only
 ## Now kubeadm does the pre-pull; Use this section only if really required for other images.
 HOST_ARCH: amd64
 #CALICO_VERSION: "v3.22.0"

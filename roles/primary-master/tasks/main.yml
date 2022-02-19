@@ -17,27 +17,28 @@
 #  - ceph-common
 
 ## PULL IMAGES
-#- name: Pull master images on master - when DOCKER_IMAGES is defined
-#  #TODO: to be removed/replaced in 1.11 with the kubeadm pull command (kubeadm config images pull --kubernetes-version v11.0.3 ), but better remove, as kubeadm pre-flight does the pull now anyway...
+- name: Pull master images on master - when DOCKER_IMAGES is defined
+  #TODO: to be removed/replaced in 1.11 with the kubeadm pull command (kubeadm config images pull --kubernetes-version v11.0.3 ), but better remove, as kubeadm pre-flight does the pull now anyway...
 #  #command: /usr/bin/docker pull "{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
 #  #command: /usr/bin/docker pull "{{ images_repo |default ('k8s.gcr.io') }}/{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
-#  command: /usr/bin/docker pull "{{ item.name }}:{{ item.tag }}"
-#  with_items: "{{ DOCKER_IMAGES }}"
-#  tags:
-#  - prepull_images
+  command: /usr/bin/docker pull "{{ item.name }}:{{ item.tag }}"
+  with_items: "{{ DOCKER_IMAGES }}"
+  tags:
+  - prepull_images
 #  register: command_result
 #  changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
 #  #when: pre_pull_k8s_images is defined and pre_pull_k8s_images
 #  #when: pre_pull_k8s_images is defined and pre_pull_k8s_images and ClusterConfiguration.kubernetesVersion is defined
 #  #when: full_kube_reinstall is defined and full_kube_reinstall and ClusterConfiguration.kubernetesVersion is defined
-#  when: 
-#  - DOCKER_IMAGES is defined
-#  - pre_pull_k8s_images is defined 
-#  - pre_pull_k8s_images 
+  when: 
+  - DOCKER_IMAGES is defined
+  - pre_pull_k8s_images is defined 
+  - pre_pull_k8s_images 
 #  - images_repo is defined
 #  #- ClusterConfiguration.kubernetesVersion is defined
 #  #- ClusterConfiguration.apiVersion == "kubeadm.k8s.io/v1alpha1"
 #  #when: full_kube_reinstall is defined and full_kube_reinstall and ClusterConfiguration.kubernetesVersion is defined
+  ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default ('False') | bool }}"
 
 
 - name: Prepull coredns image kubeadm_coredns_image_issue_2525
@@ -68,7 +69,7 @@
   - pre_pull_k8s_images 
   #- DOCKER_IMAGES is not defined ## or images_repo is not defined
   - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
-  ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default (no) }}"
+  ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default ('False') | bool }}"
 
 - name: making sure there is an apiServer section under ClusterConfiguration
   set_fact:
