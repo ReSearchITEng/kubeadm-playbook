@@ -64,8 +64,14 @@ pre_pull_k8s_images: True
 ## Images for prefetching when pre_pull_k8s_images is true and images_repo is defined
 ## Now kubeadm does the pre-pull; Use this section only if really required for other images.
 HOST_ARCH: amd64
+#CALICO_VERSION: "v3.22.0"
 DOCKER_IMAGES: [
 #  { name: "{{images_repo}}/busybox", tag: "{{ BUSYBOX_TAG }}" },
+  #{ name: "{{images_repo}}/calico/kube-controllers  ", tag: "{{ CALICO_VERSION }}" },
+  #{ name: "{{images_repo}}/calico/apiserver         ", tag: "{{ CALICO_VERSION }}" },
+  #{ name: "{{images_repo}}/calico/cni               ", tag: "{{ CALICO_VERSION }}" },
+  #{ name: "{{images_repo}}/calico/pod2daemon-flexvol", tag: "{{ CALICO_VERSION }}" },
+  #{ name: "{{images_repo}}/calico/node              ", tag: "{{ CALICO_VERSION }}" }
 ]
 
 ################################DONE HA
