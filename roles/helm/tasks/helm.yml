@@ -13,6 +13,7 @@
 
 - block:
   - name: check helm version (if exists)
+    environment: '{{env_kc}}'
     shell: helm version --template="{{ '{{.Version}}' }}"
     #local_action: shell helm version --template="{{ '{{.Version}}' }}"
     register: helm_version_result
@@ -46,7 +47,7 @@
     retries: 3
     delay: 3
     register: result
-    until: result.rc == 0
+    until: result is not failed
     
   - name: unarchive
     unarchive:
@@ -88,7 +89,7 @@
     retries: 7
     delay: 3
     register: result
-    until: result.rc == 0
+    until: result is not failed
 
   - name: helm repo update #Sometimes initial repo add corrupts the repo and update fixes it.
     environment: '{{env_kc}}'
@@ -97,7 +98,7 @@
     retries: 7
     delay: 3
     register: result
-    until: result.rc == 0
+    until: result is not failed
 
   tags:
   - helm

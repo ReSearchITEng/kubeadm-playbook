@@ -54,7 +54,7 @@
     retries: 3
     delay: 3
     register: result
-    until: result.rc == 0
+    until: result is not failed
 
   - name: helm charts/packages deployment - now for those that do have namespace defined (most of the charts)
     environment: '{{env_kc}}'
@@ -70,7 +70,7 @@
     retries: 3
     delay: 3
     register: result
-    until: result.rc == 0
+    until: result is not failed
 
   - name: Wait few seconds for deployments to start
     pause: seconds=3
