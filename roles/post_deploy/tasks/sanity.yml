@@ -12,6 +12,6 @@
     - k8s_network_addons
     - sanity
     until: command_result.stdout == ""
-    retries: 40
+    retries: "{{ RETRIES | default(40) }}"
     delay: 3
     changed_when: false

@@ -36,7 +36,7 @@
     shell: "kubectl get pv --no-headers -- || true"
     register: command_result
     until: command_result.stdout == ""
-    retries: 40
+    retries: "{{ RETRIES | default(40) }}"
     delay: 3
     ignore_errors: yes
     changed_when: false

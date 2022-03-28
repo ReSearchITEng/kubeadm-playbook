@@ -14,7 +14,7 @@
 #  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,.localdomain,.internal,127.0.1.1,127.254.254.254,169.254.169.254,169.254.169.253,169.254.169.123,/var/run/docker.sock,.sock,sock,.socket'
 #####
 
-KUBERNETES_VERSION: "1.21.9"
+KUBERNETES_VERSION: "1.21.11"
 # Software versions (used by installation, package manager, image pull, etc. )
 
 KEEPALIVED_VERSION: "1.3.5"
@@ -73,6 +73,10 @@ DOCKER_IMAGES: [
   #{ name: "{{images_repo}}/calico/pod2daemon-flexvol", tag: "{{ CALICO_VERSION }}" },
   #{ name: "{{images_repo}}/calico/node", tag: "{{ CALICO_VERSION }}" }
 ]
+
+## How long to wait (in number of retries) for various sanity tests
+## (usually bigger number is requried when network is slow and image pulls take long time)
+RETRIES: 40
 
 ################################DONE HA
 
