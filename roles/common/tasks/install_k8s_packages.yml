@@ -74,7 +74,7 @@
   - socat
   when: statsocat.stat.exists is not defined or statsocat.stat.exists == False
 
-- name: Ansible check /usr/bin/socat exists
+- name: Ansible check /usr/sbin/ipset exists
   stat:
     # ubuntu 18.04 /sbin/ipset, but we skip checking it there to simplify code. Keeping only ubuntu 20.04 and rhel based
     path: /usr/sbin/ipset
@@ -97,12 +97,18 @@
   - kubectl
   - kubernetes-cni
   - cri-tools
+  - containernetworking-plugins
   when:
   - full_kube_apt_unhold | default (False)
   - ansible_os_family == "Debian"
   - kubelet_version is defined and kubelet_version!='present'
   - kubectl_version is defined and kubectl_version!='present'
   - kubeadm_version is defined and kubeadm_version!='present'
+
+- name: make sure there is no package containernetworking-plugins as it conflicts with kubernetes-cni
+  package: name={{ item }} state=absent
+  with_items:
+  - containernetworking-plugins
 
 ### kubelet
 - name: Install kubelet when kubelet_version is not defined
