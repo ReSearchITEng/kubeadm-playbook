@@ -11,13 +11,13 @@
 pre_helm_manifests:
 ## cert-manager crds:
 #- https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
-- https://github.com/jetstack/cert-manager/releases/download/v1.7.0/cert-manager.crds.yaml
+- https://github.com/jetstack/cert-manager/releases/download/v1.8.0/cert-manager.crds.yaml
 
 ###################
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v3.8.0 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v3.9.0 # or "latest" #https://github.com/kubernetes/helm/releases
   #install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' # OBSOLETE
   archive_url: 'https://get.helm.sh' # it expects there the archive: /helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
