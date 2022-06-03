@@ -1,7 +1,7 @@
 #https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2?tab=doc#ClusterConfiguration
 #check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm?tab=subdirectories
 ClusterConfiguration:
-  apiVersion: kubeadm.k8s.io/v1beta2
+  apiVersion: kubeadm.k8s.io/v1beta3
   apiServer:
     timeoutForControlPlane: 8m0s
     extraArgs: # https://kubernetes.io/docs/admin/kube-apiserver/
@@ -27,14 +27,12 @@ ClusterConfiguration:
   kind: ClusterConfiguration
   kubernetesVersion: "v{{ KUBERNETES_VERSION }}"
   # dns:
-  #   type: CoreDNS
   networking:
   #   dnsDomain: cluster.local
     serviceSubnet: "{{ SERVICE_NETWORK_CIDR }}"
   #   podSubnet: ""
     podSubnet: "{{ POD_NETWORK_CIDR }}"
     ##podSubnet -> Calico is now able to autodetect. If calico is used, this can be commented out.
-  # useHyperKubeImage: True 
   #cloudProvider: 'vsphere' # WE NEED THIS Even after 1.11 (v1alpha2) (due to a bug in ansible on vars with "-"); this is also required: govc vm.change -e="disk.enableUUID=1" -vm=<machines> and requires setup of cloud_config below
   # controllerManager:
   #   controllerManagerExtraArgs: # https://kubernetes.io/docs/admin/kube-controller-manager/
