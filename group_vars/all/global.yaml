@@ -14,7 +14,7 @@
 #  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,.localdomain,.internal,127.0.1.1,127.254.254.254,169.254.169.254,169.254.169.253,169.254.169.123,/var/run/docker.sock,.sock,sock,.socket'
 #####
 
-KUBERNETES_VERSION: "1.22.10"
+KUBERNETES_VERSION: "1.23.7"
 # Software versions (used by installation, package manager, image pull, etc. )
 
 KEEPALIVED_VERSION: "1.3.5"
@@ -121,7 +121,7 @@ kernel_modules_setup: True # default: True
 #It will load the required kernel modules like ip_vs, bridge, nf_conntrack_ipv4, br_netfilter ;  echo 1 >/proc/sys/net/bridge/bridge-nf-call-iptables
 
 #####
-docker_setup: "auto" # when not defined, default is "auto"
+docker_setup: "ignore" # when not defined, default is "auto"
   ## auto will install docker (if not yet installed), set it up (with overlay2 storage driver), (re)start it
   ## force will do the above even if it's already installed
   ## ignore will not check docker at all.
