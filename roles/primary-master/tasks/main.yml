@@ -58,7 +58,7 @@
   - pre_pull_k8s_images
   - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
 
-- name: Pull images on master (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io )
+- name: Pull images on master (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io ) - old way
   command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
   tags:
   - prepull_images
@@ -167,6 +167,19 @@
       {{ KubeletConfiguration | to_nice_yaml }}
   when:
   - inventory_hostname in groups['primary-master']
+
+- name: Pull images on master using /etc/kubernetes/kubeadm-master.conf (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io )
+  command: "kubeadm config images pull --config /etc/kubernetes/kubeadm-master.conf --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
+  tags:
+  - prepull_images
+  register: command_result
+  changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
+  when:
+  - pre_pull_k8s_images is defined
+  - pre_pull_k8s_images
+  #- DOCKER_IMAGES is not defined ## or images_repo is not defined
+  - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
+  ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default ('False') | bool }}"
 
 - name: "Initialize cluster on primary master with kubeadm init {{kubeadm_init_args}} --config /etc/kubernetes/kubeadm-master.conf --upload-certs"
   # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)

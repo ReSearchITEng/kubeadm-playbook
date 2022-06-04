@@ -117,7 +117,7 @@
     - pre_pull_k8s_images
     - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
 
-  - name: Pull images on master (from internet when images_repo is not defined)
+  - name: Pull images on master (from internet when images_repo is not defined) - old way
     command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
     tags:
     - prepull_images
@@ -170,6 +170,19 @@
       {{ KubeProxyConfiguration | to_nice_yaml }}
       ---
       {{ KubeletConfiguration | to_nice_yaml }}
+
+- name: Pull images on master using /etc/kubernetes/kubeadm-master.conf (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io )
+  command: "kubeadm config images pull --config /etc/kubernetes/kubeadm-node.conf --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
+  tags:
+  - prepull_images
+  register: command_result
+  changed_when: '"Image is up to date" not in command_result.stdout or "Already exists" not in command_result.stdout'
+  when:
+  - pre_pull_k8s_images is defined
+  - pre_pull_k8s_images
+  #- DOCKER_IMAGES is not defined ## or images_repo is not defined
+  - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
+  ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default ('False') | bool }}"
 
 ### Join nodes to cluster
 - name: Join cluster using kubeadm join --config /etc/kubernetes/kubeadm-node.conf
