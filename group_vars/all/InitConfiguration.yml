@@ -15,7 +15,9 @@ InitConfiguration:
   #   - signing
   #   - authentication
   nodeRegistration:
-  #   criSocket: /var/run/dockershim.sock
+  #   criSocket: unix:///var/run/dockershim.sock
+  #   criSocket: unix:///var/run/crio/crio.sock
+    criSocket: unix:///var/run/containerd/containerd.sock
   #   name: <your_master_node_name>
     taints:
     - effect: NoSchedule

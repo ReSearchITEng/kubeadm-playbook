@@ -109,10 +109,11 @@
 
     when:
     - ansible_os_family == "RedHat"
+    - old_docker
   ## Block for CentOS/RedHat ends here
 
   ### DEBIAN/Ubuntu:
-  - name: Debian/Ubuntu docker installation and docker_setup
+  - name: Debian/Ubuntu (RH new) docker installation and docker_setup
     block:
 
     - name: Install in debian docker (if does not exist)
@@ -127,7 +128,7 @@
       notify:
       - Restart docker
 
-    - name: set docker storage to overlay2 (Debian) - overlay2 works only with ubuntu's official docker distribution (docker.io)
+    - name: set docker storage to overlay2 (Debian / RH new) - overlay2 works only with ubuntu's official docker distribution (docker.io)
       copy:
         content: |
           {
@@ -142,61 +143,89 @@
       - Restart docker
       # also look at: /etc/default/docker
 
-    - name: set https_proxy in docker (Debian)
+    - name: set https_proxy in docker (Debian / RH new)
       file:
-        path: /etc/systemd/system/docker.service.d/
+        path: /etc/systemd/system/{{ item }}.service.d/
         state: directory
-      when: proxy_env is defined and  ansible_os_family == "Debian"
+      when: proxy_env is defined # and  ansible_os_family == "Debian"
+      with_items:
+      - docker
+      - crio
+      - containerd
       tags:
       - docker
 
-    - name: set https_proxy in docker (Debian) - section
+    - name: set https_proxy in docker (Debian/RH new) - section
       lineinfile:
-        name: /etc/systemd/system/docker.service.d/http-proxy.conf
+        name: /etc/systemd/system/{{ item }}.service.d/http-proxy.conf
         state: present
         create: yes
         line: "[Service]"
-      when: proxy_env is defined and  ansible_os_family == "Debian"
+      when: proxy_env is defined # and  ansible_os_family == "Debian"
+      with_items:
+      - docker
+      - crio
+      - containerd
       tags:
       - docker
       notify:
       - Restart docker
+      - Restart containerd
+      - Restart crio
 
-    - name: set https_proxy in docker (Debian) - https
+    - name: set https_proxy in docker (Debian / RH new) - https
       lineinfile:
-        name: /etc/systemd/system/docker.service.d/http-proxy.conf
+        name: /etc/systemd/system/{{ item }}.service.d/http-proxy.conf
         state: present
         line: 'Environment="https_proxy={{proxy_env.https_proxy | default ([]) }}"'
       when: proxy_env is defined and  ansible_os_family == "Debian"
+      with_items:
+      - docker
+      - crio
+      - containerd
       tags:
       - docker
       notify:
       - Restart docker
+      - Restart containerd
+      - Restart crio
 
-    - name: set http_proxy in docker (Debian) - http
+    - name: set http_proxy in docker (Debian / RH new) - http
       lineinfile:
-        name: /etc/systemd/system/docker.service.d/http-proxy.conf
+        name: /etc/systemd/system/{{ item }}.service.d/http-proxy.conf
         state: present
         line: 'Environment="http_proxy={{proxy_env.http_proxy | default ([]) }}"'
       when: proxy_env is defined and  ansible_os_family == "Debian"
+      with_items:
+      - docker
+      - crio
+      - containerd
       tags:
       - docker
       notify:
       - Restart docker
+      - Restart containerd
+      - Restart crio
 
-    - name: set no_proxy in docker (Debian)
+    - name: set no_proxy in docker (Debian/RH new)
       lineinfile:
-        name: /etc/systemd/system/docker.service.d/http-proxy.conf
+        name: /etc/systemd/system/{{ item }}.service.d/http-proxy.conf
         state: present
         line: 'Environment="no_proxy={{proxy_env.no_proxy | default ([]) }}"'
       when: proxy_env is defined
+      with_items:
+      - docker
+      - crio
+      - containerd
       tags:
       - docker
       notify:
       - Restart docker
+      - Restart containerd
+      - Restart crio
 
     when:
-    - ansible_os_family == "Debian"
+    - ansible_os_family == "Debian" or ( ansible_os_family == "RedHat" and old_docker is undefined )
     ## END of Debian/Ubuntu block
 
   #- name: Use json-file docker logging driver

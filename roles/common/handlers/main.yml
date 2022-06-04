@@ -2,6 +2,12 @@
 - name: Restart docker
   systemd: name=docker state=restarted enabled=yes daemon_reload=yes
 
+- name: Restart containerd
+  systemd: name=containerd state=restarted enabled=yes daemon_reload=yes
+
+- name: Restart crio
+  systemd: name=crio state=restarted enabled=yes daemon_reload=yes
+
 - name: Restart docker-storage-setup
   systemd: name=docker-storage-setup state=restarted
 

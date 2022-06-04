@@ -38,6 +38,14 @@
     ignore_errors: yes
     # TODO: if cluster is installed, but kubedm is no longer available on the machine, we will not have a reset of cluster...
 
+  - name: Reset cluster (kubeadm reset --force --ignore-preflight-errors=all using --cri-socket loop )
+    command: /usr/bin/kubeadm reset --force --ignore-preflight-errors=all --cri-socket={{ item }}
+    ignore_errors: yes
+    with_items:
+    - /var/run/dockershim.sock
+    - /var/run/crio/crio.sock
+    - /var/run/containerd/containerd.sock
+
   ### Cleaning full /etc/kubernetes/ ; Starting k8s 1.12 behaves better, at some point we will remove this step:
   - name: ensure old kubeadm config files were removed
     file: state=absent path={{ item }}
