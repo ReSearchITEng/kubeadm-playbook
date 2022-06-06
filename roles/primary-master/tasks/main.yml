@@ -69,7 +69,7 @@
   - pre_pull_k8s_images 
   #- DOCKER_IMAGES is not defined ## or images_repo is not defined
   - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
-  ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default ('False') | bool }}"
+  ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default ('True') | bool }}"
 
 - name: making sure there is an apiServer section under ClusterConfiguration
   set_fact:

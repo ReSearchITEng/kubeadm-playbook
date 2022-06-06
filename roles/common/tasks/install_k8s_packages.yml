@@ -74,6 +74,31 @@
   - socat
   when: statsocat.stat.exists is not defined or statsocat.stat.exists == False
 
+### tc (iptables-tc)
+- name: Ansible check /usr/sbin/tc exists
+  stat:
+    path: /usr/sbin/tc
+  register: stattc
+
+- name: Install tc/iptables-tc from centos/rhel/ubuntu repo
+  package: name={{ item }} state={{ package_state | default ('present') }}
+  #environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - iptables-tc
+  when:
+  - stattc.stat.exists is not defined or stattc.stat.exists == False
+  - ansible_os_family == "RedHat"
+
+- name: Install tc/iproute2 Ubuntu/Debian
+  package: name={{ item }} state={{ package_state | default ('present') }}
+  #environment: '{{ proxy_env | default ({}) }}'
+  with_items:
+  - iproute2
+  when:
+  - stattc.stat.exists is not defined or stattc.stat.exists == False
+  - ansible_os_family == "Debian"
+
+### ipset
 - name: Ansible check /usr/sbin/ipset exists
   stat:
     # ubuntu 18.04 /sbin/ipset, but we skip checking it there to simplify code. Keeping only ubuntu 20.04 and rhel based

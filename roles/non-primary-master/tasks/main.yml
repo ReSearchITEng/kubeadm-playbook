@@ -128,7 +128,7 @@
     - pre_pull_k8s_images 
     #- DOCKER_IMAGES is not defined ## or images_repo is not defined
     - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
-    ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default ('False') | bool }}"
+    ignore_errors: "{{ pre_pull_k8s_images_ignore_errors | default ('True') | bool }}"
 
   - name: "Make sure certs are ready for secondary master to join cluster: kubeadm init phase upload-certs --upload-certs"
     # Note: one cannot merge config from both config file anc cli. Only the config file will be used (when present)
