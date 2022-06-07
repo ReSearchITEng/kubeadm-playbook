@@ -28,7 +28,7 @@
     ## and that issue will be captured later in the flow.
 
   - name: when no python(2/3), install python3(Debian) python2(RedHat) for Ansible>=2.8 # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
-    raw: test -e /usr/bin/python || (apt -y update && apt install -y python3-minimal) || (yum install -y python2 python-simplejson)
+    raw: test -e /usr/bin/python3 || (apt -y update && apt install -y python3-minimal) || (yum install -y python3 python-simplejson)
     register: output
     changed_when: output.stdout != ""
     tags: always

@@ -132,7 +132,12 @@
       copy:
         content: |
           {
-            "storage-driver": "overlay2"
+            "storage-driver": "overlay2",
+             "exec-opts": ["native.cgroupdriver=systemd"],
+             "log-opts": {
+                "max-size": "1000m",
+                "max-file": "3"
+             },
           }
         dest: /etc/docker/daemon.json
         backup: yes
@@ -245,8 +250,8 @@
     - name: Make sure containerd sandbox_image does not pull img from outside to avoid proxy issues
       lineinfile:
         dest: /etc/containerd/config.toml
-        regexp: '^sandbox_image = "k8s.gcr.io/pause(.*)'
-        line: 'sandbox_image = "{{ images_repo | default ("k8s.gcr.io") }}/pause\1"'
+        regexp: '^(.*)sandbox_image = "k8s.gcr.io/pause(.*)'
+        line: '\1sandbox_image = "{{ images_repo | default ("k8s.gcr.io") }}/pause\2"'
       backrefs: yes
       notify:
       - Restart containerd
