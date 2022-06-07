@@ -258,6 +258,20 @@
       tags:
       - docker
 
+    - name: Make sure containerd snapshotter is the desired one
+      lineinfile:
+        dest: /etc/containerd/config.toml
+        regexp: '^(.*)snapshotter = .*$'
+        line: '\1snapshotter = "{{ containerd.snapshotter | default ("overlayfs") }}"'
+        backrefs: yes
+      when:
+      - containerd is defined
+      - containerd.snapshotter is defined
+      notify:
+      - Restart containerd
+      tags:
+      - docker
+
     when:
     - ansible_os_family == "Debian" or ( ansible_os_family == "RedHat" and old_docker is undefined )
     ## END of Debian/Ubuntu block
