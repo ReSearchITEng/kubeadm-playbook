@@ -22,8 +22,8 @@
         KUBECONFIG: /etc/kubernetes/admin.conf
       shell: 'kubectl taint nodes {{ result_primary_master_name.stdout_lines[0] }} {{ item }} --overwrite'
       with_items: #'{{ taints_master }}'
-      - 'node-role.kubernetes.io/master:NoSchedule-'
-      - 'node-role.kubernetes.io/master=:PreferNoSchedule'
+      - 'node-role.kubernetes.io/control-plane:NoSchedule-'
+      - 'node-role.kubernetes.io/control-plane=:PreferNoSchedule'
       - 'node-role.kubernetes.io/infra=:PreferNoSchedule'
       ignore_errors: yes
       tags:

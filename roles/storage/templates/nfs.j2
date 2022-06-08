@@ -108,9 +108,9 @@ spec:
     spec:
       serviceAccount: nfs-provisioner
       nodeSelector:
-        node-role.kubernetes.io/master: ""
+        node-role.kubernetes.io/control-plane: ""
       tolerations:
-        - key: "node-role.kubernetes.io/master"
+        - key: "node-role.kubernetes.io/control-plane"
           effect: NoSchedule
       containers:
         - name: nfs-provisioner

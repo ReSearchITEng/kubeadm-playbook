@@ -52,7 +52,7 @@
     - name: when cluster is one machine only, labeling it also as infra node
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
-      shell: 'kubectl label nodes -l="node-role.kubernetes.io/master=" "node-role.kubernetes.io/infra=" --overwrite'
+      shell: 'kubectl label nodes -l="node-role.kubernetes.io/control-plane=" "node-role.kubernetes.io/infra=" --overwrite'
       register: command_result
       changed_when: '"not labeled" not in command_result.stdout'
       ignore_errors: yes

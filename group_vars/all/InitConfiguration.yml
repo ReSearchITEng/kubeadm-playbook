@@ -22,6 +22,6 @@ InitConfiguration:
   #   name: <your_master_node_name>
     taints:
     - effect: NoSchedule
-      key: node-role.kubernetes.io/master
+      key: node-role.kubernetes.io/control-plane
     # kubeletExtraArgs:
     #   cgroupDriver: "cgroupfs"

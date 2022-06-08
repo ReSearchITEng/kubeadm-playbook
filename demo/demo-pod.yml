@@ -20,7 +20,7 @@ spec:
       - mountPath: "/usr/share/nginx/html"
         name: demo-storage
   nodeSelector:
-    node-role.kubernetes.io/master: ""
+    node-role.kubernetes.io/control-plane: ""
   tolerations:
-    - key: "node-role.kubernetes.io/master"
+    - key: "node-role.kubernetes.io/control-plane"
       effect: NoSchedule

@@ -161,20 +161,20 @@ iptables_setup: True # Default is True.
 #####
 ## TAINTS (for master) & uncordon
 ## NoExecute evicts on the spot. (while NoSchedule does not allow new pods); other option: PreferNoSchedule
-## FYI, by default, master has this taint: node-role.kubernetes.io/master:NoSchedule
-## If you want to be able to schedule pods on the master, either set master_uncordon:true  (prefered option) or via taints section: uncomment 'node-role.kubernetes.io/master:NoSchedule-'
+## FYI, by default, master has this taint: node-role.kubernetes.io/control-plane:NoSchedule
+## If you want to be able to schedule pods on the master, either set master_uncordon:true  (prefered option) or via taints section: uncomment 'node-role.kubernetes.io/control-plane:NoSchedule-'
 ## It's useful if it's a single-machine Kubernetes cluster for development (replacing minikube)
 ## To see taints, use: kubectl describe nodes
 
 #taints_master:
-#- 'dedicated=master:NoExecute'                 # Force eviction of pods from master
-#- 'dedicated=master:PreferNoSchedule'          # Safety net
+#- 'dedicated=control-plane:NoExecute'                 # Force eviction of pods from master
+#- 'dedicated=control-plane:PreferNoSchedule'          # Safety net
 #- 'dedicated:NoExecute-'                       # Puts the previous PreferNoSchedule into action - step1
-#- 'node-role.kubernetes.io/master:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
+#- 'node-role.kubernetes.io/control-plane:NoSchedule-' # Puts the previous PreferNoSchedule into action - step2
 #####
 
 taint_for_label:
-- label: 'node-role.kubernetes.io/master='
+- label: 'node-role.kubernetes.io/control-plane='
   taint: 'NoSchedule'
 - label: 'node-role.kubernetes.io/infra='
   taint: 'PreferNoSchedule'
