@@ -21,7 +21,7 @@ KubeletConfiguration:
   #   webhook:
   #     cacheAuthorizedTTL: 5m0s
   #     cacheUnauthorizedTTL: 30s
-  # cgroupDriver: cgroupfs
+  cgroupDriver: systemd #cgroupfs  # systemd should be the new default with 1.24+
   # cgroupsPerQOS: true
   # clusterDNS:
   # - 10.96.0.10
@@ -52,8 +52,8 @@ KubeletConfiguration:
   # healthzBindAddress: 127.0.0.1
   # healthzPort: 10248
   # httpCheckFrequency: 20s
-  # imageGCHighThresholdPercent: 85
-  # imageGCLowThresholdPercent: 80
+  imageGCHighThresholdPercent: 70
+  imageGCLowThresholdPercent: 60
   # imageMinimumGCAge: 2m0s
   # iptablesDropBit: 15
   # iptablesMasqueradeBit: 14
