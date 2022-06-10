@@ -80,11 +80,11 @@
     path: /usr/sbin/tc
   register: stattc
 
-- name: Install tc/iptables-tc from centos/rhel/ubuntu repo
+- name: Install tc/iproute-tc from centos/rhel/ubuntu repo
   package: name={{ item }} state={{ package_state | default ('present') }}
   #environment: '{{ proxy_env | default ({}) }}'
   with_items:
-  - iptables-tc
+  - iproute-tc
   when:
   - stattc.stat.exists is not defined or stattc.stat.exists == False
   - ansible_os_family == "RedHat"
