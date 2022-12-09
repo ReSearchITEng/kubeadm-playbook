@@ -23,7 +23,7 @@ ClusterConfiguration:
   #       cipher-suites: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
   #     dataDir: /var/lib/etcd
   #     image: ""
-  imageRepository: '{{ images_repo | default ("k8s.gcr.io") }}'
+  imageRepository: '{{ images_repo | default ("registry.k8s.io") }}'
   kind: ClusterConfiguration
   kubernetesVersion: "v{{ KUBERNETES_VERSION }}"
   # dns:

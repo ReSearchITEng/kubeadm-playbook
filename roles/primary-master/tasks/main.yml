@@ -20,7 +20,7 @@
 - name: Pull master images on master - when DOCKER_IMAGES is defined
   #TODO: to be removed/replaced in 1.11 with the kubeadm pull command (kubeadm config images pull --kubernetes-version v11.0.3 ), but better remove, as kubeadm pre-flight does the pull now anyway...
 #  #command: /usr/bin/docker pull "{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
-#  #command: /usr/bin/docker pull "{{ images_repo |default ('k8s.gcr.io') }}/{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
+#  #command: /usr/bin/docker pull "{{ images_repo |default ('registry.k8s.io') }}/{{ item }}:{{ ClusterConfiguration.kubernetesVersion | default ('latest') }}"
   command: /usr/bin/docker pull "{{ item.name }}:{{ item.tag }}"
   with_items: "{{ DOCKER_IMAGES }}"
   tags:
@@ -51,15 +51,15 @@
   - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
 
 - name: Prepull coredns image kubeadm_coredns_image_issue_2525_PULL
-  command: "docker pull {{ kubeadm_coredns_image_issue_2525_origimg.stdout_lines[0] | regex_replace ('k8s.gcr.io',images_repo |default ('k8s.gcr.io')) | regex_replace ('/coredns/','/' ) }}"
+  command: "docker pull {{ kubeadm_coredns_image_issue_2525_origimg.stdout_lines[0] | regex_replace ('registry.k8s.io',images_repo |default ('registry.k8s.io')) | regex_replace ('/coredns/','/' ) }}"
   ignore_errors: yes
   when:
   - pre_pull_k8s_images is defined
   - pre_pull_k8s_images
   - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
 
-- name: Pull images on master (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io ) - old way
-  command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
+- name: Pull images on master (if defined, it uses images_repo; otherwise, defaults to registry.k8s.io ) - old way
+  command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('registry.k8s.io') }}"
   tags:
   - prepull_images
   register: command_result
@@ -168,8 +168,8 @@
   when:
   - inventory_hostname in groups['primary-master']
 
-- name: Pull images on master using /etc/kubernetes/kubeadm-master.conf (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io )
-  command: "kubeadm config images pull --config /etc/kubernetes/kubeadm-master.conf --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
+- name: Pull images on master using /etc/kubernetes/kubeadm-master.conf (if defined, it uses images_repo; otherwise, defaults to registry.k8s.io )
+  command: "kubeadm config images pull --config /etc/kubernetes/kubeadm-master.conf --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('registry.k8s.io') }}"
   tags:
   - prepull_images
   register: command_result

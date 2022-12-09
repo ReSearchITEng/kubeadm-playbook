@@ -1,7 +1,7 @@
 #https://pkg.go.dev/k8s.io/kubelet/config/v1beta1?tab=doc#KubeletConfiguration
 #https://pkg.go.dev/k8s.io/kubernetes/pkg/kubelet/apis/config/v1beta1?tab=doc#KubeletConfiguration
 #check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/pkg/kubelet/apis/config?tab=subdirectories 
-#                           https://pkg.go.dev/k8s.io/kubelet/config?tab=subdirectories
+#                           https://pkg.go.dev/k8s.io/kubelet/config #?tab=subdirectories
 KubeletConfiguration:
   #nodeRegistration:
   #  kubeletExtraArgs:

@@ -1,5 +1,5 @@
 #https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2?tab=doc#InitConfiguration
-#check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm?tab=subdirectories
+#check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis #/kubeadm?tab=subdirectories
 InitConfiguration:
   kind: InitConfiguration
   localAPIEndpoint:

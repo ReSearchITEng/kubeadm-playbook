@@ -110,7 +110,7 @@
     - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
 
   - name: Prepull coredns image kubeadm_coredns_image_issue_2525_PULL
-    command: "docker pull {{ kubeadm_coredns_image_issue_2525_origimg.stdout_lines[0] | regex_replace ('k8s.gcr.io',images_repo |default ('k8s.gcr.io')) | regex_replace ('/coredns/','/' ) }}"
+    command: "docker pull {{ kubeadm_coredns_image_issue_2525_origimg.stdout_lines[0] | regex_replace ('registry.k8s.io',images_repo |default ('registry.k8s.io')) | regex_replace ('/coredns/','/' ) }}"
     ignore_errors: yes
     when:
     - pre_pull_k8s_images is defined
@@ -118,7 +118,7 @@
     - ClusterConfiguration.kubernetesVersion is version_compare ( 'v1.11', '>=' )
 
   - name: Pull images on master (from internet when images_repo is not defined) - old way
-    command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
+    command: "kubeadm config images pull --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('registry.k8s.io') }}"
     tags:
     - prepull_images
     register: command_result
@@ -171,8 +171,8 @@
       ---
       {{ KubeletConfiguration | to_nice_yaml }}
 
-- name: Pull images on master using /etc/kubernetes/kubeadm-master.conf (if defined, it uses images_repo; otherwise, defaults to k8s.gcr.io )
-  command: "kubeadm config images pull --config /etc/kubernetes/kubeadm-node.conf --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('k8s.gcr.io') }}"
+- name: Pull images on master using /etc/kubernetes/kubeadm-master.conf (if defined, it uses images_repo; otherwise, defaults to registry.k8s.io )
+  command: "kubeadm config images pull --config /etc/kubernetes/kubeadm-node.conf --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('registry.k8s.io') }}"
   tags:
   - prepull_images
   register: command_result

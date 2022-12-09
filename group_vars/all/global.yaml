@@ -14,7 +14,7 @@
 #  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,.localdomain,.internal,127.0.1.1,127.254.254.254,169.254.169.254,169.254.169.253,169.254.169.123,/var/run/docker.sock,.sock,sock,.socket'
 #####
 
-KUBERNETES_VERSION: "1.24.1"
+KUBERNETES_VERSION: "1.25.4"
 # Software versions (used by installation, package manager, image pull, etc. )
 
 KEEPALIVED_VERSION: "1.3.5"
@@ -49,7 +49,7 @@ wait_charts_deploy_sanity: false #When defined, it will wait till all helm chart
 ########## Image pre-pull on MASTERS (only)
 ## Usually pre-pull not required, but there is this option here.
 ## pre-pull is now done using kubeadm's pre-pull feature
-## it will pre-pull from either images_repo defined below; if not defined, from k8s.gcr.io
+## it will pre-pull from either images_repo defined below; if not defined, from registry.k8s.io
 ####
 pre_pull_k8s_images: True
 # pre_pull_k8s_images_ignore_errors: False
@@ -57,8 +57,8 @@ pre_pull_k8s_images: True
 
 ####
 ## Docker images repo
-## If you have your internal docker registry which proxies them (e.g. a nexus3 with docker proxy mirroring at least: k8s.gcr.io,docker.io,quay.io), replace the value below.
-# images_repo: "docker-regisptry-proxy.corp.example.com"
+## If you have your internal docker registry which proxies them (e.g. a nexus3 with docker proxy mirroring at least: registry.k8s.io,docker.io,quay.io), replace the value below.
+# images_repo: "docker-registry-proxy.corp.example.com"
 #####
 
 ## Images for prefetching when pre_pull_k8s_images is true and images_repo is defined

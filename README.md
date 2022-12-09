@@ -26,7 +26,7 @@ We felt that what was missing was getting things before and after the cluster in
 - generates any cluster size, from 1 machine cluster (dev env) to productions sizes: all controlled by the provided inventory.
 - scale UP or DOWN post deployment (e.g. start small with 1 vm, then add nodes, then make multi-master) -> all without downtime thanks to kubeadm.
 - Master HA & ingress setups accepts either: VIPs (using keepalived) or Hardware LB (when available);
-- enterprise-friendly: fully tested with http_proxy and private docker registry (usually private nexus registry proxy registry of docker.io, quay.io, k8s.gcr.io, etc; private mirror hostname&port fully configurable in this project)
+- enterprise-friendly: fully tested with http_proxy and private docker registry (usually private nexus registry proxy registry of docker.io, quay.io, registry.k8s.io, etc; private mirror hostname&port fully configurable in this project)
 - actively tested on both Ubuntu/Debian and CentOS/RHEL. 
 - any helm chart can be configured/added/removed via addons.yml
 (more detailed comparison with other solutions towards the end of this readme) 
@@ -56,7 +56,7 @@ The project is for those who want to create&recreate k8s cluster using the offic
 - dashboard 2.0 (via helm chart)
 - metrics-server (via helm chart)
 - supports corporate http proxy
-- supports (corporate/intranet) docker registry mirrors (which should mirror: k8s.gcr.io,docker.io,quay.io)
+- supports (corporate/intranet) docker registry mirrors (which should mirror: registry.k8s.io,docker.io,quay.io)
 - modular, clean code, supporting multiple activies by using ansible tags (e.g. add/reset a subgroup of nodes).
 - optionally help configuring container engine (e.g. docker)
 
