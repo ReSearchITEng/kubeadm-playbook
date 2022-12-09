@@ -5,3 +5,5 @@
 ansible.cfg
 ssh_config*
 /hosts
+/group_vars/all/tmp.yaml
+/group_vars/all/temp.yaml
