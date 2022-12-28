@@ -171,6 +171,18 @@ The below playbooks are subsets of the site.yml:
 - only_nodes_only_install.yml -> runs only install actions only on nodes in the inventory (nothing on masters)
 - only_secondaryMasters_only_install.yml -> runs install actions only on secondary-masters present in the inventory (and nothing on primary-masters or nodes)
 
+## Simplified config
+group_vars/all/temp.yaml
+```shell
+containerd:
+  ## if FS used by containerd is zfs (e.g. Ubuntu 20.04+)
+  snapshotter: zfs
+
+## Override version
+KUBERNETES_VERSION_CUSTOM: "1.26.0"
+CORP_DNS_DOMAIN: "example.com"
+```
+
 ## Check the installation of dashboard
 The output should have already presented the required info (or run again: `ansible-playbook -i hosts site.yml --tags cluster_sanity`).
 The Dashboard is set on the master host, and, additionally, if it was set, also at something like: http://dashboard.cloud.corp.example.com  (depending on the configured selected domain entry), and if the wildcard DNS was properly set up *.k8s.cloud.corp.example.com pointing to master machine public IP).
