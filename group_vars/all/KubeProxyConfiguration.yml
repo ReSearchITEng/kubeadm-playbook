@@ -28,7 +28,8 @@ KubeProxyConfiguration:
   #   masqueradeBit: 14
   #   minSyncPeriod: 0s
   #   syncPeriod: 30s
-  # ipvs:
+  ipvs:
+    strictARP: true
   #   excludeCIDRs: null
   #   minSyncPeriod: 0s
   #   scheduler: ""

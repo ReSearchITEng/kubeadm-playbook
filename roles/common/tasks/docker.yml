@@ -240,7 +240,7 @@
     #   - docker
 
     - name: "sanity - make sure master is up (sometimes the above condition is empty as master is in fact not working..."
-       shell: "sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null || mkdir -p /etc/containerd && sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null"
+      shell: "sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null || mkdir -p /etc/containerd && sudo containerd config default | sudo tee /etc/containerd/config.toml > /dev/null"
       notify:
       - Restart containerd
       tags:

@@ -31,7 +31,7 @@
       description: Kubernetes
       baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
       gpgcheck: 0
-    when: ansible_os_family == "RedHat"
+    when: ansible_os_family == "RedHat" and HOST_ARCH == "amd64"
 
   - name: add proxy for the repo
     ini_file:

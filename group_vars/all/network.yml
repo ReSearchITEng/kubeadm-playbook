@@ -46,8 +46,10 @@ custom:
 #Define network for K8S services 
 SERVICE_NETWORK_CIDR: 10.96.0.0/12
 
-# Select pod Network. One may add mode simply by adding the deployment url and pod netwrod cidr it needs
-podNetwork: 'flannel'
+## Select pod Network. One may add mode simply by adding the deployment url and pod netwrod cidr it needs
+## This section is obsolete. By default calico is installed using its helm charts (see addons.yaml)
+#podNetwork: 'calico'
+#'flannel'
 #'weavenet'
 #'calico'
 

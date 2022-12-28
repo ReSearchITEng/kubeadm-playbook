@@ -18,7 +18,7 @@ InitConfiguration:
   #   criSocket: unix:///var/run/dockershim.sock
   #   criSocket: unix:///var/run/crio/crio.sock
   #   criSocket: unix:///run/cri-dockerd.sock  # https://github.com/Mirantis/cri-dockerd
-    criSocket: unix:///var/run/containerd/containerd.sock
+    criSocket: unix:///run/cri-dockerd.sock
   #   name: <your_master_node_name>
     taints:
     - effect: NoSchedule
