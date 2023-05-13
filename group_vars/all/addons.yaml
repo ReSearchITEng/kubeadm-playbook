@@ -146,7 +146,7 @@ helm:
 #####
 #
 
-    - { name: nfs-server-provisioner, repo: nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner, namespace: kube-system, options: '--set image.repository="{{ images_repo | default ("registry.k8s.io") }}/sig-storage/nfs-provisioner",persistence.enabled=true,persistence.size=500Gi,persistence.storageClass="base4nfs-ganesha-server-and-external-provisioner",storageClass.defaultClass="true",nodeSelector."kubernetes\\.io/hostname"=$(hostname -s | tr '[A-Z]' '[a-z]')' }
+    - { name: nfs-server-provisioner, repo: nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner, namespace: kube-system, options: '--set image.repository="{{ images_repo | default ("registry.k8s.io") }}/sig-storage/nfs-provisioner",persistence.enabled=true,persistence.size=500Gi,persistence.storageClass="base4nfs-ganesha-server-and-external-provisioner",storageClass.defaultClass="true"} #,nodeSelector."kubernetes\\.io/hostname"=$(hostname -s | tr '[A-Z]' '[a-z]')' }
 
 ##############################
 ## MIN.IO S3 Object STORAGE ##
