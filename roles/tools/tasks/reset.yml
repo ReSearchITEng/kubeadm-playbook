@@ -45,6 +45,7 @@
     - /var/run/dockershim.sock
     - /var/run/crio/crio.sock
     - /var/run/containerd/containerd.sock
+    - /var/run/cri-dockerd.sock
 
   ### Cleaning full /etc/kubernetes/ ; Starting k8s 1.12 behaves better, at some point we will remove this step:
   - name: ensure old kubeadm config files were removed
