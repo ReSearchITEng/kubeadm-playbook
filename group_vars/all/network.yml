@@ -16,7 +16,7 @@ custom:
     # "lb" #Choose lb when you have a MasterHA LB which load-balances across all your masters, on api port (default 6443) 
     #      # Make sure your LB is setup to forward requests to a specific master ONLY when api port /healthz on that host returns status 200 
     #masterha_type: "vip" # or "lb"
-    masterha_ip: "10.1.2.3" #| default('') }}"  # Important when you have MasterHA;  # IP of either your LB or the VIP to be used.
+    masterha_ip: "192.0.0.171" #| default('') }}"  # Important when you have MasterHA;  # IP of either your LB or the VIP to be used.
     ## masterha_fqdn is usually the dns name of masterha_ip above. (We cannot get it automatically in ansible...)
     ## This value is important in order to set apiServerCertSANs in the certs correctly
     masterha_fqdn: "master-{{ CLUSTER_NAME }}.{{ CORP_DNS_DOMAIN | default ('corp.example.com') }}"  # Important when you have MasterHA, in order to set apiServerCertSANs correctly
