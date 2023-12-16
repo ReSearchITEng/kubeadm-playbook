@@ -94,7 +94,7 @@
       pause: seconds=20
       changed_when: false
 
-    ignore_errors: yes # so it will work even when the netw is not set to calido
+    ignore_errors: true # so it will work even when the netw is not set to calido
     #TBD when: network is defined and is calico...
 
   - name: helm charts/packages deployment - now for those that do have namespace defined (most of the charts)

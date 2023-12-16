@@ -16,15 +16,16 @@
 - block:
   # Debian based (includes Ubuntu)
   - apt_key:
-      url: "https://{{ PKGS_K8S_IO_CORE }}:/stable:/v{k8s_major}.{k8s_minor}/deb/Release.key"
+      url: "{{ PKGS_K8S_IO_CORE }}:/stable:/v{{k8s_major}}.{{k8s_minor}}/deb/Release.key"
       state: present
     environment: '{{ proxy_env | default ({}) }}'
     when: ansible_os_family == "Debian"
 
   - apt_repository:
-      repo: deb {{ PKGS_K8S_IO_CORE }}:/stable:/v{k8s_major}.{k8s_minor}/deb/ /
+      repo: "deb {{ PKGS_K8S_IO_CORE }}:/stable:/v{{k8s_major}}.{{k8s_minor}}/deb/ /"
       state: present
       #filename: 'kubernetes.list'
+      #if filename not defined, looks filename generated like: pkgs_k8s_io_core_stable_v1_29_deb.list
       update_cache: yes
     environment: '{{ proxy_env | default ({}) }}'
     when: ansible_os_family == "Debian"
@@ -34,7 +35,7 @@
     yum_repository:
       name: kubernetes
       description: Kubernetes
-      baseurl: https://{{ PKGS_K8S_IO_CORE }}:/stable:/v{k8s_major}.{k8s_minor}/rpm/
+      baseurl: "{{ PKGS_K8S_IO_CORE }}:/stable:/v{{k8s_major}}.{{k8s_minor}}/rpm/"
       #http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
       gpgcheck: 0 # to allow internal repos also
     when: ansible_os_family == "RedHat" # and HOST_ARCH == "amd64"
@@ -121,7 +122,7 @@
 ### unhold (debian)
 - name: unhold before upgrade/install packages (when on debian)
   shell: apt-mark unhold {{ item }}
-  ignore_errors: yes
+  ignore_errors: true
   with_items:
   - kubeadm
   - kubelet

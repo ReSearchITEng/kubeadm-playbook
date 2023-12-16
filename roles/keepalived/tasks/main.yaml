@@ -21,7 +21,7 @@
   block:
   - name: cleanup previous keepalived
     shell: docker rm -f keepalived
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: Use keepalived from docker image
     shell: docker run --restart Always --name keepalived --env KEEPALIVED_INTERFACE=$(ip route | grep default | head -1 | cut -d' ' -f5) --env KEEPALIVED_PASSWORD='d0cker' --cap-add=NET_ADMIN --net=host --volume /etc/keepalived/keepalived.conf:/container/service/keepalived/assets/keepalived.conf --volume /etc/keepalived/check_apiserver.sh:/etc/keepalived/check_apiserver.sh --detach {{ masterha_vip_keepalived_docker_image | default ("osixia/keepalived:2.0.17") }} --copy-service # --loglevel debug

@@ -15,7 +15,7 @@
     environment: '{{env_kc}}'
     command: 'helm delete --purge rook-operator '
     when: rook.operator_url is not defined
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: clean install rook operator
     environment: '{{env_kc}}'
@@ -36,7 +36,7 @@
     - "sc rook-block"
     tags:
     - reset
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: clean install rook operator
     environment: '{{env_kc}}'
@@ -51,7 +51,7 @@
     command: /usr/bin/kubectl delete -n {{ item }} secret rook-admin
     when: rook.allowed_consumer_namespaces is defined
     with_items: "{{ rook.allowed_consumer_namespaces }}"
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: rook post cleanup/reset sanity
     environment:

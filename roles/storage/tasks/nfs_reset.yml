@@ -22,7 +22,7 @@
     tags:
     - reset
     - nfs_storage
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: wipe nfs host_path
     file: path={{nfs_k8s.host_path}} state=absent
@@ -30,5 +30,5 @@
     tags:
     - reset
     - nfs_storage
-    ignore_errors: yes
+    ignore_errors: true
 

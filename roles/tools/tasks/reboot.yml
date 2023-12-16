@@ -2,7 +2,7 @@
   shell: sleep 2 && /sbin/shutdown -r now
   async: 1
   poll: 0
-  ignore_errors: yes
+  ignore_errors: true
   when: allow_restart | default ( false )
 
 #- name: Pause till machine is up again

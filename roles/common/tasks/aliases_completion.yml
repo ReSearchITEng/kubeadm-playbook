@@ -117,7 +117,7 @@
       line: "[[ -n $PS1 ]] && compdef __start_helm {{ item }}"
       state: present
       create: "{{ aliases.file_create_if_missing | default ('no') }}"
-    ignore_errors: yes
+    ignore_errors: true
     with_items: "{{ aliases.helm_complete_also_aliases | default ([]) }}"
     when:
     - aliases.helm_complete_also_aliases is defined
@@ -126,4 +126,4 @@
   - aliases
   when:
   - aliases is defined
-  ignore_errors: yes
+  ignore_errors: true

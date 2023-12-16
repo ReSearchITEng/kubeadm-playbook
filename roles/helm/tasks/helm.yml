@@ -32,7 +32,7 @@
     - helm_version_result.stdout | length > 0
     #when: helm_version_result.stdout_lines[0] == helm.helm_version
 
-  ignore_errors: yes
+  ignore_errors: true
   tags:
   - helm
 
@@ -78,7 +78,7 @@
 #    with_items:
 #    - '{{ helm.repos | default("") }}'
 #    when: helm is defined and helm.repos is defined
-#    ignore_errors: yes
+#    ignore_errors: true
 
   - name: helm repo add 
     environment: '{{env_kc}}'

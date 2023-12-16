@@ -10,11 +10,11 @@
 #  - name: Copy weave net script
 #    environment: '{{ proxy_env | default ({}) }}'
 #    get_url: url=https://raw.githubusercontent.com/weaveworks/weave/master/weave dest=/usr/local/bin/weave mode=u+rxw force=yes
-#    ignore_errors: yes  # Currently there is no way to check if the user is using weave
+#    ignore_errors: true  # Currently there is no way to check if the user is using weave
 
 # This is also part of the reset.yml
   - name: Reset weave
     shell: /usr/local/bin/weave reset
-    ignore_errors: yes
+    ignore_errors: true
 
 

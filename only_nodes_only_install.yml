@@ -17,8 +17,8 @@
     - ansible_version.full is version_compare('2.8', '<')
     - ( ansible_python_interpreter is not defined or ansible_python_interpreter == "/usr/bin/python" )
     # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
-    ignore_errors: yes
-    ## reason for ignore_errors: yes
+    ignore_errors: true
+    ## reason for ignore_errors: true
     ## "version_compare" was replaced with "version" starting ansible 2.5;
     ## CentOS/RHEL 7.x use ansible 2.4, so not able to grasp what version_compare is.
     ## Ansible 2.9 removes the version_compare and does not recognize it any longer.
@@ -35,8 +35,8 @@
     when:
     - ansible_version.full is version('2.8', '>=') or ( ansible_python_interpreter is defined and ansible_python_interpreter == "/usr/bin/python3" )
     # ansible_os_family conds. cannot be used as this is before gathering facts (where ansible is required)
-    ignore_errors: yes
-    ## reason for ignore_errors: yes
+    ignore_errors: true
+    ## reason for ignore_errors: true
     ## is similar to the one explained above (complements it)
 
   - setup: # aka gather_facts

@@ -13,14 +13,14 @@
   - name: get all pvcs
     shell: kubectl get --all-namespaces pvc --no-headers -- | awk '{print "--namespace " $1 " pvc/" $2}'
     register: command_results
-    ignore_errors: yes
+    ignore_errors: true
     changed_when: false
 
   - name: delete all pvcs
     environment:
       KUBECONFIG: /etc/kubernetes/admin.conf
     command: kubectl delete {{ item }}
-    ignore_errors: yes
+    ignore_errors: true
     with_items: "{{command_results.stdout_lines}}"
 
   - name: wait till all pvcs are removed/cleaned
@@ -29,7 +29,7 @@
     until: command_result.stdout == ""
     retries: 10
     delay: 3
-    ignore_errors: yes
+    ignore_errors: true
     changed_when: false
 
   - name: wait till all pvs are removed/cleaned
@@ -38,7 +38,7 @@
     until: command_result.stdout == ""
     retries: "{{ RETRIES | default(40) }}"
     delay: 3
-    ignore_errors: yes
+    ignore_errors: true
     changed_when: false
 
   when: storage.delete_pvs is defined and storage.delete_pvs

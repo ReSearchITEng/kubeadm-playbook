@@ -7,7 +7,7 @@
   - check_docker
   - docker
   changed_when: false
-  ignore_errors: yes
+  ignore_errors: true
 
 - block:
   - name: CentOS/RedHat docker install and setup

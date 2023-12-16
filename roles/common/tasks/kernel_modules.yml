@@ -29,7 +29,7 @@
   modprobe: name={{item}} state=present
   with_items:
   - bridge
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: every reboot load bridge kernel modules
   copy:
@@ -42,7 +42,7 @@
   with_items:
   - br_netfilter
   register: br_netfilter_load_result
-  ignore_errors: yes # because in some old kernels br_netfilter does not exist and bridge is enough
+  ignore_errors: true # because in some old kernels br_netfilter does not exist and bridge is enough
 
 - name: every reboot load bridge and br_netfilter kernel modules (for k8s)
   # Note: br_netfilter is available only in the newer kernel versions

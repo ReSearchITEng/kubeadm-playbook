@@ -16,7 +16,7 @@
     tags:
     - kubelet
     - uninstall
-    ignore_errors: yes
+    ignore_errors: true
     when: 
     - groups['masters'] | length > 1 
     - ( custom.networking.masterha_type | default('vip') ) == 'vip'
@@ -24,28 +24,29 @@
 # We had to remove it, as it blocks the flow. It also fetches docker.io images and in some setups there is no access to or fails due to limits on docker hub...
 #  - name: Reset weave network # if it was used
 #    shell: /usr/local/bin/weave reset --force
-#    ignore_errors: yes
-  
+#    ignore_errors: true
+
   - name: remove pods NFS mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     shell: umount -f $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~nfs' | awk '{print $3}')
     tags:
     - umount
     - nfs_reset
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: Reset cluster (kubeadm reset --force --ignore-preflight-errors=all )
     command: /usr/bin/kubeadm reset --force --ignore-preflight-errors=all
-    ignore_errors: yes
+    ignore_errors: true
     # TODO: if cluster is installed, but kubedm is no longer available on the machine, we will not have a reset of cluster...
 
   - name: Reset cluster (kubeadm reset --force --ignore-preflight-errors=all using --cri-socket loop )
-    command: /usr/bin/kubeadm reset --force --ignore-preflight-errors=all --cri-socket={{ item }}
-    ignore_errors: yes
-    with_items:
-    - /var/run/dockershim.sock
-    - /var/run/crio/crio.sock
-    - /var/run/containerd/containerd.sock
-    - /var/run/cri-dockerd.sock
+    # command: /usr/bin/kubeadm reset --force --ignore-preflight-errors=all --cri-socket={{ item }}
+    command: /usr/bin/kubeadm reset --force --ignore-preflight-errors=all --cri-socket={{ InitConfiguration.nodeRegistration.criSocket }}
+    ignore_errors: true
+    # with_items:
+    # - /var/run/dockershim.sock
+    # - /var/run/crio/crio.sock
+    # - /var/run/containerd/containerd.sock
+    # - /var/run/cri-dockerd.sock
 
   ### Cleaning full /etc/kubernetes/ ; Starting k8s 1.12 behaves better, at some point we will remove this step:
   - name: ensure old kubeadm config files were removed
@@ -77,7 +78,7 @@
 
   - name: Reset cluster (kubeadm reset --force) # starting 1.14
     command: /usr/bin/kubeadm reset --force --ignore-preflight-errors=all
-    ignore_errors: yes
+    ignore_errors: true
     # TODO: if cluster is installed, but kubedm is no longer available on the machine, we will not have a reset of cluster...
 
   - name: stop kubelet and etcd for cleanup activities
@@ -88,11 +89,11 @@
     tags:
     - kubelet
     - uninstall
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: unhold before reinstall packages
     shell: apt-mark unhold {{ item }}
-    ignore_errors: yes
+    ignore_errors: true
     with_items:
     - kubeadm
     - kubelet
@@ -126,14 +127,14 @@
     tags:
     - kubelet
     - uninstall
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: remove pods mount leftovers; Note you have to collect them from the remote storage (e.g. vsphere datastore) also
     shell: umount -f $(mount | grep '/kubelet/pods/' | grep '/volumes/kubernetes.io~' | awk '{print $3}')
     tags:
     - kubelet
     - uninstall
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: docker network prune -f
     shell: 'docker network prune -f'
@@ -141,20 +142,20 @@
   #https://github.com/kubernetes/kubernetes/issues/39557
   - name: cni0/cbr0 IP alloction issue
     shell: 'rm -rf /var/lib/cni/ /var/lib/kubelet/* /etc/cni/ ; ip link delete cni0; ip link delete cbr0 ; ip link delete flannel.1; ip link delete weave'
-    ignore_errors: yes
+    ignore_errors: true
     tags:
     - uninstall
     
   - name: ipvsadm clear
     shell: 'ipvsadm --clear'
-    ignore_errors: yes
+    ignore_errors: true
     tags:
     - uninstall    
 
   - name: Reset iptables rules # THIS TASK SHOULD BE REMOVED, is not maintained
     shell: iptables-save | awk '/^[*]/ { print $1 } /^:[A-Z]+ [^-]/ { print $1 " ACCEPT" ; } /COMMIT/ { print $0; }' | iptables-restore
     when: iptables_reset is defined and iptables_reset
-    ignore_errors: yes
+    ignore_errors: true
     tags:
     - uninstall
 
@@ -166,7 +167,7 @@
   #  tags:
   #  - kubelet
   #  - uninstall
-  #  ignore_errors: yes
+  #  ignore_errors: true
 
   - name: Remove /etc/systemd/system/kubelet.service.d/20-etcd-service-manager.conf if present from HA etcd setup time (in MasterHA)
     file: 

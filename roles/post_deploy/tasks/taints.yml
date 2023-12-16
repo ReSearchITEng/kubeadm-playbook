@@ -25,7 +25,7 @@
       - 'node-role.kubernetes.io/control-plane:NoSchedule-'
       - 'node-role.kubernetes.io/control-plane=:PreferNoSchedule'
       - 'node-role.kubernetes.io/infra=:PreferNoSchedule'
-      ignore_errors: yes
+      ignore_errors: true
       tags:
       - taints
     when:

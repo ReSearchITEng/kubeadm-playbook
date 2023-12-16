@@ -21,7 +21,7 @@
     environment: '{{env_kc}}'
     shell: helm list | tail -n +2 | awk '{print $1}'
     register: command_results
-    ignore_errors: yes
+    ignore_errors: true
     changed_when: false
     tags:
     - helm_purge
@@ -30,7 +30,7 @@
     environment: '{{env_kc}}'
     command: helm delete --purge {{ item }}
     with_items: "{{ command_results.stdout_lines }}"
-    ignore_errors: yes
+    ignore_errors: true
     tags:
     - helm_purge
 
@@ -42,27 +42,27 @@
     retries: 20
     delay: 3
     changed_when: false
-    ignore_errors: yes
+    ignore_errors: true
     tags:
     - helm_purge
 
   - name: helm reset - remove/cleanup
     environment: '{{env_kc}}'
     shell: ( helm reset --force --remove-helm-home --tiller-connection-timeout 30 || true ) && sleep 2 && ( kubectl --namespace=kube-system delete --cascade=true --now=true --wait=true --ignore-not-found=true deployment tiller-deploy || true ) && ( kubectl delete service --namespace=kube-system tiller-deploy  || true ) && (  kubectl delete clusterrolebinding tiller  || true ) && (  kubectl delete --namespace=kube-system sa tiller )
-    ignore_errors: yes 
+    ignore_errors: true 
 
   - name: helm reset - list all k8s resources with tiller-deploy in their name
     environment: '{{env_kc}}'
     shell: kubectl --namespace=kube-system get all --no-headers | grep tiller-deploy | awk '{print $1}'
     register: command_results
-    ignore_errors: yes
+    ignore_errors: true
     changed_when: false
 
   - name: helm reset - delete all k8s resources with tiller-deploy in their name
     environment: '{{env_kc}}'
     command: kubectl --namespace=kube-system delete --cascade=true --now=true --wait=true --ignore-not-found=true {{ item }}
     with_items: "{{ command_results.stdout_lines }}"
-    ignore_errors: yes
+    ignore_errors: true
     tags:
     - helm_purge
 

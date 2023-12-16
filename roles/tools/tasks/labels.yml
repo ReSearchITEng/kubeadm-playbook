@@ -17,7 +17,7 @@
     shell: kubectl label nodes {{ inventory_hostname_short }} {{label | default ("node-role.kubernetes.io/compute=") }} --overwrite
     register: command_result
     changed_when: '"not labeled" not in command_result.stdout'
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: labeling using ansible_fqdn - {{ inventory_hostname }} - (this or above or below will end with error)
     delegate_to: "{{groups['primary-master'][0]}}"
@@ -26,7 +26,7 @@
     shell: kubectl label nodes {{ inventory_hostname }} {{label | default ("node-role.kubernetes.io/compute=") }} --overwrite
     register: command_result
     changed_when: '"not labeled" not in command_result.stdout'
-    ignore_errors: yes
+    ignore_errors: true
 
   - name: labeling using ansible_fqdn - {{ ansible_fqdn }} - (this or one of the above 2 will end with error)
     delegate_to: "{{groups['primary-master'][0]}}"
@@ -35,7 +35,7 @@
     shell: kubectl label nodes {{ ansible_fqdn }} {{label | default ("node-role.kubernetes.io/compute=") }} --overwrite
     register: command_result
     changed_when: '"not labeled" not in command_result.stdout'
-    ignore_errors: yes
+    ignore_errors: true
   when:
   - inventory_hostname not in groups['masters']
   tags:
@@ -55,7 +55,7 @@
       shell: 'kubectl label nodes -l="node-role.kubernetes.io/control-plane=" "node-role.kubernetes.io/infra=" --overwrite'
       register: command_result
       changed_when: '"not labeled" not in command_result.stdout'
-      ignore_errors: yes
+      ignore_errors: true
   when:
   - groups['all'] | length == 1
   tags:
