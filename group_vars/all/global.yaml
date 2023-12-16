@@ -14,7 +14,7 @@
 #  no_proxy: '127.0.0.1,localhost,.example.com,.svc,.local,.localdomain,.internal,127.0.1.1,127.254.254.254,169.254.169.254,169.254.169.253,169.254.169.123,/var/run/docker.sock,.sock,sock,.socket'
 #####
 
-KUBERNETES_VERSION: "{{ KUBERNETES_VERSION_CUSTOM | default ('1.27.2') }}"
+KUBERNETES_VERSION: "{{ KUBERNETES_VERSION_CUSTOM | default ('1.29.0') }}"
 # Software versions (used by installation, package manager, image pull, etc. )
 
 KEEPALIVED_VERSION: "1.3.5"
@@ -31,6 +31,9 @@ KEEPALIVED_VERSION: "1.3.5"
 ## package_state: present # Other valid options for this context: latest
 ## (use latest only on OSes which have package managers that understand it (most do))
 package_state: present #latest
+
+PKGS_K8S_IO_CORE: "{{ PKGS_K8S_IO_CORE_CUSTOM | default ('https://pkgs.k8s.io/core') }}"
+
 ## when package_state: present and kube*_version params below are undefined, the playbook will not touch your kube* files, and you are in full control.
 ## kube* requires full_kube_reinstall set to True! (find it below) (due to ansible (pre 2.4), which does not downgrade packages, you need to uninstalling first)
 ## full_kube_apt_unhold is required when packages were put on hold previously.

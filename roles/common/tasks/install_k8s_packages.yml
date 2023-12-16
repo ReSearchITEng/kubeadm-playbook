@@ -1,4 +1,9 @@
 ---
+- name: find requested k8s major minor vers
+  set_fact:
+    k8s_major: "{{ KUBERNETES_VERSION.split('.').0 }}"
+    k8s_minor: "{{ KUBERNETES_VERSION.split('.').1 }}"
+  ### - "KUBERNETES_VERSION is version_compare ('1.27', 'lt')"
 # Debian based (includes Ubuntu) prerequisites for using apt-get from ansible:
 - name: Install apt-transport-https
   package: name={{ item }} state={{ package_state | default ('present') }}
@@ -11,13 +16,13 @@
 - block:
   # Debian based (includes Ubuntu)
   - apt_key:
-      url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+      url: "https://{{ PKGS_K8S_IO_CORE }}:/stable:/v{k8s_major}.{k8s_minor}/deb/Release.key"
       state: present
     environment: '{{ proxy_env | default ({}) }}'
     when: ansible_os_family == "Debian"
 
   - apt_repository:
-      repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+      repo: deb {{ PKGS_K8S_IO_CORE }}:/stable:/v{k8s_major}.{k8s_minor}/deb/ /
       state: present
       #filename: 'kubernetes.list'
       update_cache: yes
@@ -29,9 +34,10 @@
     yum_repository:
       name: kubernetes
       description: Kubernetes
-      baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
-      gpgcheck: 0
-    when: ansible_os_family == "RedHat" and HOST_ARCH == "amd64"
+      baseurl: https://{{ PKGS_K8S_IO_CORE }}:/stable:/v{k8s_major}.{k8s_minor}/rpm/
+      #http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+      gpgcheck: 0 # to allow internal repos also
+    when: ansible_os_family == "RedHat" # and HOST_ARCH == "amd64"
 
   - name: add proxy for the repo
     ini_file:
