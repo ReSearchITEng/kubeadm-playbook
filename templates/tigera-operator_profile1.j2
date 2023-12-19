@@ -1,0 +1,17 @@
+calicoctl:
+  image: '{{ images_repo | default ("quay.io") }}/calico/ctl'
+cni:
+  image: '{{ images_repo | default ("quay.io") }}/calico/cni'
+flexvol:
+  image: '{{ images_repo | default ("quay.io") }}/calico/pod2daemon-flexvol'
+installation:
+  registry: '{{ images_repo | default ("docker.io") }}'
+kubeControllers:
+  image: '{{ images_repo | default ("quay.io") }}/calico/kube-controllers'
+node:
+  image: '{{ images_repo | default ("quay.io") }}/calico/node'
+tigeraOperator:
+  registry: '{{ images_repo | default ("quay.io") }}'
+typha:
+  image: '{{ images_repo | default ("quay.io") }}/calico/typha'
+

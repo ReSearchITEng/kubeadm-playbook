@@ -1,0 +1,19 @@
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  nodeSelector:
+    node-role.kubernetes.io/infra: ""
+global:
+  imageRegistry: '{{ images_repo | default ("docker.io") }}'
+installCRDs: true
+prometheusRule:
+  enabled: true
+speaker:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  nodeSelector:
+    node-role.kubernetes.io/infra: ""

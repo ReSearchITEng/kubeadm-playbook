@@ -1,0 +1,23 @@
+image:
+  repository: '{{ images_repo | default ("docker.io") }}/kubernetesui/dashboard'
+ingress:
+  enabled: true
+  hosts:
+  - 'dashboard.{{ custom.networking.dnsDomain }}'
+  - '{{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }}'
+  - '{{ groups["primary-master"][0] }}'
+metricsScraper:
+  enabled: true
+  image:
+    repository: '{{ images_repo | default ("docker.io") }}/kubernetesui/metrics-scraper'
+nodeSelector:
+  node-role.kubernetes.io/infra: ""
+protocolHttp: true
+rbac:
+  clusterReadOnlyRole: true
+  create: true
+tolerations:
+- effect: NoSchedule
+  key: node-role.kubernetes.io/infra
+- effect: PreferNoSchedule
+  key: node-role.kubernetes.io/infra

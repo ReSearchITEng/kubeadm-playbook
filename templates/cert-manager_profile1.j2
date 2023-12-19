@@ -1,0 +1,29 @@
+acmesolver:
+  image:
+    repository: '{{ images_repo | default ("quay.io") }}/jetstack/cert-manager-acmesolver'
+cainjector:
+  image:
+    repository: '{{ images_repo | default ("quay.io") }}/jetstack/cert-manager-cainjector'
+http_proxy: "{{proxy_env.http_proxy | default ('') }}"
+https_proxy: "{{proxy_env.https_proxy | default ('') }}"
+image:
+  repository: '{{ images_repo | default ("quay.io") }}/jetstack/cert-manager-controller'
+installCRDs: true
+no_proxy: '{{proxy_env.no_proxy | default ("") | replace(",","\\,") }}'
+nodeSelector:
+  node-role.kubernetes.io/infra: ""
+prometheus:
+  servicemonitor:
+    enabled: true
+    #namespace: monitoring
+startupapicheck:
+  image:
+    repository: '{{ images_repo | default ("quay.io") }}/jetstack/cert-manager-ctl'
+tolerations:
+- effect: NoSchedule
+  key: node-role.kubernetes.io/infra
+- effect: PreferNoSchedule
+  key: node-role.kubernetes.io/infra
+webhook:
+  image:
+    repository: '{{ images_repo | default ("quay.io") }}/jetstack/cert-manager-webhook'

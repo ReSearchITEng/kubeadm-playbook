@@ -1,0 +1,44 @@
+controller:
+  admissionWebhooks:
+    enabled: false
+    patch:
+      image:
+        registry: '{{ images_repo | default ("registry.k8s.io") }}'
+  config:
+    hide-headers: Server
+    server-tokens: "false"
+  hostNetwork: true
+  image:
+    registry: '{{ images_repo | default ("registry.k8s.io") }}'
+  ingressClassResource:
+    default: true
+  kind: DaemonSet
+  metrics:
+    enabled: true
+    serviceMonitor:
+      additionalLabels:
+        monitoring: prometheusoperator
+      enabled: false
+      #namespace: monitoring
+  nodeSelector:
+    node-role.kubernetes.io/infra: ""
+  service:
+    type: ClusterIP
+  stats:
+    enabled: true
+  tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/infra
+  - effect: PreferNoSchedule
+    key: node-role.kubernetes.io/infra
+  watchIngressWithoutClass: true
+defaultBackend:
+  image:
+    image: 'defaultbackend-{{ HOST_ARCH | default ("amd64") }}'
+rbac:
+  create: true
+serviceAccount:
+  create: true
+
+#https://github.com/kubernetes/ingress-nginx/blob/master/charts/ingress-nginx/Chart.yaml#L5
+# PARAMS explained: https://kubernetes.github.io/ingress-nginx/deploy/baremetal/ and https://github.com/kubernetes/ingress-nginx/blob/main/charts/ingress-nginx/values.yaml
