@@ -42,6 +42,7 @@ helm:
   - { name: runix, url: 'https://helm.runix.net' }
   - { name: crossplane-stable, url: 'https://charts.crossplane.io/stable' }
   - { name: fairwinds-stable, url: 'https://charts.fairwinds.com/stable' } #rbac-manager
+  - { name: kong, url: 'https://charts.konghq.com/' }
   packages_list: # when not defined, namespace defaults to "default" namespace
   # use "--wait" in the options section if you want to wait till min. pods are up.
   ### List helm charts you wish pre-installed every time cluster is deployed:
@@ -117,7 +118,10 @@ helm:
 ####################
 ## DASHBOARD 2.0 ###
 ####################
-    - { name: dashboard, repo: kubernetes-dashboard/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true,metricsScraper.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/metrics-scraper --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true' } # --version 4.0.0' } # https://github.com/kubernetes/dashboard/blob/master/aio/deploy/helm-chart/kubernetes-dashboard/Chart.yaml#L17
+    - { name: dashboard, repo: kubernetes-dashboard/kubernetes-dashboard, namespace: monitoring, options: '--set image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard --set ingress.enabled=True,ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},ingress.hosts[2]={{ groups["primary-master"][0] }} --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set metricsScraper.enabled=true,metricsScraper.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard-metrics-scraper --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true --set kong.image.repository={{ images_repo | default ("docker.io") }}/kong --set kong.admin.tls.enabled=false --set api.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard-api --set web.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard-web --set auth.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/dashboard-auth --set api.scaling.replicas=1 --set app.ingress.enabled=True,app.ingress.hosts[0]=dashboard.{{ custom.networking.dnsDomain }},app.ingress.hosts[1]={{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }},app.ingress.hosts[2]={{ groups["primary-master"][0] }} --set app.scheduling.nodeSelector."node\-role\.kubernetes\.io/infra=" --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set app.tolerations[1].effect=PreferNoSchedule,app.tolerations[1].key="node-role.kubernetes.io/infra"
+      
+      
+      #metricsScraper.image.repository={{ images_repo | default ("docker.io") }}/kubernetesui/metrics-scraper --set rbac.create=True,rbac.clusterReadOnlyRole=True --set protocolHttp=true' } # --version 4.0.0' } # https://github.com/kubernetes/dashboard/blob/master/aio/deploy/helm-chart/kubernetes-dashboard/Chart.yaml#L17
 
 ################
 ## Kured #######
