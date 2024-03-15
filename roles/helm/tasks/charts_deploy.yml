@@ -56,6 +56,30 @@
     register: result
     until: result is not failed
 
+  - name: Wait few seconds for deployments to start - 1
+    pause: seconds=3
+    changed_when: false
+
+  - name: helm charts/packages deployment - now for those that do have namespace defined (most of the charts)
+    environment: '{{env_kc}}'
+    command: 'helm upgrade --install --create-namespace --atomic --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
+    # --atomic is required for helm3, to make sure even failed releases are updated. This at least till this issue is closed: https://github.com/helm/helm/issues/5595
+    with_items:
+    - "{{ helm.packages_list }}"
+    when:
+    - helm is defined
+    - helm.packages_list is defined
+    - item.namespace is defined
+    - item.namespace != ""
+    retries: 3
+    delay: 3
+    register: result
+    until: result is not failed
+
+  - name: Wait few seconds for deployments to start - 2
+    pause: seconds=3
+    changed_when: false
+
   - name: CALICO BLOCK
     block:
 
@@ -97,23 +121,7 @@
     ignore_errors: true # so it will work even when the netw is not set to calido
     #TBD when: network is defined and is calico...
 
-  - name: helm charts/packages deployment - now for those that do have namespace defined (most of the charts)
-    environment: '{{env_kc}}'
-    command: 'helm upgrade --install --create-namespace --atomic --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
-    # --atomic is required for helm3, to make sure even failed releases are updated. This at least till this issue is closed: https://github.com/helm/helm/issues/5595
-    with_items:
-    - "{{ helm.packages_list }}"
-    when:
-    - helm is defined
-    - helm.packages_list is defined
-    - item.namespace is defined
-    - item.namespace != ""
-    retries: 3
-    delay: 3
-    register: result
-    until: result is not failed
-
-  - name: Wait few seconds for deployments to start
+  - name: Wait few seconds for deployments to start - 3
     pause: seconds=3
     changed_when: false
 
