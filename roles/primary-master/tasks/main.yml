@@ -193,7 +193,7 @@
   - inventory_hostname in groups['primary-master']
 
 - name: kubeadm_init_primary output
-  debug: msg:"{{kubeadm_init_primary.stdout_lines}}"
+  debug: msg="{{kubeadm_init_primary.stdout_lines}}"
   when:
   - inventory_hostname in groups['primary-master']
 
