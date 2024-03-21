@@ -177,6 +177,8 @@ group_vars/all/temp.yaml
 containerd:
   ## if FS used by containerd is zfs (e.g. Ubuntu 20.04+)
   snapshotter: zfs
+  ## if using the playbook to also install docker/containerd, storage driver needs to be overriden too. It still assumes /var/lib/docker and /var/lib/containerd/io.containerd.snapshotter.v1.zfs are on ZFS. 
+  storage_driver: zfs
 
 ## Override version
 KUBERNETES_VERSION_CUSTOM: "1.26.0"

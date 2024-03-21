@@ -128,11 +128,11 @@
       notify:
       - Restart docker
 
-    - name: set docker storage to overlay2 (Debian / RH new) - overlay2 works only with ubuntu's official docker distribution (docker.io)
+    - name: set docker storage to {{ containerd.storage_driver|default('overlay2') }} (Debian / RH new) - overlay2 works only with ubuntu's official docker distribution (docker.io)
       copy:
         content: |
           {
-            "storage-driver": "overlay2",
+            "storage-driver": "{{ containerd.storage_driver|default('overlay2') }}",
              "exec-opts": ["native.cgroupdriver=systemd"],
              "log-opts": {
                 "max-size": "1000m",
@@ -250,8 +250,8 @@
     - name: Make sure containerd sandbox_image does not pull img from outside to avoid proxy issues
       lineinfile:
         dest: /etc/containerd/config.toml
-        regexp: '^(.*)sandbox_image = "registry.k8s.io/pause(.*)$'
-        line: '\1sandbox_image = "{{ images_repo | default ("registry.k8s.io") }}/pause\2'
+        regexp: '^(.*)sandbox_image = "registry.k8s.io/pause(.*)"$'
+        line: '\1sandbox_image = "{{ images_repo | default ("registry.k8s.io") }}/pause\2"'
         backrefs: yes
       notify:
       - Restart containerd
