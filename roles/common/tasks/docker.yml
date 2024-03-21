@@ -251,7 +251,7 @@
       lineinfile:
         dest: /etc/containerd/config.toml
         regexp: '^(.*)sandbox_image = "registry.k8s.io/pause(.*)$'
-        line: '\1sandbox_image = "{{ images_repo | default ("registry.k8s.io") }}/pause\2'
+        line: '\1sandbox_image = "{{ images_repo | default ("registry.k8s.io") }}/pause\2"'
         backrefs: yes
       notify:
       - Restart containerd
