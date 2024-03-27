@@ -52,7 +52,7 @@
     - helm.packages_list is defined
     - ( item.namespace is not defined ) or ( item.namespace == "" )
     retries: 3
-    delay: 3
+    delay: "{{ CHARTS_DELAY | default(3) }}"
     register: result
     until: result is not failed
 
@@ -72,7 +72,7 @@
     - item.namespace is defined
     - item.namespace != ""
     retries: 3
-    delay: 3
+    delay: "{{ CHARTS_DELAY | default(3) }}"
     register: result
     until: result is not failed
 
