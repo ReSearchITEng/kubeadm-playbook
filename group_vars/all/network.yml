@@ -42,6 +42,9 @@ custom:
       master: true  # when true, actions like wait/join will be done against dns name instead of IP
       node: false   # when true, the join command will have --node-name set to fqdn. When false, k8s will set based on how node machine answers to the hostname command
 
+# Name of CNI pods to wait for during deployment. defualt is calico-node, but might be eg antrea-agent or others if you replace your CNI
+POD_CNI_NAME: "calico-node"
+
 ############## THE BELOW SECTION IS NO LONGER RELEVANT, as NETWORK comes via HELM CHARTS (e.g. tigera-operator from calico)
 #Define network for K8S services 
 SERVICE_NETWORK_CIDR: 10.96.0.0/12

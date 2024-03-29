@@ -29,6 +29,7 @@ ClusterConfiguration:
   kubernetesVersion: "v{{ KUBERNETES_VERSION }}"
   # dns:
   networking:
+    cni_pod_name: "{{ POD_CNI_NAME }}"
   #   dnsDomain: cluster.local
     serviceSubnet: "{{ SERVICE_NETWORK_CIDR }}"
   #   podSubnet: ""

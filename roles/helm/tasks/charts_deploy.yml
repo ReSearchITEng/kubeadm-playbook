@@ -59,31 +59,31 @@
   - name: CALICO BLOCK
     block:
 
-    - name: Calico - Wait few seconds for deployments to start - wait to make sure calico-node is getting started - required for containerd...
+    - name: Calico - Wait few seconds for deployments to start - wait to make sure {{ ClusterConfiguration.networking.cni_pod_name }} is getting started - required for containerd...
       pause: seconds=30
       changed_when: false
 
-    - name: Calico - wait for calico-node pod to appear - required for containerd cni bug...
+    - name: Calico - wait for {{ ClusterConfiguration.networking.cni_pod_name }} pod to appear - required for containerd cni bug...
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
-      shell: "kubectl get --all-namespaces pods --no-headers | grep calico-node || true "
+      shell: "kubectl get --all-namespaces pods --no-headers | grep {{ ClusterConfiguration.networking.cni_pod_name }} || true "
       register: command_result
       until: command_result.stdout != ""
       retries: 30
       delay: 7
       changed_when: false
   
-    - name: Calico - wait for calico-node pods to become Running - required for containerd cni bug...
+    - name: Calico - wait for {{ ClusterConfiguration.networking.cni_pod_name }} pods to become Running - required for containerd cni bug...
       environment:
         KUBECONFIG: /etc/kubernetes/admin.conf
-      shell: "kubectl get --all-namespaces pods --no-headers | grep calico-node | grep -v -w 'Running' || true "
+      shell: "kubectl get --all-namespaces pods --no-headers | grep {{ ClusterConfiguration.networking.cni_pod_name }} | grep -v -w 'Running' || true "
       register: command_result
       until: command_result.stdout == ""
       retries: 30
       delay: 7
       changed_when: false
 
-    - name: Calico - Wait few seconds for calico-node is Running 1/1 - required for containerd...
+    - name: Calico - Wait few seconds for {{ ClusterConfiguration.networking.cni_pod_name }} is Running 1/1 - required for containerd...
       pause: seconds=20
       changed_when: false
   
