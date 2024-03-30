@@ -62,7 +62,7 @@
     # environment -> is required due to a k8s bug which makes kubeadm need internet to generate a token. setting version is not allowed
     # Optionally using "--config /etc/kubernetes/kubeadm-master.conf" to get rid of the message that it tries to connect to internet for version
     register: kubeadm_token_whash_n
-    delegate_to: "{{groups['primary-master'][0]}}"
+    delegate_to: "{{groups[cluster_inventory_group.primary_master][0]}}"
     run_once: yes
     when: 
     - InitConfiguration is not defined or InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
@@ -135,7 +135,7 @@
     environment: '{{env_kc}}'
     shell: "/usr/bin/kubeadm init phase upload-certs --upload-certs -- 2>/dev/null | tail -1 "
     register: kubeadm_upload_certificate_key
-    delegate_to: "{{groups['primary-master'][0]}}"
+    delegate_to: "{{groups[cluster_inventory_group.primary_master][0]}}"
     run_once: yes
   
   ## TODO: try to remove this, and keep the autodetermined addr:
@@ -148,7 +148,7 @@
       JoinConfiguration: "{{ JoinConfiguration | combine ( { 'controlPlane': { 'certificateKey': kubeadm_upload_certificate_key.stdout_lines[0] } }, recursive=True) }}"
 
   when:
-  - inventory_hostname in groups['secondary-masters']
+  - inventory_hostname in groups[cluster_inventory_group.secondary_masters]
 
 ### Cloud Config
 - name: JoinConfiguration - cloudProvider merging {{ ClusterConfiguration.cloudProvider }} to the JoinConfiguration.nodeRegistration.kubeletExtraArgs
@@ -240,7 +240,7 @@
 #     changed_when: false
 
 #   - name: Check all nodes were registered
-#     shell: "/usr/bin/test $(kubectl get nodes --no-headers | grep -ow Ready | wc -l) >= {{ groups['nodes'] | length + groups['masters'] | length }}"
+#     shell: "/usr/bin/test $(kubectl get nodes --no-headers | grep -ow Ready | wc -l) >= {{ groups[cluster_inventory_group.nodes] | length + groups[cluster_inventory_group.masters] | length }}"
 #     register: command_result
 #     retries: 10
 #     delay: 3
@@ -263,7 +263,7 @@
     regexp: '^export KUBECONFIG=.*'
   when: 
   - shell is undefined or shell == 'bash'
-  - inventory_hostname in groups['nodes']
+  - inventory_hostname in groups[cluster_inventory_group.nodes]
 
 - name: export KUBECONFIG in secondary-masters' ~/.bashrc
   lineinfile: 
@@ -274,4 +274,4 @@
     regexp: '^export KUBECONFIG=.*'
   when: 
   - shell is undefined or shell == 'bash'
-  - inventory_hostname in groups['secondary-masters']
+  - inventory_hostname in groups[cluster_inventory_group.secondary_masters]

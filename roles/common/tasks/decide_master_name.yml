@@ -4,29 +4,29 @@
 # https://github.com/ReSearchITEng/kubeadm-playbook/issues/81  ( https://github.com/ansible/ansible/issues/38777 )
 - block:
   - name: by default set master name to inventory definition (no MasterHA case)
-    set_fact: master_name={{ groups['primary-master'][0] }}
+    set_fact: master_name={{ groups[cluster_inventory_group.primary_master][0] }}
     when:
-    - groups['masters'] | length == 1
+    - groups[cluster_inventory_group.masters] | length == 1
 
   - name: force use fqdn for master name (no MasterHA case) if inventory was not defined fqdn and we have to discover...
-    set_fact: master_name={{ hostvars[groups['primary-master'][0]]['ansible_fqdn'] }}
+    set_fact: master_name={{ hostvars[groups[cluster_inventory_group.primary_master][0]]['ansible_fqdn'] }}
     when:
     - custom.networking.fqdn.always or custom.networking.fqdn.master
-    - groups['masters'] | length == 1
-    - '"." not in groups["primary-master"][0]'  # meaning it was not defined with fqdn, but we would like to force fqdn (per above custom.networking.fqdn condition)
+    - groups[cluster_inventory_group.masters] | length == 1
+    - '"." not in groups[cluster_inventory_group.primary_master][0]'  # meaning it was not defined with fqdn, but we would like to force fqdn (per above custom.networking.fqdn condition)
 
   - name: force use fqdn for master name (MasterHA case)
     set_fact: master_name={{ custom.networking.masterha_fqdn }}
     when:
     - custom.networking.fqdn.always or custom.networking.fqdn.master
-    - groups['masters'] | length > 1
+    - groups[cluster_inventory_group.masters] | length > 1
 
   - name: force use ip for master name (MasterHA case)
     set_fact: master_name={{ custom.networking.masterha_ip }}
     when:
     - not custom.networking.fqdn.always
     - not custom.networking.fqdn.master
-    - groups['masters'] | length > 1
+    - groups[cluster_inventory_group.masters] | length > 1
     
   tags:
   - always

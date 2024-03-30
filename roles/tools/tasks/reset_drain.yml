@@ -32,7 +32,7 @@
     ignore_errors: true
 
     #shell: "kubectl get nodes -o jsonpath='{.items[*].metadata.name}'"
-    #with_items: "{{ groups['nodes'] }}"
+    #with_items: "{{ groups[cluster_inventory_group.nodes] }}"
 
   - name: kubectl get nodes must be empty by now (if target was full cluster and not partial update)
     shell: "kubectl get nodes --no-headers | grep -v 'node-role.kubernetes.io/control-plane' | grep -v -w 'Ready' || true"

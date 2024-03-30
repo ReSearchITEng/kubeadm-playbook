@@ -4,8 +4,8 @@ ingress:
   enabled: true
   hosts:
   - 'dashboard.{{ custom.networking.dnsDomain }}'
-  - '{{ custom.networking.masterha_fqdn | default (groups["primary-master"][0]) }}'
-  - '{{ groups["primary-master"][0] }}'
+  - '{{ custom.networking.masterha_fqdn | default (groups[cluster_inventory_group.primary_master][0]) }}'
+  - '{{ groups[cluster_inventory_group.primary_master][0] }}'
 metricsScraper:
   enabled: true
   image:

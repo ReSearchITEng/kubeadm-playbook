@@ -5,6 +5,14 @@
 # ansible_python_interpreter=/usr/bin/python3
 ## (the variable can also be defined per host if there is a need for mix)
 
+## Defines mappings for the original gropus that were used in various conditions. Allows to use the playbook with inventory file that also contains other hosts/groups or even multiple clusters.
+cluster_inventory_group:
+  all: 'all'
+  masters: 'masters'
+  nodes: 'nodes'
+  primary_master: 'primary-master'
+  secondary_masters: 'secondary-masters'
+
 #####
 ## PROXY
 ## proxy environment variable, mainly for fetching addons

@@ -96,7 +96,7 @@
            - to check pods which are not yet in Running status, run: "kubectl get --all-namespaces pods --no-headers | grep -v -w 'Running' "
            
            - browse your master (using fqdn) to see the dashboard:
-             http://{{groups["masters"][0]}}
+             http://{{groups[cluster_inventory_group.masters][0]}}
                or, ideally (depending what was defined in config)
              http://dashboard.{{custom.networking.dnsDomain}} (when var custom.networking.dnsDomain properly defined and set in your dns )
     debug: var=msg

@@ -59,7 +59,7 @@
   tags:
   - node
   roles:
-  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node_install', 'node' ], when: "inventory_hostname not in groups['masters']" }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node_install', 'node' ], when: "inventory_hostname not in groups[cluster_inventory_group.masters]" }
 
 ## master -> install common part (for all masters - and sometimes etcd when colocated with masters)
 - hosts: masters
@@ -84,10 +84,10 @@
   - role: keepalived
     tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived']
     when: 
-    - ( groups['masters'] | length ) > 1 
+    - ( groups[cluster_inventory_group.masters] | length ) > 1
     - ( custom.networking.masterha_type | default('vip') ) == 'vip'
 
-- hosts: primary-master 
+- hosts: primary-master
   name: primary-master (or master in general) - it applies to both ha and non-ha
   become: yes
   become_method: sudo
@@ -122,7 +122,7 @@
   - install
   - node_install
   roles:
-  - { role: non-primary-master, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['masters']" }
+  - { role: non-primary-master, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups[cluster_inventory_group.masters]" }
 
 ## node -> label nodes (even when master is also a node)
 - hosts: nodes
