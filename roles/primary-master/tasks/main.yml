@@ -137,8 +137,8 @@
   #   set_fact:
   #     InitConfiguration: "{{  InitConfiguration | combine ( { 'localAPIEndpoint': {'advertiseAddress': ansible_default_ipv4.address } }, recursive=True) }}"
   when: 
-  - groups['masters'] | length > 1
-  - inventory_hostname in groups['primary-master']
+  - groups[cluster_inventory_group.masters] | length > 1
+  - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
 ### Configuration is prepared, show it, write it, use it
 - name: "debug: This is the master init configuration to be used (verbosity 2 or above):"
@@ -166,7 +166,7 @@
       ---
       {{ KubeletConfiguration | to_nice_yaml }}
   when:
-  - inventory_hostname in groups['primary-master']
+  - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
 - name: Pull images on master using /etc/kubernetes/kubeadm-master.conf (if defined, it uses images_repo; otherwise, defaults to registry.k8s.io )
   command: "kubeadm config images pull --config /etc/kubernetes/kubeadm-master.conf --kubernetes-version {{ ClusterConfiguration.kubernetesVersion }} --image-repository {{ images_repo |default ('registry.k8s.io') }}"
@@ -189,18 +189,18 @@
   tags:
   - init
   when:
-  # - groups['masters'] | length > 1 # Allow this for both HA primary and non-HA (exclude ha secondary masters)
-  - inventory_hostname in groups['primary-master']
+  # - groups[cluster_inventory_group.masters] | length > 1 # Allow this for both HA primary and non-HA (exclude ha secondary masters)
+  - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
 - name: kubeadm_init_primary output
   debug: msg="{{kubeadm_init_primary.stdout_lines}}"
   when:
-  - inventory_hostname in groups['primary-master']
+  - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
 - name: kubeadm_init_primary output var
   debug: var=kubeadm_init_primary verbosity=3
   when:
-  - inventory_hostname in groups['primary-master']
+  - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
 - name: "Wait 500 seconds for primary-master to respond: {{ InitConfiguration.localAPIEndpoint.advertiseAddress | default (master_name) }}:{{ InitConfiguration.localAPIEndpoint.bindPort | default (6443) }} "
   #master_name
@@ -213,8 +213,8 @@
   tags:
   - init
   when:
-#  - groups['masters'] | length > 1
-  - inventory_hostname in groups['primary-master']
+#  - groups[cluster_inventory_group.masters] | length > 1
+  - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
 ### TODO: remake it in 1.15 !!!
   # - name: generate a join token on primary-master # TEMPORARY 1.14 till this is fixed: https://github.com/kubernetes/kubeadm/issues/1485
@@ -224,7 +224,7 @@
   #   # environment -> is required due to a k8s bug which makes kubeadm need internet to generate a token. setting version is not allowed
   #   # Optionally using "--config /etc/kubernetes/kubeadm-master.conf" to get rid of the message that it tries to connect to internet for version
   #   register: kubeadm_token_whash_secondarymasters
-  #   delegate_to: "{{groups['primary-master'][0]}}"
+  #   delegate_to: "{{groups[cluster_inventory_group.primary_master][0]}}"
   #   run_once: yes
 
 ### TODO: remake it in 1.15 !!!
@@ -242,8 +242,8 @@
   #   debug: var=kubeadm_join_secondary verbosity=3
 
   # when:
-  # - groups['masters'] | length > 1 
-  # - inventory_hostname not in groups['primary-master']
+  # - groups[cluster_inventory_group.masters] | length > 1
+  # - inventory_hostname not in groups[cluster_inventory_group.primary_master]
   # tags:
   # - init
   # - init_secondary_masters
@@ -284,20 +284,20 @@
       dest: /etc/kubernetes/cloud-config-vsphere-secret.yaml
       force: yes
     when:
-    - inventory_hostname in groups['primary-master']
+    - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
   - name: "vpshere apply cloud-config-vsphere-secret.yaml "
     environment: '{{env_kc}}'
     command: kubectl apply -f /etc/kubernetes/cloud-config-vsphere-secret.yaml
     when:
-    - inventory_hostname in groups['primary-master']
+    - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
   - name: "vpshere remove cloud-config-vsphere-secret.yaml "
     file:
       path: /etc/kubernetes/cloud-config-vsphere-secret.yaml
       state: absent
     when:
-    - inventory_hostname in groups['primary-master']
+    - inventory_hostname in groups[cluster_inventory_group.primary_master]
 
   tags:
   - init
@@ -331,7 +331,7 @@
 #    KUBECONFIG: /etc/kubernetes/admin.conf
 #  shell: 'kubectl get no -o=jsonpath="{.items[0].metadata.name}"'
 #  when:
-#  - groups['all'] | length == 1
+#  - groups[cluster_inventory_group.all] | length == 1
 #  register: result_primary_master_name
 #  tags:
 #  - all
@@ -344,7 +344,7 @@
 #  #shell: 'kubectl taint nodes {{ ansible_fqdn }} {{ item }} --overwrite'
 #  shell: 'kubectl taint nodes {{ result_primary_master_name.stdout_lines[0] }} {{ item }} --overwrite'
 #  when:
-#  - groups['all'] | length == 1
+#  - groups[cluster_inventory_group.all] | length == 1
 #  with_items: #'{{ taints_master }}'
 #  - 'node-role.kubernetes.io/master:NoSchedule-'
 #  - 'node-role.kubernetes.io/master=:PreferNoSchedule'
@@ -359,7 +359,7 @@
 #     KUBECONFIG: /etc/kubernetes/admin.conf
 #   shell: 'kubectl taint nodes {{ inventory_hostname_short }} {{ item }} --overwrite'
 #   when:
-#   - groups['all'] | length == 1
+#   - groups[cluster_inventory_group.all] | length == 1
 #   with_items: #'{{ taints_master }}'
 #   - 'node-role.kubernetes.io/master:NoSchedule-'
 #   - 'node-role.kubernetes.io/master=:PreferNoSchedule'
@@ -374,7 +374,7 @@
 #  shell: 'kubectl label nodes {{ result_primary_master_name.stdout_lines[0] }} "node-role.kubernetes.io/infra=" --overwrite'
 #  #shell: 'kubectl label nodes {{ ansible_fqdn }} "node-role.kubernetes.io/infra=" --overwrite'
 #  when:
-#  - groups['all'] | length == 1
+#  - groups[cluster_inventory_group.all] | length == 1
 #  register: command_result
 #  changed_when: '"not labeled" not in command_result.stdout'
 #  ignore_errors: true
@@ -384,7 +384,7 @@
 #     KUBECONFIG: /etc/kubernetes/admin.conf
 #   shell: 'kubectl label nodes {{ inventory_hostname_short }} "node-role.kubernetes.io/infra=" --overwrite'
 #   when:
-#   - groups['all'] | length == 1
+#   - groups[cluster_inventory_group.all] | length == 1
 #   register: command_result
 #   changed_when: '"not labeled" not in command_result.stdout'
 #   ignore_errors: true
@@ -411,10 +411,10 @@
   changed_when: false
 
 - name: Set coredns replicas to number of masters (a good practice; by default there are 2 coredns)
-  shell: "export KUBECONFIG=/etc/kubernetes/admin.conf; kubectl scale --replicas={{ groups['masters'] | length }} -n kube-system deployment/coredns"
+  shell: "export KUBECONFIG=/etc/kubernetes/admin.conf; kubectl scale --replicas={{ groups[cluster_inventory_group.masters] | length }} -n kube-system deployment/coredns"
   when:
-  - groups['masters'] | length > 1
-  - inventory_hostname in groups['primary-master']
+  - groups[cluster_inventory_group.masters] | length > 1
+  - inventory_hostname in groups[cluster_inventory_group.primary_master]
   tags:
   - scale
   - scale_dns

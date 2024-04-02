@@ -37,7 +37,7 @@
 
 # >= and not == because we may use this role to only to add nodes also.
   - name: Check all nodes were registered
-    shell: "/usr/bin/test $(kubectl get nodes | grep -ow Ready | wc -l) -ge {{ groups['all'] | length }}"
+    shell: "/usr/bin/test $(kubectl get nodes | grep -ow Ready | wc -l) -ge {{ groups[cluster_inventory_group.all] | length }}"
     register: command_result
     retries: 30
     delay: 3

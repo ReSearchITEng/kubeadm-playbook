@@ -21,7 +21,7 @@
   when: 
   - ClusterConfiguration is defined
   - ClusterConfiguration.cloudProvider is defined
-  - inventory_hostname in groups['masters']
+  - inventory_hostname in groups[cluster_inventory_group.masters]
   tags:
   - kubelet
 

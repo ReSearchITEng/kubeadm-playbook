@@ -73,8 +73,8 @@
   tags:
   - node
   roles:
-  - { role: tools, task: reset, tags: [ 'reset', 'node_reset' ], when: "inventory_hostname not in groups['masters']" }
-  - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups['masters']" }
+  - { role: tools, task: reset, tags: [ 'reset', 'node_reset' ], when: "inventory_hostname not in groups[cluster_inventory_group.masters]" }
+  - { role: tools, task: weave_reset, tags: [ 'reset', 'node_reset', 'network_reset', 'weave_reset', 'weave' ], when: "inventory_hostname not in groups[cluster_inventory_group.masters]" }
 
 - hosts: masters
   become: yes

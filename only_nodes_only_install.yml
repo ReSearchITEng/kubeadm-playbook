@@ -58,7 +58,7 @@
   tags:
   - node
   roles:
-  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node_install', 'node' ], when: "inventory_hostname not in groups['masters']" }
+  - { role: common, task: all, tags: [ 'common', 'install', 'common_install', 'node_install', 'node' ], when: "inventory_hostname not in groups[cluster_inventory_group.masters]" }
 
 ## node -> install nodes (kubeadm join, etc)
 - hosts: nodes
@@ -70,7 +70,7 @@
   - install
   - node_install
   roles:
-  - { role: non-primary-master, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups['masters']" }
+  - { role: non-primary-master, tags: [ 'node', 'install', 'node_install'], when: "inventory_hostname not in groups[cluster_inventory_group.masters]" }
 
 ## node -> label nodes (even when master is also a node)
 - hosts: nodes

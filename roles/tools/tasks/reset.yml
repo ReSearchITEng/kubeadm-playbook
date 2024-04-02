@@ -18,7 +18,7 @@
     - uninstall
     ignore_errors: true
     when: 
-    - groups['masters'] | length > 1 
+    - groups[cluster_inventory_group.masters] | length > 1
     - ( custom.networking.masterha_type | default('vip') ) == 'vip'
 
 # We had to remove it, as it blocks the flow. It also fetches docker.io images and in some setups there is no access to or fails due to limits on docker hub...
