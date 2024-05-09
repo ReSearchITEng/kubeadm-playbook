@@ -1,17 +1,17 @@
 ---
-#- include: reset.yml
-- include: selinux.yml # THIS MIGHT REBOOT MACHINE!!!
-- include: install_k8s_packages.yml
-- include: docker.yml
-- include: iptables.yml
-- include: firewalld.yml
-- include: kube_config.yml
-- include: swap.yml
-- include: kernel_modules.yml
+#- include_tasks: reset.yml
+- include_tasks: selinux.yml # THIS MIGHT REBOOT MACHINE!!!
+- include_tasks: install_k8s_packages.yml
+- include_tasks: docker.yml
+- include_tasks: iptables.yml
+- include_tasks: firewalld.yml
+- include_tasks: kube_config.yml
+- include_tasks: swap.yml
+- include_tasks: kernel_modules.yml
   when: kernel_modules_setup | default (True)
-- include: ntpd.yml
+- include_tasks: ntpd.yml
   when: ntp_setup | default (True)
-- include: rook.yml
+- include_tasks: rook.yml
   when: rook is defined and rook.enabled | default (False)
-- include: various.yml
-- include: aliases_completion.yml
+- include_tasks: various.yml
+- include_tasks: aliases_completion.yml

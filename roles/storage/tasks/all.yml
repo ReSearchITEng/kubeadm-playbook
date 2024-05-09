@@ -1,7 +1,7 @@
 ---
-- include: remove_pvs.yml
-- include: nfs_reset.yml
-- include: nfs.yml
-- include: rook_reset.yml
-- include: rook.yml
-- include: vsphere.yml
+- include_tasks: remove_pvs.yml
+- include_tasks: nfs_reset.yml
+- include_tasks: nfs.yml
+- include_tasks: rook_reset.yml
+- include_tasks: rook.yml
+- include_tasks: vsphere.yml

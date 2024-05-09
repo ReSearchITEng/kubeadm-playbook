@@ -1,5 +1,5 @@
 ---
-- include: network.yml
-- include: post_cluster_deploy.yml
-- include: sanity.yml
-- include: taints.yml
+- include_tasks: network.yml
+- include_tasks: post_cluster_deploy.yml
+- include_tasks: sanity.yml
+- include_tasks: taints.yml
