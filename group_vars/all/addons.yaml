@@ -19,7 +19,7 @@ pre_helm_manifests: []
 ## HELM & CHARTS ##
 ###################
 helm:
-  helm_version: v3.14.2 # or "latest" #https://github.com/kubernetes/helm/releases
+  helm_version: v3.15.2 # or "latest" #https://github.com/kubernetes/helm/releases
   #install_script_url: 'https://github.com/kubernetes/helm/raw/master/scripts/get-helm-3' # OBSOLETE
   archive_url: 'https://get.helm.sh' # it expects there the archive: /helm-{{ helm.helm_version }}-linux-{{ HOST_ARCH }}.tar.gz
   repos: ## stable repo is installed by helm by default, no need for its entry here, add only new ones
@@ -89,7 +89,7 @@ helm:
 ##################
 ## cert-manager ##
 ##################
-    - { name: cert-manager, repo: jetstack/cert-manager, namespace: cert-manager, options: '--set installCRDs=true --set prometheus.servicemonitor.enabled=true --set prometheus.servicemonitor.namespace=monitoring --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-controller --set webhook.image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-webhook --set cainjector.image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-cainjector --set startupapicheck.image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-ctl --set acmesolver.image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-acmesolver --set http_proxy={{proxy_env.http_proxy | default ("") }},https_proxy={{proxy_env.https_proxy | default ("") }},no_proxy={{proxy_env.no_proxy | default ("") | replace(",","\\,") }} ' }
+    - { name: cert-manager, repo: jetstack/cert-manager, namespace: cert-manager, options: '--set installCRDs=true --set prometheus.servicemonitor.enabled=true --set prometheus.servicemonitor.namespace=monitoring --set tolerations[0].effect=NoSchedule,tolerations[0].key="node-role.kubernetes.io/infra" --set tolerations[1].effect=PreferNoSchedule,tolerations[1].key="node-role.kubernetes.io/infra" --set nodeSelector."node\-role\.kubernetes\.io/infra=" --set image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-controller --set webhook.image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-webhook --set cainjector.image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-cainjector --set startupapicheck.image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-ctl --set acmesolver.image.repository={{ images_repo | default ("quay.io") }}/jetstack/cert-manager-acmesolver --set http_proxy={{proxy_env.http_proxy | default ("") }},https_proxy={{proxy_env.https_proxy | default ("") }},no_proxy={{proxy_env.no_proxy | default ("") | replace(",","\\,") }} --version ~1.14' }
       #--set prometheus.servicemonitor.labels=prometheusoperator
 
 #####################
