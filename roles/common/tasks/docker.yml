@@ -272,6 +272,20 @@
       tags:
       - docker
 
+    - name: Make sure SystemdCrgoup is the desired one
+      lineinfile:
+        dest: /etc/containerd/config.toml
+        regexp: '^(.*)SystemdCgroup = .*$'
+        line: '\1SystemdCgroup = {{ containerd.systemd_cgroup | default ("false") }}'
+        backrefs: yes
+      when:
+      - containerd is defined
+      - containerd.systemd_cgroup is defined
+      notify:
+      - Restart containerd
+      tags:
+      - docker
+
     when:
     - ansible_os_family == "Debian" or ( ansible_os_family == "RedHat" and old_docker is undefined )
     ## END of Debian/Ubuntu block
