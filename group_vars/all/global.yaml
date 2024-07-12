@@ -91,6 +91,8 @@ full_kube_reinstall: False # undefined is False. #Make it False for faster redep
 full_kube_apt_unhold: False # undefined is False. # use it together with full_kube_reinstall (usually in non-prod) when you want automatic unhold of packages on (debian based like ubuntu)
                             # unhold is required also when you define version for kube* packages, and packages were hold initially
 etcd_clean: False # True will cleanup /var/lib/etcd/ !
+
+full_helm_reinstall: False # True will first purge all existing helm deployments. This is good if you had issues with some helm charts like calico, etc.
 #####
 
 #kubeadm_init_args: E.g.: "--skip-preflight-checks" 
