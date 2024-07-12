@@ -65,7 +65,8 @@
     ignore_errors: true
     tags:
     - helm_purge
-
+  when:
+  - full_helm_reinstall is defined and full_helm_reinstall
   tags:
   - helm_reset
   - reset
