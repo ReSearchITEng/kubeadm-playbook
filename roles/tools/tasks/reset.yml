@@ -69,7 +69,7 @@
     file: state=absent path={{ item }}
     with_items:
     - /var/lib/etcd/member
-    when: etcd_clean | default(true)
+    when: etcd_clean | default(false)
 
   - name: systemctl stop kube*.*.slice
     shell: 'for i in $(systemctl list-unit-files --no-legend --no-pager -l | grep --color=never -o kube.*\.slice );do echo $i; systemctl stop $i ; done'
