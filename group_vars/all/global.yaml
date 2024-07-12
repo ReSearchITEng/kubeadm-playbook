@@ -90,7 +90,7 @@ full_kube_reinstall: False # undefined is False. #Make it False for faster redep
                            # reinstall is set to True, kubectl, kubelet, kubeadm, kubernetes-cni will be uninstalled first
 full_kube_apt_unhold: False # undefined is False. # use it together with full_kube_reinstall (usually in non-prod) when you want automatic unhold of packages on (debian based like ubuntu)
                             # unhold is required also when you define version for kube* packages, and packages were hold initially
-etcd_clean: True # default is True, and it will cleanup /var/lib/etcd/ !
+etcd_clean: False # True will cleanup /var/lib/etcd/ !
 #####
 
 #kubeadm_init_args: E.g.: "--skip-preflight-checks" 
