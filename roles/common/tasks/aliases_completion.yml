@@ -113,12 +113,13 @@
     when:
     - aliases.helm_complete_also_aliases is defined
 
-  - name: remove ~/.zcompdump before recreate
-    file: ~/.zcompdump
-    state: absent
+  - name: "remove .zcompdump before recreate"
+    ansible.builtin.file:
+      path: ~/.zcompdump
+      state: absent
 
   - name: run compinit
-    shell: "zsh -c 'compinit -C'"
+    ansible.builtin.shell: "zsh -c 'compinit -C'"
     args:
       executable: /bin/zsh
 
