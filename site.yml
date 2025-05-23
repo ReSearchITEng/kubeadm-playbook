@@ -2,14 +2,14 @@
 ## Preparations
 ## Making sure python exists on all nodes, so Ansible will be able to run; make sure min vars are defined
 - hosts: all
-  gather_facts: no
-  become: yes
+  gather_facts: true
+  become: true
   become_method: sudo
   pre_tasks:
-  ## It would be best to have ansible already installed on all machines. 
+  ## It would be best to have ansible already installed on all machines.
   ## But if it is not, we'll try to do it:
   - name: when no python2, install python2 for Ansible<2.8 (usually required on ubuntu, which defaults to python3) # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
-    raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal) || (yum install -y python2 python-simplejson)
+    ansible.builtin.raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal) || (yum install -y python2 python-simplejson)
     register: output
     changed_when: output.stdout != ""
     tags: always
@@ -28,7 +28,7 @@
     ## and that issue will be captured later in the flow.
 
   - name: when no python(2/3), install python3(Debian) python2(RedHat) for Ansible>=2.8 # Alternativelly, for Ubuntu machines, define var: ansible_python_interpreter=/usr/bin/python3
-    raw: test -e /usr/bin/python3 || (apt -y update && apt install -y python3-minimal) || (yum install -y python3 python-simplejson)
+    ansible.builtin.raw: test -e /usr/bin/python3 || (apt -y update && apt install -y python3-minimal) || (yum install -y python3 python-simplejson)
     register: output
     changed_when: output.stdout != ""
     tags: always
@@ -40,28 +40,28 @@
     ## is similar to the one explained above (complements it)
 
   - name: Make sure proxy_env map is defined, even if not required; must be a map, e.g. empty map
-    set_fact:
+    ansible.builtin.set_fact:
       proxy_env: '{{ proxy_env |default({}) }}'
       cacheable: yes
     tags: always
     when: proxy_env is not defined
 
-  - setup: # aka gather_facts
+  - ansible.builtin.setup: # aka gather_facts
     tags: always # required for tags, see ansible issue: #14228
-    
+
   - name: test min. vars (group_vars/all) are set, like ClusterConfiguration (and k8s_network_addons_urls if netw is not via helm chart)
-    debug: msg='Make sure min. vars (group_vars/all) are set, like ClusterConfiguration (and k8s_network_addons_urls if netw is not via helm chart)'
-    when: 
+    ansible.builtin.debug: msg='Make sure min. vars (group_vars/all) are set, like ClusterConfiguration (and k8s_network_addons_urls if netw is not via helm chart)'
+    when:
     - ClusterConfiguration is not defined
     - JoinConfiguration is not defined
-    failed_when: 
+    failed_when:
     - ClusterConfiguration is not defined
     - JoinConfiguration is not defined
     tags: always # always check if we have vars in place
 
 ## proper reset of any previous cluster (if any)
 - hosts: primary-master
-  become: yes
+  become: true
   become_method: sudo
   tags:
   - reset
@@ -75,7 +75,7 @@
 
 ## nodes -> reset and install common part (for all nodes)
 - hosts: nodes
-  become: yes
+  become: true
   become_method: sudo
   tags:
   - node
@@ -86,7 +86,7 @@
 
 ## master -> reset and install common part (for all masters - and sometimes etcd when colocated with masters)
 - hosts: masters
-  become: yes
+  become: true
   become_method: sudo
   tags:
   - master
@@ -97,9 +97,9 @@
 
 ## master -> install keepalived on masters (relevat if HA)
 - hosts: masters
-  become: yes
+  become: true
   become_method: sudo
-  any_errors_fatal: yes
+  any_errors_fatal: true
   tags:
   - master
   - install
@@ -108,15 +108,15 @@
   roles:
   - role: keepalived
     tags: [ 'master', 'install', 'master_install', 'ha', 'keepalived']
-    when: 
-    - ( groups['masters'] | length ) > 1 
+    when:
+    - ( groups['masters'] | length ) > 1
     - ( custom.networking.masterha_type | default('vip') ) == 'vip'
 
-- hosts: primary-master 
+- hosts: primary-master
   name: primary-master (or master in general) - it applies to both ha and non-ha
-  become: yes
+  become: true
   become_method: sudo
-  any_errors_fatal: yes
+  any_errors_fatal: true
   tags:
   - master
   - install
@@ -125,10 +125,11 @@
   roles:
   - { role: primary-master, task: primary, tags: [ 'primary-master', 'master', 'install', 'master_install'] } 
 
+## secondary-masters -> install secondary masters
 - hosts: secondary-masters
-  become: yes
+  become: true
   become_method: sudo
-  any_errors_fatal: yes
+  any_errors_fatal: true
   tags:
   - master
   - install
@@ -139,9 +140,9 @@
 
 ## node -> install nodes (kubeadm join, etc)
 - hosts: nodes
-  become: yes
+  become: true
   become_method: sudo
-  any_errors_fatal: yes
+  any_errors_fatal: true
   tags:
   - node
   - install
@@ -151,9 +152,9 @@
 
 ## node -> label nodes (even when master is also a node)
 - hosts: nodes
-  become: yes
+  become: true
   become_method: sudo
-  any_errors_fatal: yes
+  any_errors_fatal: true
   tags:
   - node
   - install
@@ -164,7 +165,7 @@
 
 ## Post deploy (network, storage, taints, helm installation, helm charts deploy, any other addons)
 - hosts: primary-master
-  become: yes
+  become: true
   become_method: sudo
   tags:
   - post_deploy
@@ -178,8 +179,8 @@
 ### For fixes like vsphere's bug, we have to reboot after some more fixes...
 #https://github.com/vmware/kubernetes/issues/495
 - hosts: mustrebootlist
-  gather_facts: no
-  become: yes
+  gather_facts: false
+  become: true
   become_method: sudo
   tags:
   - mustrebootlist
@@ -190,7 +191,7 @@
 
 ## Generic Sanity
 - hosts: masters
-  become: yes
+  become: true
   become_method: sudo
   tags:
   - master

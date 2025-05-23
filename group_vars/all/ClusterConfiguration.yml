@@ -1,13 +1,15 @@
 #https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta3?tab=doc#ClusterConfiguration
 #check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm?tab=subdirectories
 ClusterConfiguration:
-  apiVersion: kubeadm.k8s.io/v1beta3
+  apiVersion: kubeadm.k8s.io/v1beta4
   apiServer:
     timeoutForControlPlane: 8m0s
     #extraEnvs: []
     extraArgs: # https://kubernetes.io/docs/admin/kube-apiserver/
-      endpoint-reconciler-type: "lease"  # needs k8s 1.9+ More info: https://kubernetes.io/docs/admin/high-availability/building/#endpoint-reconciler
-      service-node-port-range: '79-32767' #Default 32000-32767 ; Ensure the local ports on all nodes are set accordingly
+      - name: endpoint-reconciler-type
+        value: "lease"  # needs k8s 1.9+ More info: https://kubernetes.io/docs/admin/high-availability/building/#endpoint-reconciler
+      - name: service-node-port-range
+        value: '79-32767' #Default 32000-32767 ; Ensure the local ports on all nodes are set accordingly
   #   auditPolicy:
   #     logDir: /var/log/kubernetes/audit
   #     logMaxAge: 2
