@@ -1,0 +1,116 @@
+---
+- name: "Deploy batch {{ batch_number }} helm charts"
+  debug:
+    msg: "Deploying batch {{ batch_number }} with {{ charts_in_batch | length }} charts in parallel"
+
+- name: "Deploy helm charts in batch {{ batch_number }} (without namespace) - async"
+  command: >
+    helm upgrade --install {{ item.name }} {{ item.repo }}
+    {{ item.options | default('') }}
+    --create-namespace
+  with_items: "{{ charts_in_batch }}"
+  async: 600  # 10 minutes timeout for each chart
+  poll: 0     # Don't wait, start all in parallel
+  retries: 3
+  until: helm_result_no_ns is not failed
+  delay: "{{ CHARTS_DELAY | default(3) }}"
+  environment: '{{ env_kc }}'
+  when:
+    - item.namespace is not defined or item.namespace == ""
+  register: helm_jobs_no_ns
+  changed_when: false  # Will check later
+
+- name: "Deploy helm charts in batch {{ batch_number }} (with namespace) - async"
+  command: >
+    helm upgrade --install {{ item.name }} {{ item.repo }}
+    --namespace {{ item.namespace }}
+    {{ item.options | default('') }}
+    --create-namespace
+  with_items: "{{ charts_in_batch }}"
+  async: 600  # 10 minutes timeout for each chart
+  poll: 0     # Don't wait, start all in parallel
+  retries: 3
+  until: helm_result_with_ns is not failed
+  delay: "{{ CHARTS_DELAY | default(3) }}"
+  environment: '{{ env_kc }}'
+  when:
+    - item.namespace is defined
+    - item.namespace != ""
+  register: helm_jobs_with_ns
+  changed_when: false  # Will check later
+
+- name: "Wait for all helm charts in batch {{ batch_number }} to complete"
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: helm_result_no_ns
+  until: helm_result_no_ns.finished
+  retries: 120  # 10 minutes total (120 * 5 seconds)
+  delay: 5
+  with_items: "{{ helm_jobs_no_ns.results | default([]) }}"
+  when:
+    - helm_jobs_no_ns is defined
+    - item.ansible_job_id is defined
+  changed_when: '"deployed" in helm_result_no_ns.stdout'
+
+- name: "Wait for all helm charts with namespace in batch {{ batch_number }} to complete"
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: helm_result_with_ns
+  until: helm_result_with_ns.finished
+  retries: 120  # 10 minutes total (120 * 5 seconds)
+  delay: 5
+  with_items: "{{ helm_jobs_with_ns.results | default([]) }}"
+  when:
+    - helm_jobs_with_ns is defined
+    - item.ansible_job_id is defined
+  changed_when: '"deployed" in helm_result_with_ns.stdout'
+
+- name: "Display completion status for batch {{ batch_number }}"
+  debug:
+    msg: "All {{ charts_in_batch | length }} charts in batch {{ batch_number }} have been deployed"
+
+- name: "CALICO BLOCK - after batch {{ batch_number }}"
+  block:
+  - name: Wait for tigera-operator deployment to be ready
+    shell: kubectl -n tigera-operator get deployment tigera-operator -o jsonpath='{.status.readyReplicas}'
+    environment: '{{ env_kc }}'
+    register: tigera_ready
+    until: tigera_ready.stdout | int > 0
+    retries: 60
+    delay: 10
+    ignore_errors: true
+    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
+
+  - name: Wait for calico-apiserver deployment to be ready
+    shell: kubectl -n calico-apiserver get deployment calico-apiserver -o jsonpath='{.status.readyReplicas}'
+    environment: '{{ env_kc }}'
+    register: apiserver_ready
+    until: apiserver_ready.stdout | int > 0
+    retries: 60
+    delay: 10
+    ignore_errors: true
+    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
+
+  - name: Wait for calico-system deployments to be ready
+    shell: kubectl -n calico-system get deployments -o jsonpath='{.items[*].status.readyReplicas}'
+    environment: '{{ env_kc }}'
+    register: calico_system_ready
+    until: calico_system_ready.stdout != ""
+    retries: 60
+    delay: 10
+    ignore_errors: true
+    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
+
+  - name: Wait for calico-node daemonset to be ready
+    shell: kubectl -n calico-system get daemonset calico-node -o jsonpath='{.status.numberReady}'
+    environment: '{{ env_kc }}'
+    register: calico_node_ready
+    until: calico_node_ready.stdout | int > 0
+    retries: 60
+    delay: 10
+    ignore_errors: true
+    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
+
+  - debug:
+      msg: "Calico networking components are ready, proceeding to next batch"
+    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'

@@ -7,7 +7,7 @@
 #  tasks:
 
 - set_fact:
-    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/home/linuxbrew/.linuxbrew/bin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
   tags:
   - always
 
@@ -28,101 +28,43 @@
   - charts_deploy
 
 - block:
-#  - name: create the namespaces required by the helm charts deployment (deprecated by the new --create-namespace )
-#    environment: '{{env_kc}}'
-#    shell: 'kubectl create namespace {{ item.namespace }} || true '
-#    with_items:
-#    - "{{ helm.packages_list }}"
-#    when:
-#    - helm is defined
-#    - helm.packages_list is defined
-#    - item.namespace is defined
-#    - item.namespace != ""
-#    register: command_result
-#    changed_when: '"already exists" not in command_result.stderr'
-
-  - name: helm charts/packages deployment - first for the special ones that do not have namespace defined (tigera-operator that creates ns itself)
-    environment: '{{env_kc}}'
-    command: 'helm upgrade --install --atomic {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
-    # --atomic is required for helm3, to make sure even failed releases are updated. This at least till this issue is closed: https://github.com/helm/helm/issues/5595
-    with_items: 
-    - "{{ helm.packages_list }}"
+  - name: Group helm charts by batch
+    set_fact:
+      charts_by_batch: "{{ charts_by_batch | default({}) | combine({ (item.batch | default(50)) | string: (charts_by_batch[item.batch | default(50) | string] | default([])) + [item] }) }}"
+    with_items: "{{ helm.packages_list }}"
     when:
     - helm is defined
     - helm.packages_list is defined
-    - ( item.namespace is not defined ) or ( item.namespace == "" )
-    retries: 3
-    delay: "{{ CHARTS_DELAY | default(3) }}"
-    register: result
-    until: result is not failed
 
-  - name: Wait few seconds for deployments to start - 1
-    pause: seconds=3
-    changed_when: false
-
-  - name: helm charts/packages deployment - now for those that do have namespace defined (most of the charts)
-    environment: '{{env_kc}}'
-    command: 'helm upgrade --install --create-namespace --atomic --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}'
-    # --atomic is required for helm3, to make sure even failed releases are updated. This at least till this issue is closed: https://github.com/helm/helm/issues/5595
-    with_items:
-    - "{{ helm.packages_list }}"
+  - name: Get sorted batch numbers
+    set_fact:
+      sorted_batches: "{{ charts_by_batch.keys() | map('int') | sort | map('string') }}"
     when:
-    - helm is defined
-    - helm.packages_list is defined
-    - item.namespace is defined
-    - item.namespace != ""
-    retries: 3
-    delay: "{{ CHARTS_DELAY | default(3) }}"
-    register: result
-    until: result is not failed
+    - charts_by_batch is defined
 
-  - name: Wait few seconds for deployments to start - 2
-    pause: seconds=3
-    changed_when: false
+  - name: Deploy helm charts batch by batch
+    include_tasks: deploy_batch.yml
+    vars:
+      batch_number: "{{ batch_item }}"
+      charts_in_batch: "{{ charts_by_batch[batch_item] }}"
+    loop: "{{ sorted_batches }}"
+    loop_control:
+      loop_var: batch_item
+    when:
+    - sorted_batches is defined
+    - charts_by_batch is defined
+  tags:
+  - helm
+  - charts_deploy
 
-  - name: CALICO BLOCK
-    block:
-
-    - name: Calico - Wait few seconds for deployments to start - wait to make sure calico-node is getting started - required for containerd...
-      pause: seconds=30
-      changed_when: false
-
-    - name: Calico - wait for calico-node pod to appear - required for containerd cni bug...
-      environment:
-        KUBECONFIG: /etc/kubernetes/admin.conf
-      shell: "kubectl get --all-namespaces pods --no-headers | grep calico-node || true "
-      register: command_result
-      until: command_result.stdout != ""
-      retries: 30
-      delay: 7
-      changed_when: false
-  
-    - name: Calico - wait for calico-node pods to become Running - required for containerd cni bug...
-      environment:
-        KUBECONFIG: /etc/kubernetes/admin.conf
-      shell: "kubectl get --all-namespaces pods --no-headers | grep calico-node | grep -v -w 'Running' || true "
-      register: command_result
-      until: command_result.stdout == ""
-      retries: 30
-      delay: 7
-      changed_when: false
-
-    - name: Calico - Wait few seconds for calico-node is Running 1/1 - required for containerd...
-      pause: seconds=20
-      changed_when: false
-  
-    - name: Calico - Restart containerd due to containerd cni bugs are still there in containerd 1.6.6
-      systemd: name=containerd state=restarted enabled=true daemon_reload=true
-
-    - name: Calico - Wait few seconds for containerd to restart
-      pause: seconds=20
-      changed_when: false
-
-    ignore_errors: true # so it will work even when the netw is not set to calido
-    #TBD when: network is defined and is calico...
-
-  - name: Wait few seconds for deployments to start - 3
-    pause: seconds=3
+- name: "helm full sanity - wait for all installed charts to become running after all batches deployed"
+  tags:
+  - helm
+  - charts_deploy
+  block:
+  - name: Wait 3 seconds before helm sanity check
+    pause:
+      seconds: 3
     changed_when: false
 
   - name: helm full sanity - wait for all installed charts to become running
@@ -139,7 +81,15 @@
     delay: 3
     changed_when: false
     when: wait_charts_deploy_sanity | default('false') | bool # it's not mandatory to wait/make sure absolutelly all deployments are fine.
-  tags:
-  - helm
-  - charts_deploy
+
+  - name: Display cluster status after all helm charts deployed
+    shell: "kubectl get pods --all-namespaces"
+    environment: '{{ env_kc }}'
+    register: final_status
+    changed_when: false
+
+  - debug:
+      msg: "All helm charts deployed successfully. Final cluster status:"
+  - debug:
+      var: final_status.stdout_lines
 
