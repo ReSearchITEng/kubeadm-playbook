@@ -7,7 +7,7 @@
 #  tasks:
 
 - set_fact:
-    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/home/linuxbrew/.linuxbrew/bin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
   tags:
   - always
 
