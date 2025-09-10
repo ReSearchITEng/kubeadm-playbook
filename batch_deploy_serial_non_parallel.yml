@@ -1,0 +1,90 @@
+---
+#- hosts: master
+#  become: yes
+#  become_method: sudo
+#  tags:
+#  - helm
+#  tasks:
+
+- set_fact:
+    env_kc: '{{ proxy_env |default({}) | combine ({"PATH" : "/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/home/linuxbrew/.linuxbrew/bin"  }) | combine ({"KUBECONFIG" :"/etc/kubernetes/admin.conf"}) }}'
+  tags:
+  - always
+
+- name: helm related crds,webhooks,rbacs,operators via manifests
+  block:
+  - name: applying pre_helm_manifests
+    command: kubectl apply -f {{ item }}
+    with_items: '{{ pre_helm_manifests }}'
+    environment: '{{env_kc}}'
+    when:
+    - pre_helm_manifests is defined
+    - pre_helm_manifests | length > 0
+    register: command_result
+    changed_when: '" changed" in command_result.stdout or " created" in command_result.stdout'
+    # there might be mutiplce artifacts in the same yaml, so we cannot simply rely on "unchanged"
+  tags:
+  - pre_helm_manifests
+  - charts_deploy
+
+- block:
+  - name: Group helm charts by batch
+    set_fact:
+      charts_by_batch: "{{ charts_by_batch | default({}) | combine({ (item.batch | default(50)) | string: (charts_by_batch[item.batch | default(50) | string] | default([])) + [item] }) }}"
+    with_items: "{{ helm.packages_list }}"
+    when:
+    - helm is defined
+    - helm.packages_list is defined
+
+  - name: Get sorted batch numbers
+    set_fact:
+      sorted_batches: "{{ charts_by_batch.keys() | map('int') | sort | map('string') }}"
+    when:
+    - charts_by_batch is defined
+
+  - name: Deploy helm charts batch by batch
+    include_tasks: deploy_batch.yml
+    vars:
+      batch_number: "{{ batch_item }}"
+      charts_in_batch: "{{ charts_by_batch[batch_item] }}"
+    loop: "{{ sorted_batches }}"
+    loop_control:
+      loop_var: batch_item
+    when:
+    - sorted_batches is defined
+    - charts_by_batch is defined
+  tags:
+  - helm
+  - charts_deploy
+
+- name: "helm full sanity - wait for all installed charts to become running after all batches deployed"
+  block:
+  - name: Wait 3 seconds before helm sanity check
+    pause: 
+      seconds: 3
+    changed_when: false
+
+  - name: helm full sanity - wait for all pods to be running (excluding some that may not be ready immediately)
+    shell: "kubectl get pods --all-namespaces --no-headers | grep -v -w 'Running' | grep -v 'kube-dns' | grep -v 'coredns' | grep -v 'tiller-deploy' || true"
+    environment: '{{ env_kc }}'
+    register: command_result
+    until: command_result.stdout == ""
+    retries: "{{ RETRIES | default(40) }}"
+    delay: 3
+    changed_when: false
+    tags:
+    - sanity
+    - helm_sanity
+
+  - name: Display cluster status after all helm charts deployed
+    shell: "kubectl get pods --all-namespaces"
+    environment: '{{ env_kc }}'
+    register: final_status
+    changed_when: false
+
+  - debug:
+      msg: "All helm charts deployed successfully. Final cluster status:"
+  - debug:
+      var: final_status.stdout_lines
+
+
