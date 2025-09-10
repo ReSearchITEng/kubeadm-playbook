@@ -30,7 +30,7 @@
           STORAGE_DRIVER="overlay2"
         dest: /etc/sysconfig/docker-storage-setup
         backup: yes
-      run_once: yes
+      run_once: true
       tags:
       - docker
       when: ansible_os_family == "RedHat"

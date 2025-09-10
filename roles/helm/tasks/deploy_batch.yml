@@ -39,7 +39,7 @@
   retries: 120  # 10 minutes total (120 * 5 seconds)
   delay: 5
   with_items: "{{ helm_jobs_no_ns.results | default([]) }}"
-  when: 
+  when:
     - helm_jobs_no_ns is defined
     - helm_jobs_no_ns.results is defined
     - item.ansible_job_id is defined
@@ -53,7 +53,7 @@
   retries: 120  # 10 minutes total (120 * 5 seconds)
   delay: 5
   with_items: "{{ helm_jobs_with_ns.results | default([]) }}"
-  when: 
+  when:
     - helm_jobs_with_ns is defined
     - helm_jobs_with_ns.results is defined
     - item.ansible_job_id is defined
@@ -63,44 +63,39 @@
   debug:
     msg: "All {{ charts_in_batch | length }} charts in batch {{ batch_number }} have been deployed"
 
-- name: "CALICO BLOCK - after batch {{ batch_number }}"
+- name: "CALICO BLOCK - after batch {{ batch_number }} when tigera-operator in charts_in_batch"
   when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
   block:
-  - name: Wait for tigera-operator deployment to be ready
-    shell: kubectl -n tigera-operator get deployment tigera-operator -o jsonpath='{.status.readyReplicas}'
-    environment: '{{ env_kc }}'
-    register: tigera_ready
-    until: tigera_ready.stdout | int > 0
-    retries: 60
-    delay: 10
-    ignore_errors: true
 
-  - name: Wait for calico-apiserver deployment to be ready
-    shell: kubectl -n calico-apiserver get deployment calico-apiserver -o jsonpath='{.status.readyReplicas}'
-    environment: '{{ env_kc }}'
-    register: apiserver_ready
-    until: apiserver_ready.stdout | int > 0
-    retries: 60
-    delay: 10
-    ignore_errors: true
-
-  - name: Wait for calico-system deployments to be ready
-    shell: kubectl -n calico-system get deployments -o jsonpath='{.items[*].status.readyReplicas}'
-    environment: '{{ env_kc }}'
-    register: calico_system_ready
-    until: calico_system_ready.stdout != ""
-    retries: 60
-    delay: 10
-    ignore_errors: true
+  - name: Calico - Wait few seconds for deployments to start - wait to make sure calico-node is getting started - required for containerd...
+    pause: seconds=10
+    changed_when: false
 
   - name: Wait for calico-node daemonset to be ready
-    shell: kubectl -n calico-system get daemonset calico-node -o jsonpath='{.status.numberReady}'
+    shell: kubectl -n calico-system get daemonset calico-node -o jsonpath='{.status.numberReady}/{.status.desiredNumberScheduled}'
     environment: '{{ env_kc }}'
     register: calico_node_ready
-    until: calico_node_ready.stdout | int > 0
+    until: calico_node_ready.stdout.split('/')[0] == calico_node_ready.stdout.split('/')[1] and calico_node_ready.stdout.split('/')[0] | int > 0
     retries: 60
     delay: 10
     ignore_errors: true
+
+  - name: Calico - Restart containerd due to containerd cni bugs are still there in containerd 1.6.6
+    systemd: name=containerd state=restarted enabled=yes daemon_reload=yes
+
+  - name: Calico - Wait few seconds for containerd to restart
+    pause: seconds=10
+    changed_when: false
+
+  - name: Wait for CoreDNS deployment to be ready
+    shell: kubectl -n kube-system get deployment coredns -o jsonpath='{.status.readyReplicas}'
+    environment: '{{ env_kc }}'
+    register: coredns_ready
+    until: coredns_ready.stdout | int > 0
+    retries: 20
+    delay: 10
+    ignore_errors: false
+    changed_when: false
 
   - debug:
       msg: "Calico networking components are ready, proceeding to next batch"
