@@ -70,6 +70,7 @@
     msg: "All {{ charts_in_batch | length }} charts in batch {{ batch_number }} have been deployed"
 
 - name: "CALICO BLOCK - after batch {{ batch_number }}"
+  when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
   block:
   - name: Wait for tigera-operator deployment to be ready
     shell: kubectl -n tigera-operator get deployment tigera-operator -o jsonpath='{.status.readyReplicas}'
@@ -79,7 +80,6 @@
     retries: 60
     delay: 10
     ignore_errors: true
-    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
 
   - name: Wait for calico-apiserver deployment to be ready
     shell: kubectl -n calico-apiserver get deployment calico-apiserver -o jsonpath='{.status.readyReplicas}'
@@ -89,7 +89,6 @@
     retries: 60
     delay: 10
     ignore_errors: true
-    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
 
   - name: Wait for calico-system deployments to be ready
     shell: kubectl -n calico-system get deployments -o jsonpath='{.items[*].status.readyReplicas}'
@@ -99,7 +98,6 @@
     retries: 60
     delay: 10
     ignore_errors: true
-    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
 
   - name: Wait for calico-node daemonset to be ready
     shell: kubectl -n calico-system get daemonset calico-node -o jsonpath='{.status.numberReady}'
@@ -109,8 +107,6 @@
     retries: 60
     delay: 10
     ignore_errors: true
-    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
 
   - debug:
       msg: "Calico networking components are ready, proceeding to next batch"
-    when: '"tigera-operator" in (charts_in_batch | map(attribute="namespace") | list)'
