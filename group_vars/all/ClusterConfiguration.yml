@@ -3,7 +3,6 @@
 ClusterConfiguration:
   apiVersion: kubeadm.k8s.io/v1beta4
   apiServer:
-    timeoutForControlPlane: 8m0s
     #extraEnvs: []
     extraArgs: # https://kubernetes.io/docs/admin/kube-apiserver/
       - name: endpoint-reconciler-type

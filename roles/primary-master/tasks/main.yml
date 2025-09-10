@@ -209,7 +209,7 @@
     host: "{{ InitConfiguration.localAPIEndpoint.advertiseAddress | default (master_name) }}" #master_name
     delay: 1
     timeout: 500
-  run_once: yes
+  run_once: true
   tags:
   - init
   when:

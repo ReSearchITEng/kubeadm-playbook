@@ -2,6 +2,8 @@
 #check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis #/kubeadm?tab=subdirectories
 InitConfiguration:
   kind: InitConfiguration
+  timeouts:
+    controlPlaneComponentHealthCheck: 8m0s
   localAPIEndpoint:
   #  advertiseAddress: 1.2.3.4
   #  bindPort: 6443
@@ -19,11 +21,13 @@ InitConfiguration:
   #   criSocket: unix:///var/run/crio/crio.sock
   #   criSocket: unix:///run/cri-dockerd.sock  # https://github.com/Mirantis/cri-dockerd
     criSocket: unix:///run/cri-dockerd.sock
-  #   name: <your_master_node_name>
+#   name: <your_master_node_name>
     imagePullSerial: false
     kubeletExtraArgs:
-      cgroupDriver: "systemd"
-      failSwapOn: false
+      - name: cgroup-driver
+        value: "systemd"
+      - name: fail-swap-on
+        value: "false"
     taints:
     - effect: NoSchedule
       key: node-role.kubernetes.io/control-plane

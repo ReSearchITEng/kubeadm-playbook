@@ -1,6 +1,8 @@
 #https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta3?tab=doc#JoinConfiguration
 #check latest api ver here: https://pkg.go.dev/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm?tab=subdirectories
 JoinConfiguration:
+  timeouts:
+    controlPlaneComponentHealthCheck: 8m0s
 #  controlPlane: # define controlPlane section only in secondary-masters; not required in minions.
 #    localAPIEndpoint:
 #      advertiseAddress: <your_address>

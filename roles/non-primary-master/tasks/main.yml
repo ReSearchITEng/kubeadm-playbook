@@ -24,7 +24,7 @@
     host: "{{ master_name }}"
     delay: 1
     timeout: 500
-  run_once: yes
+  run_once: true
 
 ### TOKEN:
 - name: making sure there is a JoinConfiguration.discovery.bootstrapToken placeholder
@@ -63,7 +63,7 @@
     # Optionally using "--config /etc/kubernetes/kubeadm-master.conf" to get rid of the message that it tries to connect to internet for version
     register: kubeadm_token_whash_n
     delegate_to: "{{groups['primary-master'][0]}}"
-    run_once: yes
+    run_once: true
     when: 
     - InitConfiguration is not defined or InitConfiguration.bootstrapTokens is not defined or InitConfiguration.bootstrapTokens[0].token is not defined
     changed_when: false
@@ -136,7 +136,7 @@
     shell: "/usr/bin/kubeadm init phase upload-certs --upload-certs -- 2>/dev/null | tail -1 "
     register: kubeadm_upload_certificate_key
     delegate_to: "{{groups['primary-master'][0]}}"
-    run_once: yes
+    run_once: true
   
   ## TODO: try to remove this, and keep the autodetermined addr:
   - name: control plane (secondary-master) -> add controlPlane.localAPIEndpoint.advertiseAddress (ipv4; dns not allowed)
