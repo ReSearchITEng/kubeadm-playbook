@@ -34,7 +34,7 @@
 
   ignore_errors: true
   when:
-  - helm_version is defined
+  - helm.helm_version is defined
   tags:
   - helm
 
@@ -69,7 +69,7 @@
     become_user: root
   when:
   - helm_install_not_required is not defined
-  - helm_version is defined
+  - helm.helm_version is defined
   tags:
   - helm
 
