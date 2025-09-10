@@ -112,7 +112,7 @@
       changed_when: false
   
     - name: Calico - Restart containerd due to containerd cni bugs are still there in containerd 1.6.6
-      systemd: name=containerd state=restarted enabled=yes daemon_reload=yes
+      systemd: name=containerd state=restarted enabled=true daemon_reload=true
 
     - name: Calico - Wait few seconds for containerd to restart
       pause: seconds=20

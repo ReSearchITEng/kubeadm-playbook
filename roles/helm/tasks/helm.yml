@@ -33,6 +33,8 @@
     #when: helm_version_result.stdout_lines[0] == helm.helm_version
 
   ignore_errors: true
+  when:
+  - helm_version is defined
   tags:
   - helm
 
@@ -63,10 +65,11 @@
       force: yes
       mode: "0755"
       remote_src: yes
-    become: yes
+    become: true
     become_user: root
   when:
   - helm_install_not_required is not defined
+  - helm_version is defined
   tags:
   - helm
 
