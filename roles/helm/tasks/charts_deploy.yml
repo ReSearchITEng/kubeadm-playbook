@@ -62,7 +62,7 @@
 
   - name: helm charts/packages deployment - now for those that do have namespace defined (most of the charts)
     environment: '{{env_kc}}'
-    command: 'helm upgrade --install --create-namespace --atomic --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}' #--name
+    command: 'helm upgrade --install --create-namespace --atomic --namespace {{ item.namespace | default("default") }} {{ item.name }} {{ item.repo }} {{ item.options | default ("") }}'
     # --atomic is required for helm3, to make sure even failed releases are updated. This at least till this issue is closed: https://github.com/helm/helm/issues/5595
     with_items:
     - "{{ helm.packages_list }}"
